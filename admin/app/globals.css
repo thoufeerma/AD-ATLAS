@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+/* ── Velastia Admin — design tokens ───────────────────────────────────
+   Sampled from reference/M-Admin-Panel-1.0v.png: dark plum sidebar with a
+   soft-gold active pill, white cards on a pale lavender plane.
+
+   Chart colours are NOT eyeballed. The categorical slots and the ordinal
+   ramp below were run through the data-viz palette validator against the
+   #ffffff chart surface and pass every gate:
+     violet/orange (2-series)  adjacent CVD ΔE 30.3 · normal ΔE 35.3
+     violet/orange/aqua        all-pairs CVD ΔE 9.2 · normal ΔE 27.6
+     violet ordinal ramp       monotone L, light end 3.96:1
+   Aqua sits at 2.82:1 on white, below the 3:1 bar, so every chart using it
+   ships visible direct labels plus a table view (the "relief" rule).
+   -------------------------------------------------------------------- */
+@theme {
+  /* Shell */
+  --color-sidebar: #2c1a41;
+  --color-sidebar-deep: #241435;
+  --color-sidebar-hover: #3a2454;
+  --color-pill: #fdd19b;
+  --color-plane: #f7f6fa;
+  --color-card: #ffffff;
+
+  /* Ink */
+  --color-ink: #0b0b0b;
+  --color-ink-2: #52514e;
+  --color-muted: #898781;
+
+  /* Chart chrome */
+  --color-grid: #e1e0d9;
+  --color-axis: #c3c2b7;
+  --color-hairline: #e8e6ef;
+
+  /* Validated categorical slots */
+  --color-series-1: #6d4ae0;
+  --color-series-2: #eb6834;
+  --color-series-3: #1baf7a;
+
+  /* Validated ordinal ramp (single hue, light → dark) */
+  --color-ramp-1: #402790;
+  --color-ramp-2: #5636b8;
+  --color-ramp-3: #6d4ae0;
+  --color-ramp-4: #8a6ae8;
+
+  /* Status — reserved, never reused as a series colour */
+  --color-good: #0ca30c;
+  --color-warning: #fab219;
+  --color-serious: #ec835a;
+  --color-critical: #d03b3b;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --radius-card: 14px;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-plane);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+}
+
+/* Axis ticks and table figures align vertically; hero numbers stay
+   proportional, per the data-viz figure rule. */
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

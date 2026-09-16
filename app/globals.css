@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* ── Velastia design tokens ───────────────────────────────────────────
+   Colours sampled directly from reference/*.png (Gen B / 2025 set).
+   Plum + gold + cream, per the approved brand direction.
+   ------------------------------------------------------------------ */
+@theme {
+  /* Deep plum — announcement bar, footer, primary buttons */
+  --color-plum-950: #16060f;
+  --color-plum-900: #1d0829;
+  --color-plum-800: #250b30;
+  --color-plum-700: #33123d;
+  --color-plum-600: #4a1f52;
+  --color-plum-500: #6b3a70;
+
+  /* Gold — secondary buttons, headings on dark, rules, stars */
+  --color-gold-200: #f0dfc4;
+  --color-gold-300: #e2c79a;
+  --color-gold-400: #d8b075;
+  --color-gold-500: #c1883e;
+  --color-gold-600: #ae7432;
+  --color-gold-700: #8a5a26;
+
+  /* Cream — page and card surfaces */
+  --color-cream-50: #fdf9f5;
+  --color-cream-100: #fcf6f2;
+  --color-cream-200: #f9f3ed;
+  --color-cream-300: #f2e8de;
+
+  /* Blush — gift banners, soft highlight panels */
+  --color-blush-100: #fcefec;
+  --color-blush-200: #f7ddd8;
+
+  --color-ink: #2a122b;
+  --color-ink-soft: #6b5a63;
+  --color-success: #2e9e44;
+
+  --font-display: var(--font-cormorant), Georgia, serif;
+  --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  --font-script: var(--font-script), cursive;
+
+  --radius-card: 14px;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-cream-50);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+  }
+}
+
+@utility container-vel {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 1360px;
+  padding-inline: 1rem;
+  @media (width >= 1024px) {
+    padding-inline: 2.5rem;
+  }
+}
+
+/* Small caps nav / eyebrow label used throughout the references */
+@utility label-caps {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
