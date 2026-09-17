@@ -121,14 +121,22 @@ export function resolveLines(lines: CartLine[]): ResolvedLine[] {
  */
 export function cartTotals(lines: ResolvedLine[], coupon: string | null) {
   const itemCount = lines.reduce((n, l) => n + l.qty, 0);
-  const subtotal = lines.reduce((n, l) => n + l.lineTotal, 0);
-  const discount = coupon ? Math.round(subtotal * (STORE.welcomeDiscountPct / 100)) : 0;
-  const shipping = subtotal - discount >= STORE.freeShippingAbove || subtotal === 0 ? 0 : 99;
+
+  // Worked in integer paise, then returned as rupees. Discounts are NOT rounded
+  // to whole rupees — 10% of ₹799 is ₹79.90 — matching the backend exactly.
+  // Rupee floats would drift (799 - 79.9 = 719.0999…), so no float maths here.
+  const toPaise = (rupees: number) => Math.round(rupees * 100);
+  const subtotalP = lines.reduce((n, l) => n + toPaise(l.lineTotal), 0);
+  const discountP = coupon ? Math.round((subtotalP * STORE.welcomeDiscountPct) / 100) : 0;
+  const afterDiscountP = subtotalP - discountP;
+  const shippingP =
+    afterDiscountP >= toPaise(STORE.freeShippingAbove) || subtotalP === 0 ? 0 : toPaise(99);
+
   return {
     itemCount,
-    subtotal,
-    discount,
-    shipping,
-    total: subtotal - discount + shipping,
+    subtotal: subtotalP / 100,
+    discount: discountP / 100,
+    shipping: shippingP / 100,
+    total: (afterDiscountP + shippingP) / 100,
   };
 }
