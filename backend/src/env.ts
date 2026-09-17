@@ -1,0 +1,54 @@
+import "dotenv/config";
+import { z } from "zod";
+
+/**
+ * Environment is parsed once, at boot. A missing or malformed variable stops
+ * the server immediately with a readable message, instead of surfacing later
+ * as an undefined value deep inside a request.
+ */
+const schema = z
+  .object({
+    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    PORT: z.coerce.number().int().positive().default(4000),
+    DATABASE_URL: z.url(),
+    CORS_ORIGINS: z
+      .string()
+      .default("http://localhost:3000,http://localhost:3001")
+      .transform((s) =>
+        s
+          .split(",")
+          .map((o) => o.trim())
+          .filter(Boolean),
+      ),
+    JWT_SECRET: z.string().min(1),
+    SEED_ADMIN_EMAIL: z.email().optional(),
+    SEED_ADMIN_PASSWORD: z.string().optional(),
+  })
+  .superRefine((e, ctx) => {
+    // A weak or placeholder signing secret in production would let anyone
+    // forge an admin session. Refuse to boot rather than run exposed.
+    if (
+      e.NODE_ENV === "production" &&
+      (e.JWT_SECRET.length < 32 || e.JWT_SECRET.startsWith("replace-me"))
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["JWT_SECRET"],
+        message: "must be a random value of at least 32 characters in production",
+      });
+    }
+  });
+
+const parsed = schema.safeParse(process.env);
+
+if (!parsed.success) {
+  console.error("✖ Invalid environment configuration:");
+  for (const issue of parsed.error.issues) {
+    console.error(`  - ${issue.path.join(".")}: ${issue.message}`);
+  }
+  console.error("  See backend/.env.example.");
+  process.exit(1);
+}
+
+export const env = parsed.data;
+export const isProd = env.NODE_ENV === "production";

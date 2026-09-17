@@ -1,0 +1,563 @@
+// Velastia data model.
+//
+// Conventions
+// - Money is ALWAYS integer paise (₹799 → 79900). Never floats: they corrupt
+//   money through rounding, and Razorpay speaks paise natively.
+// - Percentages are integer basis points where precision matters (18% → 1800).
+// - Orders snapshot product name, SKU, price and shipping address at purchase
+//   time, so later catalog edits never rewrite a customer's order history.
+// - Tables are snake_case in Postgres; models stay PascalCase in code.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/* ───────────────────────────── Catalog ───────────────────────────── */
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  COMING_SOON
+  ARCHIVED
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  sortOrder   Int       @default(0)
+  isVisible   Boolean   @default(true)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("categories")
+}
+
+model Product {
+  id                String         @id @default(cuid())
+  slug              String         @unique
+  sku               String         @unique
+  name              String
+  /// Short "Brightens · Hydrates · Repairs" line shown on cart and wishlist rows
+  descriptor        String?
+  blurb             String?
+  size              String?
+  pricePaise        Int
+  compareAtPaise    Int?
+  status            ProductStatus  @default(DRAFT)
+  isBestseller      Boolean        @default(false)
+  /// Stock is tracked per product for now, not per shade.
+  stock             Int            @default(0)
+  lowStockThreshold Int            @default(15)
+  benefits          String[]
+  metaTitle         String?
+  metaDescription   String?
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  images     ProductImage[]
+  shades     Shade[]
+  reviews    Review[]
+  orderItems OrderItem[]
+  wishlistedBy WishlistItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([status])
+  @@map("products")
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  url       String
+  alt       String  @default("")
+  sortOrder Int     @default(0)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_images")
+}
+
+model Shade {
+  id        String  @id @default(cuid())
+  code      String
+  name      String
+  hex       String
+  sortOrder Int     @default(0)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, code])
+  @@map("shades")
+}
+
+/* ──────────────────────────── Customers ──────────────────────────── */
+
+model Customer {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  name         String
+  phone        String?
+  /// Null for customers who have only checked out as guests.
+  passwordHash String?
+  addresses    Address[]
+  orders       Order[]
+  reviews      Review[]
+  wishlist     WishlistItem[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@map("customers")
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  fullName   String
+  phone      String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  pincode    String
+  country    String   @default("India")
+  isDefault  Boolean  @default(false)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@map("addresses")
+}
+
+model WishlistItem {
+  customerId String
+  productId  String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([customerId, productId])
+  @@map("wishlist_items")
+}
+
+/* ───────────────────────────── Orders ────────────────────────────── */
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  UPI
+  CARD
+  NETBANKING
+  WALLET
+  COD
+}
+
+model Order {
+  id            String         @id @default(cuid())
+  /// Customer-facing number, e.g. VL25052978
+  number        String         @unique
+  email         String
+  status        OrderStatus    @default(PENDING)
+  paymentStatus PaymentStatus  @default(PENDING)
+  paymentMethod PaymentMethod?
+
+  subtotalPaise Int
+  discountPaise Int @default(0)
+  shippingPaise Int @default(0)
+  taxPaise      Int @default(0)
+  totalPaise    Int
+  couponCode    String?
+
+  // Shipping address snapshot — deliberately not a relation to Address.
+  shipName    String
+  shipPhone   String
+  shipLine1   String
+  shipLine2   String?
+  shipCity    String
+  shipState   String
+  shipPincode String
+  shipCountry String @default("India")
+
+  razorpayOrderId   String? @unique
+  razorpayPaymentId String?
+
+  customerId String?
+  customer   Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items      OrderItem[]
+  events     OrderEvent[]
+
+  placedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([email])
+  @@map("orders")
+}
+
+model OrderItem {
+  id             String   @id @default(cuid())
+  // Snapshots, so a later rename or price change never alters past orders.
+  productName    String
+  sku            String
+  shadeName      String?
+  unitPricePaise Int
+  quantity       Int
+  lineTotalPaise Int
+
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+/// The status timeline behind Track Order.
+model OrderEvent {
+  id        String      @id @default(cuid())
+  status    OrderStatus
+  note      String?
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@index([orderId])
+  @@map("order_events")
+}
+
+/* ─────────────────────────── Promotions ──────────────────────────── */
+
+enum CouponType {
+  PERCENTAGE
+  FIXED
+  FREE_SHIPPING
+}
+
+model Coupon {
+  id               String     @id @default(cuid())
+  code             String     @unique
+  type             CouponType
+  /// PERCENTAGE: basis points (1000 = 10%). FIXED: paise. FREE_SHIPPING: ignored.
+  value            Int        @default(0)
+  minOrderPaise    Int        @default(0)
+  usageLimit       Int?
+  perCustomerLimit Int?
+  usedCount        Int        @default(0)
+  firstOrderOnly   Boolean    @default(false)
+  isActive         Boolean    @default(true)
+  startsAt         DateTime?
+  expiresAt        DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@map("coupons")
+}
+
+model Offer {
+  id        String   @id @default(cuid())
+  name      String
+  scope     String
+  isActive  Boolean  @default(true)
+  startsAt  DateTime
+  endsAt    DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("offers")
+}
+
+model ShippingMethod {
+  id             String  @id @default(cuid())
+  name           String
+  eta            String
+  pricePaise     Int
+  /// Free when the post-discount subtotal reaches this. Null = never free.
+  freeAbovePaise Int?
+  isEnabled      Boolean @default(true)
+  sortOrder      Int     @default(0)
+
+  @@map("shipping_methods")
+}
+
+model TaxRate {
+  id          String  @id @default(cuid())
+  name        String
+  /// Basis points: 1800 = 18%
+  rateBps     Int
+  region      String
+  isInclusive Boolean @default(true)
+
+  @@map("tax_rates")
+}
+
+/* ───────────────────────────── Reviews ───────────────────────────── */
+
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+}
+
+model Review {
+  id         String       @id @default(cuid())
+  authorName String
+  rating     Int
+  body       String
+  status     ReviewStatus @default(PENDING)
+  isVerified Boolean      @default(false)
+  productId  String
+  product    Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerId String?
+  customer   Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  createdAt  DateTime     @default(now())
+
+  @@index([productId, status])
+  @@map("reviews")
+}
+
+/* ───────────────────────────── Content ───────────────────────────── */
+
+enum PublishStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+}
+
+model Page {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  title           String
+  /// Structured sections; shape is owned by the page type.
+  body            Json
+  status          PublishStatus @default(DRAFT)
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("pages")
+}
+
+model BlogPost {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  title       String
+  excerpt     String?
+  body        String
+  author      String
+  coverUrl    String?
+  status      PublishStatus @default(DRAFT)
+  publishedAt DateTime?
+  views       Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("blog_posts")
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  name      String
+  placement String
+  headline  String?
+  imageUrl  String?
+  href      String?
+  isActive  Boolean  @default(true)
+  clicks    Int      @default(0)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("banners")
+}
+
+model Testimonial {
+  id         String   @id @default(cuid())
+  author     String
+  role       String
+  rating     Int      @default(5)
+  quote      String
+  avatarUrl  String?
+  isFeatured Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@map("testimonials")
+}
+
+model Collaborator {
+  id        String  @id @default(cuid())
+  name      String
+  role      String
+  avatarUrl String?
+  sortOrder Int     @default(0)
+
+  @@map("collaborators")
+}
+
+model Faq {
+  id          String  @id @default(cuid())
+  question    String
+  answer      String
+  category    String
+  sortOrder   Int     @default(0)
+  isPublished Boolean @default(true)
+
+  @@map("faqs")
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  filename  String
+  url       String
+  mimeType  String
+  sizeBytes Int
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now())
+
+  @@map("media_assets")
+}
+
+/* ─────────────────────────── Marketing ───────────────────────────── */
+
+enum SubscriberStatus {
+  SUBSCRIBED
+  UNSUBSCRIBED
+  BOUNCED
+}
+
+model Subscriber {
+  id        String           @id @default(cuid())
+  email     String           @unique
+  source    String?
+  status    SubscriberStatus @default(SUBSCRIBED)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@map("subscribers")
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  AUTOMATED
+}
+
+model Campaign {
+  id           String         @id @default(cuid())
+  name         String
+  subject      String?
+  status       CampaignStatus @default(DRAFT)
+  sentCount    Int            @default(0)
+  openedCount  Int            @default(0)
+  clickedCount Int            @default(0)
+  scheduledAt  DateTime?
+  sentAt       DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@map("campaigns")
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  isHandled Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("contact_messages")
+}
+
+model CollabApplication {
+  id           String   @id @default(cuid())
+  name         String
+  email        String
+  handle       String
+  audienceSize String?
+  about        String
+  isReviewed   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@map("collab_applications")
+}
+
+/* ──────────────────────────── System ─────────────────────────────── */
+
+enum AdminRole {
+  SUPER_ADMIN
+  CONTENT_MANAGER
+  ORDER_MANAGER
+  SUPPORT_AGENT
+}
+
+model AdminUser {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String
+  passwordHash String
+  role         AdminRole
+  isActive     Boolean       @default(true)
+  lastLoginAt  DateTime?
+  activity     ActivityLog[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("admin_users")
+}
+
+model ActivityLog {
+  id          String     @id @default(cuid())
+  action      String
+  entityType  String
+  entityId    String?
+  metadata    Json?
+  adminUserId String?
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+/// Key/value store settings: store details, free-shipping threshold, etc.
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}

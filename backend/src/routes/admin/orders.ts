@@ -1,0 +1,160 @@
+import { Router } from "express";
+import { z } from "zod";
+import type { OrderStatus, Prisma } from "../../generated/prisma/client.js";
+import { prisma } from "../../db.js";
+import { badRequest, notFound, param, parse } from "../../lib/http.js";
+import { allow, ROLES } from "../../middleware/auth.js";
+import { logActivity } from "../../lib/activity.js";
+
+export const adminOrdersRouter = Router();
+
+const STATUSES = [
+  "PENDING",
+  "CONFIRMED",
+  "PROCESSING",
+  "SHIPPED",
+  "OUT_FOR_DELIVERY",
+  "DELIVERED",
+  "CANCELLED",
+  "REFUNDED",
+] as const;
+
+/**
+ * Which status an order may move to next. Anything not listed is rejected, so
+ * a delivered order can't be flipped back to "processing" by a mis-click, and
+ * a cancelled one can't be shipped.
+ */
+const TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["PROCESSING", "CANCELLED"],
+  PROCESSING: ["SHIPPED", "CANCELLED"],
+  SHIPPED: ["OUT_FOR_DELIVERY", "DELIVERED"],
+  OUT_FOR_DELIVERY: ["DELIVERED"],
+  DELIVERED: ["REFUNDED"],
+  CANCELLED: [],
+  REFUNDED: [],
+};
+
+const ListQuery = z.object({
+  status: z.enum(STATUSES).optional(),
+  q: z.string().trim().optional(),
+  take: z.coerce.number().int().min(1).max(200).default(50),
+  skip: z.coerce.number().int().min(0).default(0),
+});
+
+adminOrdersRouter.get("/", allow(...ROLES.ordersRead), async (req, res) => {
+  const q = parse(ListQuery, req.query);
+  const where: Prisma.OrderWhereInput = {
+    ...(q.status ? { status: q.status } : {}),
+    ...(q.q
+      ? {
+          OR: [
+            { number: { contains: q.q, mode: "insensitive" } },
+            { email: { contains: q.q, mode: "insensitive" } },
+            { shipName: { contains: q.q, mode: "insensitive" } },
+            { shipCity: { contains: q.q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      orderBy: { placedAt: "desc" },
+      take: q.take,
+      skip: q.skip,
+      include: { _count: { select: { items: true } } },
+    }),
+    prisma.order.count({ where }),
+  ]);
+
+  res.json({
+    data: orders.map((o) => ({
+      id: o.id,
+      number: o.number,
+      customer: o.shipName,
+      email: o.email,
+      city: o.shipCity,
+      itemCount: o._count.items,
+      totalPaise: o.totalPaise,
+      status: o.status,
+      paymentStatus: o.paymentStatus,
+      paymentMethod: o.paymentMethod,
+      placedAt: o.placedAt,
+    })),
+    meta: { total, take: q.take, skip: q.skip },
+  });
+});
+
+adminOrdersRouter.get("/:number", allow(...ROLES.ordersRead), async (req, res) => {
+  const order = await prisma.order.findUnique({
+    where: { number: param(req, "number") },
+    include: {
+      items: true,
+      events: { orderBy: { createdAt: "asc" } },
+      customer: { select: { id: true, name: true, email: true, phone: true } },
+    },
+  });
+  if (!order) throw notFound("Order");
+  res.json({ data: order });
+});
+
+const StatusBody = z.object({
+  status: z.enum(STATUSES),
+  note: z.string().trim().max(300).optional(),
+});
+
+adminOrdersRouter.patch("/:number/status", allow(...ROLES.ordersWrite), async (req, res) => {
+  const body = parse(StatusBody, req.body);
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { number: param(req, "number") },
+      include: { items: true },
+    });
+    if (!order) throw notFound("Order");
+
+    if (!TRANSITIONS[order.status].includes(body.status)) {
+      throw badRequest(
+        `Cannot move an order from ${order.status} to ${body.status}`,
+        { allowed: TRANSITIONS[order.status] },
+      );
+    }
+
+    // Cancelling returns the reserved stock to inventory.
+    if (body.status === "CANCELLED") {
+      for (const item of order.items) {
+        if (item.productId) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
+      }
+    }
+
+    return tx.order.update({
+      where: { id: order.id },
+      data: {
+        status: body.status,
+        ...(body.status === "REFUNDED" ? { paymentStatus: "REFUNDED" } : {}),
+        // COD is collected on delivery.
+        ...(body.status === "DELIVERED" && order.paymentMethod === "COD"
+          ? { paymentStatus: "PAID" }
+          : {}),
+        events: { create: { status: body.status, note: body.note } },
+      },
+      include: { items: true, events: { orderBy: { createdAt: "asc" } } },
+    });
+  });
+
+  await logActivity(
+    req,
+    `Marked ${updated.number} as ${body.status}`,
+    "Order",
+    updated.id,
+    body.note ? { note: body.note } : undefined,
+  );
+  res.json({ data: updated });
+});

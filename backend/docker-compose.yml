@@ -1,0 +1,29 @@
+# Local development database only. Production uses a managed Postgres
+# (Neon / Supabase / RDS) configured through DATABASE_URL.
+#
+# Port 5433 on the host, because a native PostgreSQL install on this machine
+# already owns 5432. The credentials below are throwaway dev values for a
+# container that is only reachable from localhost — never reuse them anywhere.
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: velastia-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: velastia
+      POSTGRES_PASSWORD: velastia_dev
+      POSTGRES_DB: velastia
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      # Postgres 18 images keep data under a versioned subdirectory and expect
+      # the volume at /var/lib/postgresql (not .../data, as in 17 and earlier).
+      - velastia-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U velastia -d velastia"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  velastia-db-data:
