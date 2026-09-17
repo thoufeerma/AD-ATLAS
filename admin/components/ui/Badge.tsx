@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { humanize } from "@/lib/api/types";
 
 export type Tone = "good" | "warning" | "serious" | "critical" | "neutral" | "info";
 
@@ -51,18 +52,23 @@ export default function Badge({
 
 /** Maps the statuses used across the panel onto reserved status tones. */
 export function toneFor(status: string): Tone {
-  switch (status) {
+  // Accepts API enum values ("OUT_FOR_DELIVERY") as well as display labels.
+  const label = /^[A-Z_]+$/.test(status) ? humanize(status) : status;
+  switch (label) {
     case "Delivered":
     case "Published":
     case "Active":
     case "Subscribed":
     case "Sent":
+    case "Paid":
       return "good";
     case "Processing":
     case "Pending":
     case "Scheduled":
       return "warning";
+    case "Confirmed":
     case "Shipped":
+    case "Out for Delivery":
     case "Automated":
     case "Coming Soon":
       return "info";
@@ -71,6 +77,7 @@ export function toneFor(status: string): Tone {
       return "serious";
     case "Cancelled":
     case "Rejected":
+    case "Failed":
       return "critical";
     default:
       return "neutral";

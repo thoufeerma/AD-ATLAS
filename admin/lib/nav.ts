@@ -37,6 +37,13 @@ export type NavItem = {
   label: string;
   Icon: LucideIcon;
   badge?: number;
+  /**
+   * The screen still shows placeholder data from lib/mock.ts because the API
+   * has no routes for it yet. Flagged in the sidebar and on the page itself so
+   * nobody mistakes sample figures for the store's own. Remove the flag when a
+   * screen is wired up.
+   */
+  sample?: boolean;
 };
 
 export type NavGroup = {
@@ -50,7 +57,7 @@ export const NAV: NavGroup[] = [
     title: "Main",
     items: [
       { href: "/", label: "Dashboard", Icon: LayoutDashboard },
-      { href: "/orders", label: "Orders", Icon: ShoppingCart, badge: 125 },
+      { href: "/orders", label: "Orders", Icon: ShoppingCart },
       { href: "/customers", label: "Customers", Icon: Users },
       { href: "/products", label: "Products", Icon: Package },
       { href: "/categories", label: "Categories", Icon: FolderTree },
@@ -63,9 +70,9 @@ export const NAV: NavGroup[] = [
   {
     title: "Content Management",
     items: [
-      { href: "/pages", label: "Pages", Icon: FileText },
-      { href: "/blog", label: "Blog Posts", Icon: Newspaper },
-      { href: "/media", label: "Media Library", Icon: Images },
+      { href: "/pages", label: "Pages", Icon: FileText, sample: true },
+      { href: "/blog", label: "Blog Posts", Icon: Newspaper, sample: true },
+      { href: "/media", label: "Media Library", Icon: Images, sample: true },
       { href: "/banners", label: "Banners", Icon: GalleryHorizontal },
       { href: "/testimonials", label: "Testimonials", Icon: MessageSquareQuote },
       { href: "/faqs", label: "FAQs", Icon: HelpCircle },
@@ -74,33 +81,43 @@ export const NAV: NavGroup[] = [
   {
     title: "Marketing",
     items: [
-      { href: "/campaigns", label: "Email Campaigns", Icon: Mail },
-      { href: "/subscribers", label: "Subscribers", Icon: UserPlus },
-      { href: "/seo", label: "SEO Settings", Icon: Search },
+      { href: "/campaigns", label: "Email Campaigns", Icon: Mail, sample: true },
+      { href: "/subscribers", label: "Subscribers", Icon: UserPlus, sample: true },
+      { href: "/seo", label: "SEO Settings", Icon: Search, sample: true },
     ],
   },
   {
     title: "Reports & Analytics",
     items: [
-      { href: "/reports/sales", label: "Sales Reports", Icon: BarChart3 },
-      { href: "/reports/products", label: "Product Reports", Icon: PackageSearch },
-      { href: "/reports/customers", label: "Customer Reports", Icon: UserSearch },
-      { href: "/reports/traffic", label: "Traffic Analytics", Icon: Activity },
+      { href: "/reports/sales", label: "Sales Reports", Icon: BarChart3, sample: true },
+      { href: "/reports/products", label: "Product Reports", Icon: PackageSearch, sample: true },
+      { href: "/reports/customers", label: "Customer Reports", Icon: UserSearch, sample: true },
+      { href: "/reports/traffic", label: "Traffic Analytics", Icon: Activity, sample: true },
     ],
   },
   {
     title: "System Settings",
     items: [
-      { href: "/users", label: "Users & Roles", Icon: ShieldCheck },
-      { href: "/settings", label: "Settings", Icon: Settings },
-      { href: "/settings/payments", label: "Payment Methods", Icon: CreditCard },
-      { href: "/settings/shipping", label: "Shipping Methods", Icon: Truck },
-      { href: "/settings/tax", label: "Tax Settings", Icon: Receipt },
-      { href: "/settings/notifications", label: "Notifications", Icon: Bell },
+      { href: "/users", label: "Users & Roles", Icon: ShieldCheck, sample: true },
+      { href: "/settings", label: "Settings", Icon: Settings, sample: true },
+      { href: "/settings/payments", label: "Payment Methods", Icon: CreditCard, sample: true },
+      { href: "/settings/shipping", label: "Shipping Methods", Icon: Truck, sample: true },
+      { href: "/settings/tax", label: "Tax Settings", Icon: Receipt, sample: true },
+      { href: "/settings/notifications", label: "Notifications", Icon: Bell, sample: true },
       { href: "/activity", label: "Activity Logs", Icon: ScrollText },
-      { href: "/backup", label: "Backup & Restore", Icon: DatabaseBackup },
+      { href: "/backup", label: "Backup & Restore", Icon: DatabaseBackup, sample: true },
     ],
   },
 ];
 
 export const ALL_NAV_ITEMS = NAV.flatMap((g) => g.items);
+
+/**
+ * The nav item for a path: the longest href that prefixes it, so
+ * `/settings/tax` resolves to "Tax Settings" rather than "Settings".
+ */
+export function findNavItem(pathname: string): NavItem | undefined {
+  return ALL_NAV_ITEMS.filter((i) =>
+    i.href === "/" ? pathname === "/" : pathname === i.href || pathname.startsWith(i.href + "/"),
+  ).sort((a, b) => b.href.length - a.href.length)[0];
+}

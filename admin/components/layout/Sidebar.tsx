@@ -3,20 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LifeBuoy, X } from "lucide-react";
-import { NAV, ALL_NAV_ITEMS } from "@/lib/nav";
+import { NAV, findNavItem } from "@/lib/nav";
 import { cn } from "@/lib/utils";
-
-/**
- * The active item is the longest nav href that prefixes the current path, so
- * `/settings/tax` lights up "Tax Settings" rather than the shorter "Settings".
- */
-function activeHref(pathname: string) {
-  return ALL_NAV_ITEMS.map((i) => i.href)
-    .filter((href) =>
-      href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/"),
-    )
-    .sort((a, b) => b.length - a.length)[0];
-}
 
 export default function Sidebar({
   open,
@@ -26,7 +14,7 @@ export default function Sidebar({
   onClose: () => void;
 }) {
   const pathname = usePathname();
-  const current = activeHref(pathname);
+  const current = findNavItem(pathname)?.href;
 
   return (
     <>
@@ -86,6 +74,17 @@ export default function Sidebar({
                       >
                         <item.Icon className="size-4 shrink-0" />
                         <span className="flex-1 truncate">{item.label}</span>
+                        {item.sample && (
+                          <span
+                            title="Shows sample data — not connected to the store yet"
+                            className={cn(
+                              "rounded px-1 py-px text-[0.52rem] font-semibold uppercase tracking-wider",
+                              activeItem ? "bg-sidebar-deep/15 text-sidebar-deep" : "bg-white/10 text-white/45",
+                            )}
+                          >
+                            Sample
+                          </span>
+                        )}
                         {item.badge && (
                           <span
                             className={cn(

@@ -54,7 +54,9 @@ export default function LinePlot({
   const [hover, setHover] = useState<number | null>(null);
 
   const max = Math.max(...data);
-  const step = niceStep(max / TICKS);
+  // All-zero data (a new store) would make the scale 0 and every y position
+  // NaN. Fall back to a unit step so the plot draws a flat baseline instead.
+  const step = max > 0 ? niceStep(max / TICKS) : 1;
   const top = step * TICKS;
 
   // Unit space: x 0→100 across the points, y 0→100 with 0 at the bottom.

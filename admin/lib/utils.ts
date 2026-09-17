@@ -6,8 +6,16 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /** ₹ with Indian digit grouping. */
+/** ₹ with Indian digit grouping. Paise always print as two digits (₹818.10). */
 export function inr(n: number) {
-  return "₹" + n.toLocaleString("en-IN");
+  const hasPaise = Math.round(n * 100) % 100 !== 0;
+  return (
+    "₹" +
+    n.toLocaleString("en-IN", {
+      minimumFractionDigits: hasPaise ? 2 : 0,
+      maximumFractionDigits: 2,
+    })
+  );
 }
 
 /** Compact Indian notation used on axis ticks: 50K, 1L, 2L. */
