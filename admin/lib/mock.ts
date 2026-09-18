@@ -282,17 +282,6 @@ export const OFFERS = [
 
 /* ── Content ──────────────────────────────────────────────────────────── */
 
-export const PAGES = [
-  { id: "pg-1", title: "About Us", slug: "/about", updated: "2025-05-20", status: "Published" as const },
-  { id: "pg-2", title: "Ingredients", slug: "/ingredients", updated: "2025-05-18", status: "Published" as const },
-  { id: "pg-3", title: "Contact Us", slug: "/contact", updated: "2025-05-12", status: "Published" as const },
-  { id: "pg-4", title: "Shipping & Delivery", slug: "/shipping", updated: "2025-01-01", status: "Published" as const },
-  { id: "pg-5", title: "Returns & Refunds", slug: "/returns", updated: "2025-01-01", status: "Published" as const },
-  { id: "pg-6", title: "Terms & Conditions", slug: "/terms", updated: "2025-01-01", status: "Published" as const },
-  { id: "pg-7", title: "Privacy Policy", slug: "/privacy", updated: "2025-01-01", status: "Published" as const },
-  { id: "pg-8", title: "Offers", slug: "/offers", updated: "2025-05-29", status: "Draft" as const },
-];
-
 export const BLOG_POSTS = [
   { id: "b-1", title: "How to Find Your Perfect Nude Shade", author: "Anshil Dev", date: "2025-05-26", views: 4_210, status: "Published" as const },
   { id: "b-2", title: "The Science Behind Long-Wear Matte", author: "Dr. Rhea Nathan", date: "2025-05-19", views: 3_154, status: "Published" as const },

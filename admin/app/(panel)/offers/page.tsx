@@ -10,7 +10,10 @@ export default async function Page() {
   const offers = await apiGet<Offer[]>("/admin/offers");
   return (
     <>
-      <PageHeader title="Offers & Deals" subtitle="Promotions shown on the storefront Offers page" />
+      <PageHeader
+        title="Offers & Deals"
+        subtitle="Shown on the storefront Offers page while active and in date. Offers are for display — discounts are applied at checkout by coupons."
+      />
       <OffersManager offers={offers} />
     </>
   );

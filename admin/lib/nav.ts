@@ -70,7 +70,7 @@ export const NAV: NavGroup[] = [
   {
     title: "Content Management",
     items: [
-      { href: "/pages", label: "Pages", Icon: FileText, sample: true },
+      { href: "/pages", label: "Pages", Icon: FileText },
       { href: "/blog", label: "Blog Posts", Icon: Newspaper, sample: true },
       { href: "/media", label: "Media Library", Icon: Images, sample: true },
       { href: "/banners", label: "Banners", Icon: GalleryHorizontal },
@@ -99,7 +99,7 @@ export const NAV: NavGroup[] = [
     title: "System Settings",
     items: [
       { href: "/users", label: "Users & Roles", Icon: ShieldCheck, sample: true },
-      { href: "/settings", label: "Settings", Icon: Settings, sample: true },
+      { href: "/settings", label: "Settings", Icon: Settings },
       { href: "/settings/payments", label: "Payment Methods", Icon: CreditCard, sample: true },
       { href: "/settings/shipping", label: "Shipping Methods", Icon: Truck, sample: true },
       { href: "/settings/tax", label: "Tax Settings", Icon: Receipt, sample: true },

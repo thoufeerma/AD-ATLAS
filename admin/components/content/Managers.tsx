@@ -81,7 +81,14 @@ export function TestimonialsManager({ testimonials }: { testimonials: Testimonia
 
 const BANNER_FIELDS: FieldSpec[] = [
   { name: "name", label: "Internal Name", kind: "text", required: true, placeholder: "Diwali hero" },
-  { name: "placement", label: "Placement", kind: "text", required: true, placeholder: "home.hero", hint: "Where it shows, e.g. home.hero, global.topbar, cart.inline" },
+  {
+    name: "placement",
+    label: "Placement",
+    kind: "text",
+    required: true,
+    placeholder: "global.topbar",
+    hint: "The store shows the headline of: global.topbar (announcement bar), shop.sidebar (shop offer card), cart.inline (cart promo). The homepage hero isn't banner-driven yet.",
+  },
   { name: "headline", label: "Headline", kind: "text" },
   { name: "imageUrl", label: "Image", kind: "text", placeholder: "/brand/hero-products.png" },
   { name: "href", label: "Links To", kind: "text", placeholder: "/shop" },

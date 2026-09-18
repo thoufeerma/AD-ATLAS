@@ -5,7 +5,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** ₹ with Indian digit grouping. */
 /** ₹ with Indian digit grouping. Paise always print as two digits (₹818.10). */
 export function inr(n: number) {
   const hasPaise = Math.round(n * 100) % 100 !== 0;
@@ -32,4 +31,22 @@ export function num(n: number) {
 
 export function pct(n: number, dp = 1) {
   return `${n.toFixed(dp)}%`;
+}
+
+/**
+ * Deep equality that ignores key order — JSON stored in Postgres (JSONB)
+ * comes back with its keys reordered, so plain JSON.stringify would disagree.
+ */
+export function same(a: unknown, b: unknown): boolean {
+  const norm = (v: unknown): unknown =>
+    Array.isArray(v)
+      ? v.map(norm)
+      : v && typeof v === "object"
+        ? Object.fromEntries(
+            Object.keys(v)
+              .sort()
+              .map((k) => [k, norm((v as Record<string, unknown>)[k])]),
+          )
+        : v;
+  return JSON.stringify(norm(a)) === JSON.stringify(norm(b));
 }

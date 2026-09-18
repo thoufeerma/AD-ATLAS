@@ -258,3 +258,54 @@ export type ActivityEntry = {
   createdAt: string;
   adminUser: { name: string; email: string } | null;
 };
+
+/* ── Settings & pages ── */
+
+export type StoreDetails = {
+  name: string;
+  legalEntity: string;
+  tagline: string;
+  supportEmail: string;
+  supportPhone: string;
+  supportHours: string;
+  city: string;
+};
+
+export type SiteCopy = {
+  ratingHeadline: string;
+  socialProofHeadline: string;
+  happyCustomers: string;
+  whyVelastia: string[];
+};
+
+export type SiteSettings = {
+  store: StoreDetails | null;
+  welcomeOffer: { code: string | null };
+  copy: SiteCopy;
+  shipping: { name: string; pricePaise: number; freeAbovePaise: number | null } | null;
+};
+
+export type PageSection = { heading: string; body: string[] };
+
+export type PageListItem = {
+  id: string;
+  slug: string;
+  title: string;
+  status: "DRAFT" | "PUBLISHED";
+  updatedAt: string;
+};
+
+export type PageDetail = PageListItem & {
+  body: { lead: string; sections: PageSection[] };
+  metaTitle: string | null;
+  metaDescription: string | null;
+  /** Placeholder names the storefront fills in, e.g. free_shipping_above. */
+  tokens: string[];
+};
+
+/** Mirrors the API's role gates (backend/src/middleware/auth.ts). */
+export const can = {
+  editContent: (role: AdminRole) => role === "SUPER_ADMIN" || role === "CONTENT_MANAGER",
+  editStore: (role: AdminRole) => role === "SUPER_ADMIN",
+};
+
