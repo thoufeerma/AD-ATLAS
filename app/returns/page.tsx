@@ -1,12 +1,8 @@
-import type { Metadata } from "next";
-import PolicyPage from "@/components/ui/PolicyPage";
-import { RETURNS } from "@/lib/legal";
+import PolicyPage, { policyMetadata } from "@/components/ui/PolicyPage";
 
-export const metadata: Metadata = {
-  title: "Returns & Refunds",
-  description: "Changed your mind? Here is how returns work.",
-};
+// Text is edited in the admin on the Pages screen.
+export const generateMetadata = () => policyMetadata("returns");
 
 export default function Page() {
-  return <PolicyPage policy={RETURNS} />;
+  return <PolicyPage slug="returns" />;
 }

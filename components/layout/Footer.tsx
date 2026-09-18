@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, Phone, Clock, MapPin, ArrowRight } from "lucide-react";
+import { Mail, Phone, Clock, MapPin } from "lucide-react";
 import {
   Instagram,
   Youtube,
@@ -7,8 +7,10 @@ import {
   XIcon,
   Pinterest,
 } from "@/components/ui/SocialIcons";
-import { STORE } from "@/lib/products";
+import { getSettings } from "@/lib/api/server";
+import { telHref } from "@/lib/utils";
 import Logo from "./Logo";
+import NewsletterForm from "./NewsletterForm";
 
 /**
  * Gen B (2025) footer: five link columns with a contact block, matching
@@ -54,7 +56,9 @@ const SOCIALS = [
   { Icon: Pinterest, href: "https://pinterest.com", label: "Pinterest" },
 ];
 
-export default function Footer() {
+export default async function Footer() {
+  const { store } = await getSettings();
+
   return (
     <footer className="mt-20 bg-plum-800 text-cream-100">
       <div className="container-vel grid grid-cols-2 gap-x-8 gap-y-10 py-14 md:grid-cols-3 lg:grid-cols-12">
@@ -103,23 +107,23 @@ export default function Footer() {
           <ul className="space-y-3 text-sm text-cream-200/70">
             <li className="flex items-start gap-2.5">
               <Mail className="mt-0.5 size-4 shrink-0 text-gold-400" />
-              <a href={`mailto:${STORE.supportEmail}`} className="hover:text-gold-300">
-                {STORE.supportEmail}
+              <a href={`mailto:${store.supportEmail}`} className="hover:text-gold-300">
+                {store.supportEmail}
               </a>
             </li>
             <li className="flex items-start gap-2.5">
               <Phone className="mt-0.5 size-4 shrink-0 text-gold-400" />
-              <a href={`tel:${STORE.supportPhone.replace(/\s/g, "")}`} className="hover:text-gold-300">
-                {STORE.supportPhone}
+              <a href={telHref(store.supportPhone)} className="hover:text-gold-300">
+                {store.supportPhone}
               </a>
             </li>
             <li className="flex items-start gap-2.5">
               <Clock className="mt-0.5 size-4 shrink-0 text-gold-400" />
-              <span>{STORE.supportHours}</span>
+              <span>{store.supportHours}</span>
             </li>
             <li className="flex items-start gap-2.5">
               <MapPin className="mt-0.5 size-4 shrink-0 text-gold-400" />
-              <span>{STORE.city}</span>
+              <span>{store.city}</span>
             </li>
           </ul>
         </div>
@@ -130,29 +134,13 @@ export default function Footer() {
           <p className="mb-4 text-sm leading-relaxed text-cream-200/70">
             Be the first to know about new launches &amp; exclusive offers.
           </p>
-          <form className="space-y-3">
-            <label htmlFor="footer-email" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="footer-email"
-              type="email"
-              placeholder="Enter your email address"
-              className="w-full rounded-sm border border-gold-500/35 bg-plum-900/60 px-3.5 py-2.5 text-sm text-cream-100 placeholder:text-cream-200/40 focus:border-gold-400 focus:outline-none"
-            />
-            <button
-              type="submit"
-              className="label-caps flex w-full items-center justify-center gap-2 rounded-sm bg-gold-600 py-2.5 text-white transition-colors hover:bg-gold-500"
-            >
-              Subscribe <ArrowRight className="size-3.5" />
-            </button>
-          </form>
+          <NewsletterForm />
         </div>
       </div>
 
       <div className="border-t border-white/10">
         <div className="container-vel flex flex-col items-center justify-between gap-3 py-5 text-xs text-cream-200/55 sm:flex-row">
-          <p>© {new Date().getFullYear()} Velastia. All Rights Reserved.</p>
+          <p>© {new Date().getFullYear()} {store.name}. All Rights Reserved.</p>
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="hover:text-gold-300">
               Privacy Policy

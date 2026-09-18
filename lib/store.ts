@@ -3,7 +3,9 @@
 import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { PRODUCTS, STORE, type Product } from "./products";
+
+/** The API accepts up to 20 of one item per order. */
+export const MAX_QTY = 20;
 
 export type CartLine = {
   slug: string;
@@ -14,6 +16,7 @@ export type CartLine = {
 type CartState = {
   lines: CartLine[];
   wishlist: string[];
+  /** A code the API has accepted at least once. Re-checked on every quote. */
   coupon: string | null;
   add: (slug: string, qty?: number, shade?: string) => void;
   setQty: (slug: string, shade: string | undefined, qty: number) => void;
@@ -21,7 +24,7 @@ type CartState = {
   clear: () => void;
   toggleWish: (slug: string) => void;
   clearWishlist: () => void;
-  applyCoupon: (code: string) => boolean;
+  setCoupon: (code: string) => void;
   removeCoupon: () => void;
 };
 
@@ -41,11 +44,11 @@ export const useStore = create<CartState>()(
           if (existing) {
             return {
               lines: s.lines.map((l) =>
-                sameLine(l, slug, shade) ? { ...l, qty: l.qty + qty } : l,
+                sameLine(l, slug, shade) ? { ...l, qty: Math.min(MAX_QTY, l.qty + qty) } : l,
               ),
             };
           }
-          return { lines: [...s.lines, { slug, qty, shade }] };
+          return { lines: [...s.lines, { slug, qty: Math.min(MAX_QTY, qty), shade }] };
         }),
 
       setQty: (slug, shade, qty) =>
@@ -53,7 +56,9 @@ export const useStore = create<CartState>()(
           lines:
             qty <= 0
               ? s.lines.filter((l) => !sameLine(l, slug, shade))
-              : s.lines.map((l) => (sameLine(l, slug, shade) ? { ...l, qty } : l)),
+              : s.lines.map((l) =>
+                  sameLine(l, slug, shade) ? { ...l, qty: Math.min(MAX_QTY, qty) } : l,
+                ),
         })),
 
       remove: (slug, shade) =>
@@ -70,11 +75,7 @@ export const useStore = create<CartState>()(
 
       clearWishlist: () => set({ wishlist: [] }),
 
-      applyCoupon: (code) => {
-        const ok = code.trim().toUpperCase() === STORE.welcomeCode;
-        if (ok) set({ coupon: STORE.welcomeCode });
-        return ok;
-      },
+      setCoupon: (code) => set({ coupon: code.trim().toUpperCase() }),
 
       removeCoupon: () => set({ coupon: null }),
     }),
@@ -96,47 +97,4 @@ export function useHydrated() {
     () => useStore.persist.hasHydrated(),
     () => false,
   );
-}
-
-/* ── Derived helpers ──────────────────────────────────────────────────── */
-
-export type ResolvedLine = CartLine & { product: Product; lineTotal: number };
-
-export function resolveLines(lines: CartLine[]): ResolvedLine[] {
-  return lines.flatMap((l) => {
-    const product = PRODUCTS.find((p) => p.slug === l.slug);
-    if (!product) return [];
-    return [{ ...l, product, lineTotal: product.price * l.qty }];
-  });
-}
-
-/**
- * Cart totals. Mirrors the arithmetic on M-Cart-1.0v.png, which is the screen
- * that gets it right: subtotal is the sum of line totals, the VEL10 coupon
- * takes 10% off that, shipping is free above the threshold.
- *
- * Note: N-Order-Success-1.0v.png prints Subtotal Rs 4,031 / Discount Rs 403 for
- * the same three lines that sum to Rs 4,830 - its subtotal and discount lines
- * are wrong, though its Total Paid (Rs 4,347) matches this calculation.
- */
-export function cartTotals(lines: ResolvedLine[], coupon: string | null) {
-  const itemCount = lines.reduce((n, l) => n + l.qty, 0);
-
-  // Worked in integer paise, then returned as rupees. Discounts are NOT rounded
-  // to whole rupees — 10% of ₹799 is ₹79.90 — matching the backend exactly.
-  // Rupee floats would drift (799 - 79.9 = 719.0999…), so no float maths here.
-  const toPaise = (rupees: number) => Math.round(rupees * 100);
-  const subtotalP = lines.reduce((n, l) => n + toPaise(l.lineTotal), 0);
-  const discountP = coupon ? Math.round((subtotalP * STORE.welcomeDiscountPct) / 100) : 0;
-  const afterDiscountP = subtotalP - discountP;
-  const shippingP =
-    afterDiscountP >= toPaise(STORE.freeShippingAbove) || subtotalP === 0 ? 0 : toPaise(99);
-
-  return {
-    itemCount,
-    subtotal: subtotalP / 100,
-    discount: discountP / 100,
-    shipping: shippingP / 100,
-    total: (afterDiscountP + shippingP) / 100,
-  };
 }

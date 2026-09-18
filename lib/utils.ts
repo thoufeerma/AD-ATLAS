@@ -18,3 +18,26 @@ export function inr(amount: number) {
     })
   );
 }
+
+/** Same as `inr`, from integer paise — the unit the API uses for all money. */
+export function inrPaise(paise: number) {
+  return inr(paise / 100);
+}
+
+/** First product image, or the brand placeholder while a product has none. */
+export function productImage(product: { images: { url: string }[] }) {
+  return product.images[0]?.url ?? "/products/matte-lipstick.png";
+}
+
+/** "+91 98765 43210" → "tel:+919876543210" */
+export function telHref(phone: string) {
+  return `tel:${phone.replace(/[^\d+]/g, "")}`;
+}
+
+/** "+91 98765 43210" → "https://wa.me/919876543210" */
+export function whatsappHref(phone: string) {
+  return `https://wa.me/${phone.replace(/\D/g, "")}`;
+}
+
+/** Loose email shape check for forms; the API does the strict one. */
+export const looksLikeEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());

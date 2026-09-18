@@ -1,12 +1,8 @@
-import type { Metadata } from "next";
-import PolicyPage from "@/components/ui/PolicyPage";
-import { PRIVACY } from "@/lib/legal";
+import PolicyPage, { policyMetadata } from "@/components/ui/PolicyPage";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy",
-  description: "What we collect, why, and the control you have over it.",
-};
+// Text is edited in the admin on the Pages screen.
+export const generateMetadata = () => policyMetadata("privacy");
 
 export default function Page() {
-  return <PolicyPage policy={PRIVACY} />;
+  return <PolicyPage slug="privacy" />;
 }

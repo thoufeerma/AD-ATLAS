@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Mail, Lock, User, Eye, EyeOff, Leaf, FlaskConical, Heart, Award, Gift, Cake, Headphones } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { useSettings } from "@/components/providers/SettingsProvider";
 import { cn } from "@/lib/utils";
 
 const PERKS = [
@@ -14,13 +15,14 @@ const PERKS = [
   { Icon: Headphones, title: "Priority Support", note: "Faster assistance whenever you need" },
 ];
 
-const BADGES = [
-  { Icon: Leaf, title: "Clean Beauty", note: "Safe & Effective" },
-  { Icon: FlaskConical, title: "Science Backed", note: "Dermatologically Tested" },
-  { Icon: Heart, title: "Loved by Thousands", note: "10,000+ Happy Customers" },
-];
-
 export default function AuthPanel() {
+  // The last badge's wording is editable in the admin: Settings → Site Copy.
+  const { copy } = useSettings();
+  const badges = [
+    { Icon: Leaf, title: "Clean Beauty", note: "Safe & Effective" },
+    { Icon: FlaskConical, title: "Science Backed", note: "Dermatologically Tested" },
+    { Icon: Heart, title: copy.ratingHeadline, note: `${copy.happyCustomers} Happy Customers` },
+  ];
   const [tab, setTab] = useState<"login" | "register">("login");
 
   return (
@@ -40,7 +42,7 @@ export default function AuthPanel() {
           </p>
 
           <ul className="mx-auto mt-9 flex max-w-sm justify-center gap-7">
-            {BADGES.map(({ Icon, title, note }) => (
+            {badges.map(({ Icon, title, note }) => (
               <li key={title} className="flex flex-1 flex-col items-center gap-2 text-center">
                 <span className="grid size-11 place-items-center rounded-full border border-gold-400/60">
                   <Icon className="size-[18px] text-gold-300" />

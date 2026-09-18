@@ -1,18 +1,35 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { FileText } from "lucide-react";
 import PageBanner from "./PageBanner";
-import { POLICIES, type Policy } from "@/lib/legal";
-import { STORE } from "@/lib/products";
+import { getPage, getPages, getSettings } from "@/lib/api/server";
+import { fillTokens } from "@/lib/tokens";
 import { cn } from "@/lib/utils";
 
-export default function PolicyPage({ policy }: { policy: Policy }) {
+/**
+ * Shipping, returns, terms and privacy. The text is edited in the admin
+ * (Pages screen); {{tokens}} in it are filled from live settings.
+ */
+export default async function PolicyPage({ slug }: { slug: string }) {
+  const [page, pages, settings] = await Promise.all([getPage(slug), getPages(), getSettings()]);
+  if (!page) notFound();
+
+  const { store } = settings;
+  const fill = (text: string) => fillTokens(text, settings);
+  const updated = new Date(page.updatedAt).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     <>
       <PageBanner
-        title={policy.title}
+        title={page.title}
         tone="light"
-        lead={policy.lead}
-        crumbs={[{ label: "Home", href: "/" }, { label: policy.title }]}
+        lead={page.body.lead ? fill(page.body.lead) : undefined}
+        crumbs={[{ label: "Home", href: "/" }, { label: page.title }]}
       />
 
       <div className="container-vel grid gap-10 py-12 lg:grid-cols-[240px_minmax(0,1fr)]">
@@ -20,8 +37,8 @@ export default function PolicyPage({ policy }: { policy: Policy }) {
         <aside className="lg:sticky lg:top-28 lg:self-start">
           <h2 className="label-caps mb-4 text-[0.62rem] text-gold-700">Policies</h2>
           <ul className="space-y-1">
-            {POLICIES.map((p) => {
-              const active = p.slug === policy.slug;
+            {pages.map((p) => {
+              const active = p.slug === page.slug;
               return (
                 <li key={p.slug}>
                   <Link
@@ -45,29 +62,29 @@ export default function PolicyPage({ policy }: { policy: Policy }) {
             <p className="text-[0.72rem] font-medium text-plum-800">Still have a question?</p>
             <p className="mt-1.5 text-[0.7rem] leading-relaxed text-ink-soft">
               Write to us at{" "}
-              <a href={`mailto:${STORE.supportEmail}`} className="text-gold-700 hover:text-gold-600">
-                {STORE.supportEmail}
+              <a href={`mailto:${store.supportEmail}`} className="text-gold-700 hover:text-gold-600">
+                {store.supportEmail}
               </a>{" "}
-              or call {STORE.supportPhone}.
+              or call {store.supportPhone}.
             </p>
           </div>
         </aside>
 
         {/* Body */}
         <article className="max-w-3xl">
-          <p className="text-[0.72rem] text-ink-soft">Last updated: {policy.updated}</p>
+          <p className="text-[0.72rem] text-ink-soft">Last updated: {updated}</p>
 
           <div className="mt-8 space-y-9">
-            {policy.sections.map((s, i) => (
-              <section key={s.heading}>
+            {page.body.sections.map((s, i) => (
+              <section key={`${i}-${s.heading}`}>
                 <h2 className="font-display text-xl text-plum-800">
                   <span className="mr-2.5 text-gold-500">{String(i + 1).padStart(2, "0")}</span>
-                  {s.heading}
+                  {fill(s.heading)}
                 </h2>
                 <div className="mt-3 space-y-3">
-                  {s.body.map((p) => (
-                    <p key={p} className="text-[0.9rem] leading-relaxed text-ink-soft">
-                      {p}
+                  {s.body.map((para, j) => (
+                    <p key={j} className="text-[0.9rem] leading-relaxed text-ink-soft">
+                      {fill(para)}
                     </p>
                   ))}
                 </div>
@@ -76,10 +93,10 @@ export default function PolicyPage({ policy }: { policy: Policy }) {
           </div>
 
           <p className="mt-12 border-t border-gold-200/70 pt-6 text-[0.72rem] leading-relaxed text-ink-soft">
-            Velastia is a brand of AD Atlas Ventures Private Limited, {STORE.city}.
-            Questions about this policy can be sent to{" "}
-            <a href={`mailto:${STORE.supportEmail}`} className="text-gold-700 hover:text-gold-600">
-              {STORE.supportEmail}
+            {store.name} is a brand of {store.legalEntity}, {store.city}. Questions about this
+            policy can be sent to{" "}
+            <a href={`mailto:${store.supportEmail}`} className="text-gold-700 hover:text-gold-600">
+              {store.supportEmail}
             </a>
             .
           </p>
@@ -87,4 +104,14 @@ export default function PolicyPage({ policy }: { policy: Policy }) {
       </div>
     </>
   );
+}
+
+/** Title and description for a policy route, from the page in the CMS. */
+export async function policyMetadata(slug: string): Promise<Metadata> {
+  const [page, settings] = await Promise.all([getPage(slug), getSettings()]);
+  if (!page) return { title: "Page not found" };
+  return {
+    title: page.metaTitle ?? page.title,
+    description: page.metaDescription ?? (page.body.lead ? fillTokens(page.body.lead, settings) : undefined),
+  };
 }

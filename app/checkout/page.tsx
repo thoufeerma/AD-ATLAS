@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import PageBanner from "@/components/ui/PageBanner";
 import CheckoutFlow from "@/components/checkout/CheckoutFlow";
+import { getProducts } from "@/lib/api/server";
 
 export const metadata: Metadata = {
   title: "Checkout",
-  description: "Secure checkout, powered by Razorpay.",
+  description: "Secure checkout for your Velastia order.",
 };
 
-export default function CheckoutPage() {
+export default async function CheckoutPage() {
+  const products = await getProducts();
+
   return (
     <>
       <PageBanner
@@ -20,7 +23,7 @@ export default function CheckoutPage() {
           { label: "Checkout" },
         ]}
       />
-      <CheckoutFlow />
+      <CheckoutFlow products={products} />
     </>
   );
 }

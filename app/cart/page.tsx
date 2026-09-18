@@ -1,13 +1,21 @@
 import type { Metadata } from "next";
 import PageBanner from "@/components/ui/PageBanner";
 import CartView from "@/components/cart/CartView";
+import { bannerHeadlines, getHomeContent, getProducts, getRatingSummary } from "@/lib/api/server";
 
 export const metadata: Metadata = {
   title: "Your Cart",
   description: "Review your Velastia bag before checkout.",
 };
 
-export default function CartPage() {
+export default async function CartPage() {
+  const [products, [giftBanner], rating, content] = await Promise.all([
+    getProducts(),
+    bannerHeadlines("cart.inline"),
+    getRatingSummary(),
+    getHomeContent(),
+  ]);
+
   return (
     <>
       <PageBanner
@@ -18,7 +26,12 @@ export default function CartPage() {
         crumbs={[{ label: "Home", href: "/" }, { label: "Cart" }]}
         image="/brand/cart-banner.png"
       />
-      <CartView />
+      <CartView
+        products={products}
+        giftBanner={giftBanner ?? null}
+        rating={rating}
+        testimonials={content.testimonials}
+      />
     </>
   );
 }

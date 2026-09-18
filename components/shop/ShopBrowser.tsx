@@ -21,7 +21,8 @@ import {
 } from "lucide-react";
 import ProductCard from "@/components/ui/ProductCard";
 import Button from "@/components/ui/Button";
-import { PRODUCTS, CATEGORIES, STORE, type CategoryId } from "@/lib/products";
+import { useSettings } from "@/components/providers/SettingsProvider";
+import type { Category, Product } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
 type Sort = "featured" | "price-asc" | "price-desc" | "name";
@@ -42,7 +43,7 @@ const CLAIMS = [
   { Icon: Sparkles, label: "Safe & Effective" },
 ];
 
-const MAX_PRICE = 2999;
+type Status = Product["status"];
 
 /** Chip icons, one per category as drawn on the shop page. */
 const CHIP_ICONS: Record<string, LucideIcon> = {
@@ -55,45 +56,57 @@ const CHIP_ICONS: Record<string, LucideIcon> = {
   perfume: SprayCan,
 };
 
-export default function ShopBrowser({ initialCategory }: { initialCategory?: string }) {
-  const [category, setCategory] = useState<CategoryId | "all">(
-    (CATEGORIES.some((c) => c.id === initialCategory) ? initialCategory : "all") as CategoryId | "all",
+export default function ShopBrowser({
+  products,
+  categories,
+  promo,
+  initialCategory,
+}: {
+  products: Product[];
+  categories: Category[];
+  /** Headline of the admin's "shop.sidebar" banner; the card hides without one. */
+  promo: string | null;
+  initialCategory?: string;
+}) {
+  const { welcomeOffer } = useSettings();
+
+  // The slider tops out at the priciest product, rounded up to the next ₹100,
+  // so a newly added premium product is never filtered out by default.
+  const priceCeiling = useMemo(
+    () => Math.ceil(Math.max(0, ...products.map((p) => p.pricePaise)) / 10_000) * 100,
+    [products],
   );
-  const [checked, setChecked] = useState<CategoryId[]>([]);
-  const [maxPrice, setMaxPrice] = useState(MAX_PRICE);
-  const [types, setTypes] = useState<("active" | "coming-soon")[]>([]);
+
+  const [category, setCategory] = useState(
+    initialCategory && categories.some((c) => c.slug === initialCategory) ? initialCategory : "all",
+  );
+  const [checked, setChecked] = useState<string[]>([]);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null); // null = no limit
+  const [types, setTypes] = useState<Status[]>([]);
   const [sort, setSort] = useState<Sort>("featured");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const counts = useMemo(() => {
-    const m = new Map<CategoryId, number>();
-    PRODUCTS.forEach((p) => m.set(p.category, (m.get(p.category) ?? 0) + 1));
-    return m;
-  }, []);
-
   const results = useMemo(() => {
-    let list = PRODUCTS.filter((p) => p.price <= maxPrice);
+    let list =
+      maxPrice == null ? products : products.filter((p) => p.pricePaise <= maxPrice * 100);
 
-    if (category !== "all") list = list.filter((p) => p.category === category);
-    if (checked.length) list = list.filter((p) => checked.includes(p.category));
+    if (category !== "all") list = list.filter((p) => p.category.slug === category);
+    if (checked.length) list = list.filter((p) => checked.includes(p.category.slug));
     if (types.length) list = list.filter((p) => types.includes(p.status));
 
     switch (sort) {
       case "price-asc":
-        return [...list].sort((a, b) => a.price - b.price);
+        return [...list].sort((a, b) => a.pricePaise - b.pricePaise);
       case "price-desc":
-        return [...list].sort((a, b) => b.price - a.price);
+        return [...list].sort((a, b) => b.pricePaise - a.pricePaise);
       case "name":
         return [...list].sort((a, b) => a.name.localeCompare(b.name));
       default:
-        // Featured: active products first, bestsellers ahead of the rest
-        return [...list].sort(
-          (a, b) =>
-            Number(b.status === "active") - Number(a.status === "active") ||
-            Number(!!b.bestseller) - Number(!!a.bestseller),
-        );
+        // The API already returns products in featured order: purchasable
+        // first, then bestsellers, then newest.
+        return list;
     }
-  }, [category, checked, types, maxPrice, sort]);
+  }, [products, category, checked, types, maxPrice, sort]);
 
   const toggle = <T,>(arr: T[], v: T) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
@@ -102,7 +115,7 @@ export default function ShopBrowser({ initialCategory }: { initialCategory?: str
     <div className="container-vel py-10">
       {/* Category chips */}
       <div className="no-scrollbar -mx-4 mb-10 flex gap-3 overflow-x-auto px-4 sm:justify-center">
-        {[{ id: "all" as const, label: "All" }, ...CATEGORIES].map((c) => {
+        {[{ id: "all", label: "All" }, ...categories.map((c) => ({ id: c.slug, label: c.name }))].map((c) => {
           const active = category === c.id;
           const ChipIcon = CHIP_ICONS[c.id] ?? Sparkles;
           return (
@@ -153,12 +166,12 @@ export default function ShopBrowser({ initialCategory }: { initialCategory?: str
               </div>
 
               <FilterGroup title="Categories">
-                {CATEGORIES.map((c) => (
+                {categories.map((c) => (
                   <Check
-                    key={c.id}
-                    label={`${c.label} (${counts.get(c.id) ?? 0})`}
-                    checked={checked.includes(c.id)}
-                    onChange={() => setChecked((s) => toggle(s, c.id))}
+                    key={c.slug}
+                    label={`${c.name} (${c.productCount})`}
+                    checked={checked.includes(c.slug)}
+                    onChange={() => setChecked((s) => toggle(s, c.slug))}
                   />
                 ))}
               </FilterGroup>
@@ -167,29 +180,32 @@ export default function ShopBrowser({ initialCategory }: { initialCategory?: str
                 <input
                   type="range"
                   min={0}
-                  max={MAX_PRICE}
+                  max={priceCeiling}
                   step={100}
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(Number(e.target.value))}
+                  value={maxPrice ?? priceCeiling}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    setMaxPrice(v >= priceCeiling ? null : v);
+                  }}
                   className="w-full accent-gold-600"
                   aria-label="Maximum price"
                 />
                 <div className="mt-1 flex justify-between text-[0.68rem] text-ink-soft">
                   <span>₹0</span>
-                  <span>₹{maxPrice.toLocaleString("en-IN")}</span>
+                  <span>₹{(maxPrice ?? priceCeiling).toLocaleString("en-IN")}</span>
                 </div>
               </FilterGroup>
 
               <FilterGroup title="Product Type">
                 <Check
                   label="Active Products"
-                  checked={types.includes("active")}
-                  onChange={() => setTypes((s) => toggle(s, "active"))}
+                  checked={types.includes("ACTIVE")}
+                  onChange={() => setTypes((s) => toggle(s, "ACTIVE"))}
                 />
                 <Check
                   label="Coming Soon"
-                  checked={types.includes("coming-soon")}
-                  onChange={() => setTypes((s) => toggle(s, "coming-soon"))}
+                  checked={types.includes("COMING_SOON")}
+                  onChange={() => setTypes((s) => toggle(s, "COMING_SOON"))}
                 />
               </FilterGroup>
 
@@ -202,21 +218,24 @@ export default function ShopBrowser({ initialCategory }: { initialCategory?: str
               </FilterGroup>
             </div>
 
-            {/* Exclusive offer */}
-            <div className="rounded-[var(--radius-card)] border border-gold-300/60 bg-blush-100 p-6 text-center">
-              <Gift className="mx-auto size-7 text-gold-600" />
-              <h3 className="label-caps mt-3 text-plum-800">Exclusive Offer</h3>
-              <p className="mt-2 text-xs leading-relaxed text-ink-soft">
-                Get {STORE.welcomeDiscountPct}% OFF on your first order
-              </p>
-              <p className="mt-1.5 text-xs text-ink-soft">
-                Use Code:{" "}
-                <strong className="font-medium text-plum-800">{STORE.welcomeCode}</strong>
-              </p>
-              <Button href="/shop" size="sm" className="mt-4">
-                Shop Now
-              </Button>
-            </div>
+            {/* Exclusive offer: the admin's shop-sidebar banner, plus the
+                welcome code while it is live */}
+            {promo && (
+              <div className="rounded-[var(--radius-card)] border border-gold-300/60 bg-blush-100 p-6 text-center">
+                <Gift className="mx-auto size-7 text-gold-600" />
+                <h3 className="label-caps mt-3 text-plum-800">Exclusive Offer</h3>
+                <p className="mt-2 text-xs leading-relaxed text-ink-soft">{promo}</p>
+                {welcomeOffer && (
+                  <p className="mt-1.5 text-xs text-ink-soft">
+                    Use Code:{" "}
+                    <strong className="font-medium text-plum-800">{welcomeOffer.code}</strong>
+                  </p>
+                )}
+                <Button href="/shop" size="sm" className="mt-4">
+                  Shop Now
+                </Button>
+              </div>
+            )}
           </div>
         </aside>
 
@@ -224,7 +243,7 @@ export default function ShopBrowser({ initialCategory }: { initialCategory?: str
         <div>
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <p className="text-[0.78rem] text-ink-soft">
-              Showing {results.length} of {PRODUCTS.length} products
+              Showing {results.length} of {products.length} products
             </p>
             <label className="flex items-center gap-2 text-[0.78rem] text-ink-soft">
               Sort by:

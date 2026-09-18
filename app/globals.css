@@ -34,6 +34,7 @@
   --color-ink: #2a122b;
   --color-ink-soft: #6b5a63;
   --color-success: #2e9e44;
+  --color-danger: #b3261e;
 
   --font-display: var(--font-cormorant), Georgia, serif;
   --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;

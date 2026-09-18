@@ -1,13 +1,16 @@
 import Image from "next/image";
 import Button from "@/components/ui/Button";
+import { getSettings } from "@/lib/api/server";
 
-const STATS = [
-  { value: "50+", label: "Premium Ingredients" },
-  { value: "100%", label: "Safe & Effective" },
-  { value: "10K+", label: "Happy Customers" },
-];
+export default async function OurStory() {
+  const { copy } = await getSettings();
+  const stats = [
+    { value: "50+", label: "Premium Ingredients" },
+    { value: "100%", label: "Safe & Effective" },
+    // Editable in the admin: Settings → Site Copy.
+    { value: copy.happyCustomers, label: "Happy Customers" },
+  ];
 
-export default function OurStory() {
   return (
     <section className="bg-cream-50">
       <div className="container-vel grid items-center gap-10 py-16 lg:grid-cols-[1.05fr_1fr_auto] lg:gap-14">
@@ -37,7 +40,7 @@ export default function OurStory() {
         </div>
 
         <ul className="grid grid-cols-3 gap-6 lg:grid-cols-1 lg:border-l lg:border-gold-200 lg:pl-12">
-          {STATS.map((s) => (
+          {stats.map((s) => (
             <li key={s.label} className="text-center lg:text-left">
               <p className="font-display text-[2.1rem] font-semibold leading-none text-plum-800">
                 {s.value}

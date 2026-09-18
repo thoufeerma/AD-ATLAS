@@ -1,9 +1,9 @@
-import Image from "next/image";
 import { Handshake } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { COLLABORATORS } from "@/lib/content";
+import Avatar from "@/components/ui/Avatar";
+import type { Collaborator } from "@/lib/api/types";
 
-export default function Collabs() {
+export default function Collabs({ collaborators }: { collaborators: Collaborator[] }) {
   return (
     <section className="bg-cream-50">
       <div className="container-vel grid gap-10 py-14 lg:grid-cols-[1.6fr_1fr] lg:items-center">
@@ -18,14 +18,13 @@ export default function Collabs() {
           </div>
 
           <ul className="grid grid-cols-3 gap-6 sm:grid-cols-5">
-            {COLLABORATORS.map((c) => (
-              <li key={c.name} className="flex flex-col items-center text-center">
-                <Image
-                  src={c.avatar}
-                  alt={c.name}
-                  width={64}
-                  height={64}
-                  className="size-16 rounded-full border border-gold-300/70 object-cover"
+            {collaborators.map((c) => (
+              <li key={c.id} className="flex flex-col items-center text-center">
+                <Avatar
+                  src={c.avatarUrl}
+                  name={c.name}
+                  size={64}
+                  className="border border-gold-300/70"
                 />
                 <p className="mt-2.5 text-[0.72rem] font-medium text-plum-800">{c.name}</p>
                 <p className="text-[0.62rem] text-ink-soft">{c.role}</p>

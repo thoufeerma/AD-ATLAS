@@ -1,12 +1,8 @@
-import type { Metadata } from "next";
-import PolicyPage from "@/components/ui/PolicyPage";
-import { SHIPPING } from "@/lib/legal";
+import PolicyPage, { policyMetadata } from "@/components/ui/PolicyPage";
 
-export const metadata: Metadata = {
-  title: "Shipping & Delivery",
-  description: "How and when your Velastia order reaches you.",
-};
+// Text is edited in the admin on the Pages screen.
+export const generateMetadata = () => policyMetadata("shipping");
 
 export default function Page() {
-  return <PolicyPage policy={SHIPPING} />;
+  return <PolicyPage slug="shipping" />;
 }

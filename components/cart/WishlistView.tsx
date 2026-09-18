@@ -14,26 +14,32 @@ import {
   Headphones,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { useSettings } from "@/components/providers/SettingsProvider";
 import { useStore, useHydrated } from "@/lib/store";
-import { PRODUCTS, STORE } from "@/lib/products";
-import { inr } from "@/lib/utils";
+import type { Product } from "@/lib/api/types";
+import { inrPaise, productImage } from "@/lib/utils";
 
-const ASSURANCES = [
-  { Icon: BadgeCheck, title: "100% Authentic Products", note: "Sourced with Care" },
-  { Icon: RotateCcw, title: "Easy Returns", note: "Hassle Free Returns" },
-  { Icon: ShieldCheck, title: "Secure Payments", note: "100% Safe & Secure" },
-  { Icon: Truck, title: "Free Shipping", note: `On Orders Above ₹${STORE.freeShippingAbove}` },
-  { Icon: Headphones, title: "Customer Support", note: "We're Here to Help" },
-];
+export default function WishlistView({ products }: { products: Product[] }) {
+  const { shipping } = useSettings();
+  const assurances = [
+    { Icon: BadgeCheck, title: "100% Authentic Products", note: "Sourced with Care" },
+    { Icon: RotateCcw, title: "Easy Returns", note: "Hassle Free Returns" },
+    { Icon: ShieldCheck, title: "Secure Payments", note: "100% Safe & Secure" },
+    shipping?.freeAbovePaise != null
+      ? { Icon: Truck, title: "Free Shipping", note: `On Orders Above ${inrPaise(shipping.freeAbovePaise)}` }
+      : { Icon: Truck, title: "Fast Shipping", note: "Across India" },
+    { Icon: Headphones, title: "Customer Support", note: "We're Here to Help" },
+  ];
 
-export default function WishlistView() {
   const hydrated = useHydrated();
   const wishlist = useStore((s) => s.wishlist);
   const toggleWish = useStore((s) => s.toggleWish);
   const clearWishlist = useStore((s) => s.clearWishlist);
   const add = useStore((s) => s.add);
 
-  const items = PRODUCTS.filter((p) => wishlist.includes(p.slug));
+  // Saved slugs that are no longer in the catalog simply drop out of view.
+  const items = products.filter((p) => wishlist.includes(p.slug));
+  const buyable = (p: Product) => p.status === "ACTIVE" && p.inStock;
 
   if (!hydrated) return <div className="container-vel py-20" aria-hidden />;
 
@@ -67,9 +73,7 @@ export default function WishlistView() {
               </button>
               <Button
                 onClick={() =>
-                  items
-                    .filter((p) => p.status === "active")
-                    .forEach((p) => add(p.slug, 1, p.shades?.[0]?.name))
+                  items.filter(buyable).forEach((p) => add(p.slug, 1, p.shades[0]?.name))
                 }
               >
                 <ShoppingBag className="size-3.5" /> Add All to Bag
@@ -94,7 +98,7 @@ export default function WishlistView() {
                 <Link href={`/product/${p.slug}`} className="block">
                   <div className="relative aspect-square bg-cream-200/40">
                     <Image
-                      src={p.image}
+                      src={productImage(p)}
                       alt={p.name}
                       fill
                       sizes="(min-width: 1024px) 18vw, 45vw"
@@ -114,17 +118,19 @@ export default function WishlistView() {
                     <p className="mt-0.5 text-[0.65rem] text-ink-soft">{p.descriptor}</p>
                   )}
                   <p className="mt-1.5 font-display text-lg font-semibold text-plum-800">
-                    {inr(p.price)}
+                    {inrPaise(p.pricePaise)}
                   </p>
 
                   <p className="mt-1.5 flex items-center gap-1.5 text-[0.65rem]">
                     <span
-                      className={`size-1.5 rounded-full ${
-                        p.status === "active" ? "bg-success" : "bg-gold-500"
-                      }`}
+                      className={`size-1.5 rounded-full ${buyable(p) ? "bg-success" : "bg-gold-500"}`}
                     />
-                    <span className={p.status === "active" ? "text-success" : "text-ink-soft"}>
-                      {p.status === "active" ? "In Stock" : "Coming Soon"}
+                    <span className={buyable(p) ? "text-success" : "text-ink-soft"}>
+                      {buyable(p)
+                        ? "In Stock"
+                        : p.status === "COMING_SOON"
+                          ? "Coming Soon"
+                          : "Out of Stock"}
                     </span>
                   </p>
 
@@ -133,8 +139,11 @@ export default function WishlistView() {
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      disabled={p.status !== "active"}
-                      onClick={() => add(p.slug, 1, p.shades?.[0]?.name)}
+                      disabled={!buyable(p)}
+                      onClick={() => {
+                        add(p.slug, 1, p.shades[0]?.name);
+                        toggleWish(p.slug);
+                      }}
                     >
                       <ShoppingBag className="size-3" /> Move to Bag
                     </Button>
@@ -154,7 +163,7 @@ export default function WishlistView() {
       )}
 
       <ul className="mt-10 grid grid-cols-2 gap-6 rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6 sm:grid-cols-3 lg:grid-cols-5">
-        {ASSURANCES.map(({ Icon, title, note }) => (
+        {assurances.map(({ Icon, title, note }) => (
           <li key={title} className="flex items-center gap-2.5">
             <Icon className="size-5 shrink-0 text-gold-600" />
             <span className="text-[0.66rem] leading-tight">

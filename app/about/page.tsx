@@ -12,6 +12,7 @@ import {
   Star,
   Ban,
 } from "lucide-react";
+import { getRatingSummary, getSettings } from "@/lib/api/server";
 
 export const metadata: Metadata = {
   title: "About Velastia",
@@ -43,17 +44,22 @@ const SCIENCE = [
   { name: "Peptide Blend", note: "Strengthens & improves skin texture", image: "/ingredients/peptide.png" },
 ];
 
-const STATS = [
-  { Icon: Sparkles, value: "50+", label: "Premium Ingredients" },
-  { Icon: FlaskConical, value: "100%", label: "Safe & Effective" },
-  { Icon: Users, value: "10K+", label: "Happy Customers" },
-  { Icon: Star, value: "4.9/5", label: "Average Rating" },
-  { Icon: Heart, value: "0%", label: "Compromise" },
-];
-
 const FREE_FROM = ["Paraben Free", "Sulphate Free", "Phthalate Free", "Mineral Oil Free", "Toxin Free"];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const [{ copy }, rating] = await Promise.all([getSettings(), getRatingSummary()]);
+  const stats = [
+    { Icon: Sparkles, value: "50+", label: "Premium Ingredients" },
+    { Icon: FlaskConical, value: "100%", label: "Safe & Effective" },
+    // Editable in the admin: Settings → Site Copy.
+    { Icon: Users, value: copy.happyCustomers, label: "Happy Customers" },
+    // The real average of published reviews, shown once there are some.
+    ...(rating.total > 0
+      ? [{ Icon: Star, value: `${rating.average.toFixed(1)}/5`, label: "Average Rating" }]
+      : []),
+    { Icon: Heart, value: "0%", label: "Compromise" },
+  ];
+
   return (
     <>
       {/* Hero */}
@@ -198,7 +204,7 @@ export default function AboutPage() {
       {/* Stats */}
       <section className="bg-plum-900">
         <ul className="container-vel grid grid-cols-2 gap-8 py-10 sm:grid-cols-3 lg:grid-cols-5">
-          {STATS.map(({ Icon, value, label }) => (
+          {stats.map(({ Icon, value, label }) => (
             <li key={label} className="flex items-center justify-center gap-3">
               <Icon className="size-7 shrink-0 text-gold-400" strokeWidth={1.3} />
               <span>

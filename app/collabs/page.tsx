@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { Sparkles, Gift, Megaphone, HandHeart } from "lucide-react";
 import PageBanner from "@/components/ui/PageBanner";
-import Button from "@/components/ui/Button";
-import { COLLABORATORS, INSTAGRAM } from "@/lib/content";
+import Avatar from "@/components/ui/Avatar";
+import CollabForm from "@/components/forms/CollabForm";
+import { getHomeContent } from "@/lib/api/server";
+import { INSTAGRAM } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Collaborations",
@@ -18,7 +20,9 @@ const BENEFITS = [
   { Icon: HandHeart, title: "Affiliate Program", note: "Your own discount code and a share of every sale it drives." },
 ];
 
-export default function CollabsPage() {
+export default async function CollabsPage() {
+  const { collaborators } = await getHomeContent();
+
   return (
     <>
       <PageBanner
@@ -30,18 +34,16 @@ export default function CollabsPage() {
 
       <div className="container-vel py-12">
         <ul className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
-          {COLLABORATORS.map((c) => (
+          {collaborators.map((c) => (
             <li
-              key={c.name}
+              key={c.id}
               className="flex flex-col items-center rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6 text-center"
             >
-              <Image
-                src={c.avatar}
-                alt={c.name}
-                width={84}
-                height={84}
-                className="size-21 rounded-full border border-gold-300/70 object-cover"
-                style={{ width: 84, height: 84 }}
+              <Avatar
+                src={c.avatarUrl}
+                name={c.name}
+                size={84}
+                className="border border-gold-300/70"
               />
               <p className="mt-3.5 text-[0.85rem] font-medium text-plum-800">{c.name}</p>
               <p className="text-[0.68rem] text-ink-soft">{c.role}</p>
@@ -89,11 +91,6 @@ export default function CollabsPage() {
               Are you a creator or makeup artist? Tell us about yourself and
               let&apos;s create magic together.
             </p>
-            <ul className="mt-7 space-y-2.5">
-              {INSTAGRAM.slice(0, 0).map((s) => (
-                <li key={s} />
-              ))}
-            </ul>
             <div className="mt-8 flex gap-3">
               {INSTAGRAM.slice(0, 4).map((src, i) => (
                 <div key={src} className="relative size-16 overflow-hidden rounded-md">
@@ -103,40 +100,7 @@ export default function CollabsPage() {
             </div>
           </div>
 
-          <form className="space-y-4">
-            {[
-              { id: "col-name", label: "Full Name", placeholder: "Your name" },
-              { id: "col-email", label: "Email Address", placeholder: "you@example.com", type: "email" },
-              { id: "col-handle", label: "Instagram / YouTube Handle", placeholder: "@yourhandle" },
-              { id: "col-followers", label: "Audience Size", placeholder: "e.g. 25,000" },
-            ].map((f) => (
-              <div key={f.id}>
-                <label htmlFor={f.id} className="label-caps mb-1.5 block text-[0.6rem] text-gold-400">
-                  {f.label}
-                </label>
-                <input
-                  id={f.id}
-                  type={f.type ?? "text"}
-                  placeholder={f.placeholder}
-                  className="w-full rounded-sm border border-gold-500/35 bg-plum-900/60 px-3.5 py-2.5 text-sm text-cream-100 placeholder:text-cream-200/35 focus:border-gold-400 focus:outline-none"
-                />
-              </div>
-            ))}
-            <div>
-              <label htmlFor="col-about" className="label-caps mb-1.5 block text-[0.6rem] text-gold-400">
-                Tell us about yourself
-              </label>
-              <textarea
-                id="col-about"
-                rows={4}
-                placeholder="What do you create, and why Velastia?"
-                className="w-full rounded-sm border border-gold-500/35 bg-plum-900/60 px-3.5 py-2.5 text-sm text-cream-100 placeholder:text-cream-200/35 focus:border-gold-400 focus:outline-none"
-              />
-            </div>
-            <Button type="submit" variant="gold" size="lg" className="w-full">
-              Apply for Collab
-            </Button>
-          </form>
+          <CollabForm />
         </div>
       </section>
     </>

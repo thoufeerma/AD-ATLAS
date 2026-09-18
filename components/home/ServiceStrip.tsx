@@ -1,20 +1,26 @@
 import { CreditCard, RotateCcw, Truck, Gift, Play, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { STORE } from "@/lib/products";
+import { getSettings } from "@/lib/api/server";
+import { inrPaise } from "@/lib/utils";
 
-const SERVICES = [
-  { Icon: CreditCard, title: "Secure", note: "Payments" },
-  { Icon: RotateCcw, title: "Easy Returns", note: "(7 Days)" },
-  { Icon: Truck, title: "Free Shipping", note: `above ₹${STORE.freeShippingAbove}` },
-  { Icon: Gift, title: "Exclusive Offers", note: "for Members" },
-];
+export default async function ServiceStrip() {
+  const { shipping } = await getSettings();
+  const freeAbove = shipping?.freeAbovePaise;
 
-export default function ServiceStrip() {
+  const services = [
+    { Icon: CreditCard, title: "Secure", note: "Payments" },
+    { Icon: RotateCcw, title: "Easy Returns", note: "(7 Days)" },
+    freeAbove != null
+      ? { Icon: Truck, title: "Free Shipping", note: `above ${inrPaise(freeAbove)}` }
+      : { Icon: Truck, title: "Fast Shipping", note: "across India" },
+    { Icon: Gift, title: "Exclusive Offers", note: "for Members" },
+  ];
+
   return (
     <section className="border-b border-gold-200/60 bg-cream-50">
       <div className="container-vel grid gap-8 py-7 lg:grid-cols-[1fr_auto] lg:items-center">
         <ul className="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
-          {SERVICES.map(({ Icon, title, note }) => (
+          {services.map(({ Icon, title, note }) => (
             <li key={title} className="flex items-center gap-3">
               <span className="grid size-9 shrink-0 place-items-center rounded-full border border-gold-300/70">
                 <Icon className="size-4 text-gold-600" />

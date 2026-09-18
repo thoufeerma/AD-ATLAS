@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import PageBanner from "@/components/ui/PageBanner";
 import ShopBrowser from "@/components/shop/ShopBrowser";
 import TrustStrip from "@/components/ui/TrustStrip";
+import { bannerHeadlines, getCategories, getProducts } from "@/lib/api/server";
 
 export const metadata: Metadata = {
   title: "Shop Collection",
@@ -12,6 +13,11 @@ export const metadata: Metadata = {
 export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
   const params = await searchParams;
   const category = typeof params.category === "string" ? params.category : undefined;
+  const [products, categories, [promo]] = await Promise.all([
+    getProducts(),
+    getCategories(),
+    bannerHeadlines("shop.sidebar"),
+  ]);
 
   return (
     <>
@@ -21,7 +27,12 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
         crumbs={[{ label: "Home", href: "/" }, { label: "Shop" }]}
         image="/brand/shop-banner.png"
       />
-      <ShopBrowser initialCategory={category} />
+      <ShopBrowser
+        products={products}
+        categories={categories}
+        promo={promo ?? null}
+        initialCategory={category}
+      />
       <TrustStrip />
     </>
   );

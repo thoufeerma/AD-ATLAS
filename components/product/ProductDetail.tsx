@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Heart,
   Share2,
@@ -15,16 +16,25 @@ import {
   ZoomIn,
   Check,
   ChevronRight,
+  PenLine,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import StarRating from "@/components/ui/StarRating";
 import ProductCard from "@/components/ui/ProductCard";
-import { useStore } from "@/lib/store";
-import { inr, cn } from "@/lib/utils";
-import { PRODUCTS, type Product } from "@/lib/products";
-import { INGREDIENTS, RATING_SUMMARY, TESTIMONIALS } from "@/lib/content";
+import ReviewForm from "@/components/reviews/ReviewForm";
+import RatingBars from "@/components/ui/RatingBars";
+import { useSettings } from "@/components/providers/SettingsProvider";
+import { MAX_QTY, useStore } from "@/lib/store";
+import { inrPaise, cn, productImage } from "@/lib/utils";
+import type { Product, ProductDetail as Detail } from "@/lib/api/types";
+import { INGREDIENTS } from "@/lib/content";
 
-const FEATURES = [
+/*
+ * The reference design is a lipstick page. Its feature claims, lip-care
+ * ingredients and how-to steps are true of lipsticks only, so they appear on
+ * lip products only — a face serum shouldn't claim to be "smudge proof".
+ */
+const LIPSTICK_FEATURES = [
   { Icon: Clock, label: "Long Lasting", note: "Up to 12 Hours" },
   { Icon: ShieldCheck, label: "Smudge Proof", note: "Transfer Resistant" },
   { Icon: Droplets, label: "Rich Pigment", note: "One Swipe Color" },
@@ -32,47 +42,87 @@ const FEATURES = [
   { Icon: Sparkles, label: "Dermatologically Tested", note: "Safe for All Skin Types" },
 ];
 
-const TABS = ["Why You'll Love It", "Ingredients", "How to Use", "Shipping & Returns"] as const;
-
-const HOW_TO_USE = [
+const LIP_HOW_TO_USE = [
   "Start with clean, exfoliated lips for the smoothest finish.",
   "Line the lips first if you want a sharper edge — the Velastia Lip Liner in a matching tone works best.",
   "Apply from the centre outwards, then press your lips together once.",
   "Build a second layer only where you want deeper colour.",
 ];
 
-const SHIPPING_NOTES = [
-  "Free shipping on all orders above ₹999.",
-  "Standard delivery in 3–5 business days, metro cities usually sooner.",
-  "Easy returns within 7 days of delivery on unopened products.",
-  "Refunds reach the original payment method in 5–7 business days.",
-];
+const LIP_CATEGORIES = ["lipstick", "lip-care"];
 
-export default function ProductDetail({ product }: { product: Product }) {
-  const shades = product.shades ?? [];
+/** The pairing the reference design suggests, in its order. */
+const PAIRS_WITH = ["lip-liner", "velvet-matte-liquid-lipstick", "makeup-fixer"];
+
+type Tab = "Why You'll Love It" | "Ingredients" | "How to Use" | "Shipping & Returns";
+
+export default function ProductDetail({
+  product,
+  catalog,
+}: {
+  product: Detail;
+  catalog: Product[];
+}) {
+  const router = useRouter();
+  const { shipping } = useSettings();
+
+  const isLip = LIP_CATEGORIES.includes(product.category.slug);
+  const isLipstick = product.category.slug === "lipstick";
+  const tabs: Tab[] = [
+    ...(product.benefits.length ? (["Why You'll Love It"] as const) : []),
+    ...(isLip ? (["Ingredients", "How to Use"] as const) : []),
+    "Shipping & Returns",
+  ];
+
+  const shades = product.shades;
+  const images = product.images.length ? product.images : [{ url: productImage(product), alt: null }];
+  const [imageIndex, setImageIndex] = useState(0);
   const [shade, setShade] = useState(shades[0]?.name);
   const [qty, setQty] = useState(1);
-  const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
+  const [tab, setTab] = useState<Tab>(tabs[0]);
   const [added, setAdded] = useState(false);
+  const [writing, setWriting] = useState(false);
 
   const add = useStore((s) => s.add);
   const wishlist = useStore((s) => s.wishlist);
   const toggleWish = useStore((s) => s.toggleWish);
   const wished = wishlist.includes(product.slug);
 
-  // "Frequently bought together" — the bundle from the reference, priced off the
-  // catalog rather than hardcoded, at the 15% the design advertises.
-  const bundle = ["lip-liner", "velvet-matte-liquid-lipstick", "makeup-fixer"]
-    .filter((s) => s !== product.slug)
-    .map((s) => PRODUCTS.find((p) => p.slug === s))
-    .filter((p): p is Product => !!p);
-  const bundleItems = [product, ...bundle].slice(0, 3);
-  const bundleFull = bundleItems.reduce((n, p) => n + p.price, 0);
-  const bundlePrice = Math.round(bundleFull * 0.85);
+  const comingSoon = product.status === "COMING_SOON";
+  const buyable = !comingSoon && product.inStock;
+  const purchasable = (p: Product) => p.status === "ACTIVE" && p.inStock;
 
-  const related = PRODUCTS.filter(
-    (p) => p.status === "active" && p.slug !== product.slug,
-  ).slice(0, 5);
+  // "Frequently bought together": the design's pairing, from whatever of it is
+  // on sale right now. Priced at the plain sum — no bundle discount exists at
+  // checkout, so none is advertised.
+  const bundleItems = buyable
+    ? [
+        product,
+        ...PAIRS_WITH.filter((s) => s !== product.slug)
+          .map((s) => catalog.find((p) => p.slug === s))
+          .filter((p): p is Product => !!p && purchasable(p)),
+      ].slice(0, 3)
+    : [];
+  const bundleTotal = bundleItems.reduce((n, p) => n + p.pricePaise, 0);
+
+  // Same category first, then the rest of what's on sale.
+  const related = catalog
+    .filter((p) => p.slug !== product.slug && purchasable(p))
+    .sort(
+      (a, b) =>
+        Number(b.category.slug === product.category.slug) -
+        Number(a.category.slug === product.category.slug),
+    )
+    .slice(0, 5);
+
+  const shippingNotes = [
+    shipping?.freeAbovePaise != null
+      ? `Free shipping on all orders above ${inrPaise(shipping.freeAbovePaise)}.`
+      : null,
+    "Standard delivery in 3–5 business days, metro cities usually sooner.",
+    "Easy returns within 7 days of delivery on unopened products.",
+    "Refunds reach the original payment method in 5–7 business days.",
+  ].filter((n): n is string => !!n);
 
   function handleAdd() {
     add(product.slug, qty, shade);
@@ -80,38 +130,53 @@ export default function ProductDetail({ product }: { product: Product }) {
     setTimeout(() => setAdded(false), 1800);
   }
 
+  function buyNow() {
+    add(product.slug, qty, shade);
+    router.push("/checkout");
+  }
+
+  async function share() {
+    const url = window.location.href;
+    try {
+      if (navigator.share) await navigator.share({ title: product.name, url });
+      else await navigator.clipboard.writeText(url);
+    } catch {
+      // Dismissing the share sheet rejects; nothing to do.
+    }
+  }
+
+  const { reviewSummary, reviews } = product;
+
   return (
     <>
       <div className="container-vel py-10">
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
           {/* Gallery */}
           <div className="flex gap-4">
-            <div className="hidden w-[68px] shrink-0 flex-col gap-3 sm:flex">
-              {[0, 1, 2, 3, 4].map((i) => (
-                <button
-                  key={i}
-                  className={cn(
-                    "relative aspect-square overflow-hidden rounded-md border bg-cream-100 transition-colors",
-                    i === 0 ? "border-gold-500" : "border-gold-200/70 hover:border-gold-400",
-                  )}
-                  aria-label={`View image ${i + 1}`}
-                >
-                  <Image
-                    src={product.image}
-                    alt=""
-                    fill
-                    sizes="68px"
-                    className="object-contain p-1"
-                  />
-                </button>
-              ))}
-            </div>
+            {images.length > 1 && (
+              <div className="hidden w-[68px] shrink-0 flex-col gap-3 sm:flex">
+                {images.map((img, i) => (
+                  <button
+                    key={img.url + i}
+                    onClick={() => setImageIndex(i)}
+                    className={cn(
+                      "relative aspect-square overflow-hidden rounded-md border bg-cream-100 transition-colors",
+                      i === imageIndex ? "border-gold-500" : "border-gold-200/70 hover:border-gold-400",
+                    )}
+                    aria-label={`View image ${i + 1}`}
+                    aria-pressed={i === imageIndex}
+                  >
+                    <Image src={img.url} alt="" fill sizes="68px" className="object-contain p-1" />
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="relative flex-1 overflow-hidden rounded-[var(--radius-card)] border border-gold-200/60 bg-cream-100">
               <div className="relative aspect-square">
                 <Image
-                  src={product.image}
-                  alt={product.name}
+                  src={images[imageIndex]?.url ?? images[0].url}
+                  alt={images[imageIndex]?.alt ?? product.name}
                   fill
                   priority
                   sizes="(min-width: 1024px) 45vw, 92vw"
@@ -126,7 +191,7 @@ export default function ProductDetail({ product }: { product: Product }) {
 
           {/* Buy panel */}
           <div>
-            {product.bestseller && (
+            {product.isBestseller && (
               <span className="label-caps inline-block rounded-full bg-gold-600 px-3 py-1 text-[0.55rem] text-white">
                 Best Seller
               </span>
@@ -137,18 +202,27 @@ export default function ProductDetail({ product }: { product: Product }) {
             </h1>
             {shade && <p className="mt-1 font-display text-xl text-gold-600">{shade}</p>}
 
-            {product.rating && (
-              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.75rem] text-ink-soft">
-                <StarRating value={product.rating} size={15} />
-                <span className="font-medium text-plum-800">{product.rating}</span>
-                <span>({product.reviewCount?.toLocaleString("en-IN")} reviews)</span>
-                <span className="text-gold-300">|</span>
-                <span>32 answered questions</span>
-              </div>
+            {product.rating.count > 0 && (
+              <a
+                href="#reviews"
+                className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.75rem] text-ink-soft hover:text-plum-800"
+              >
+                <StarRating value={product.rating.average} size={15} />
+                <span className="font-medium text-plum-800">{product.rating.average.toFixed(1)}</span>
+                <span>
+                  ({product.rating.count.toLocaleString("en-IN")}{" "}
+                  {product.rating.count === 1 ? "review" : "reviews"})
+                </span>
+              </a>
             )}
 
             <p className="mt-5 font-display text-[2rem] font-semibold leading-none text-plum-800">
-              {inr(product.price)}
+              {inrPaise(product.pricePaise)}
+              {product.compareAtPaise != null && product.compareAtPaise > product.pricePaise && (
+                <span className="ml-3 font-sans text-base font-normal text-ink-soft line-through">
+                  {inrPaise(product.compareAtPaise)}
+                </span>
+              )}
             </p>
             <p className="mt-1 text-[0.7rem] text-ink-soft">Inclusive of all taxes</p>
 
@@ -156,16 +230,18 @@ export default function ProductDetail({ product }: { product: Product }) {
               <p className="mt-4 text-sm leading-relaxed text-ink-soft">{product.blurb}</p>
             )}
 
-            <ul className="mt-6 space-y-2.5">
-              {FEATURES.map(({ Icon, label, note }) => (
-                <li key={label} className="flex items-center gap-2.5 text-[0.78rem]">
-                  <Icon className="size-4 shrink-0 text-gold-600" />
-                  <span className="text-plum-800">{label}</span>
-                  <span className="text-gold-300">|</span>
-                  <span className="text-ink-soft">{note}</span>
-                </li>
-              ))}
-            </ul>
+            {isLipstick && (
+              <ul className="mt-6 space-y-2.5">
+                {LIPSTICK_FEATURES.map(({ Icon, label, note }) => (
+                  <li key={label} className="flex items-center gap-2.5 text-[0.78rem]">
+                    <Icon className="size-4 shrink-0 text-gold-600" />
+                    <span className="text-plum-800">{label}</span>
+                    <span className="text-gold-300">|</span>
+                    <span className="text-ink-soft">{note}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {shades.length > 0 && (
               <div className="mt-7">
@@ -175,9 +251,10 @@ export default function ProductDetail({ product }: { product: Product }) {
                 <div className="mt-3 flex flex-wrap gap-3">
                   {shades.map((s) => (
                     <button
-                      key={s.name}
+                      key={s.code}
                       onClick={() => setShade(s.name)}
                       aria-label={s.name}
+                      aria-pressed={shade === s.name}
                       title={`${s.code} ${s.name}`}
                       className={cn(
                         "size-9 rounded-full transition-all",
@@ -192,37 +269,62 @@ export default function ProductDetail({ product }: { product: Product }) {
               </div>
             )}
 
-            <div className="mt-7 flex flex-wrap items-center gap-3">
+            {/* Availability */}
+            <p
+              className={cn(
+                "mt-6 flex items-center gap-1.5 text-[0.75rem]",
+                buyable ? "text-success" : "text-ink-soft",
+              )}
+            >
+              <span className={cn("size-1.5 rounded-full", buyable ? "bg-success" : "bg-gold-500")} />
+              {comingSoon
+                ? "Coming soon"
+                : !product.inStock
+                  ? "Out of stock"
+                  : product.lowStock
+                    ? "In stock — only a few left"
+                    : "In stock"}
+            </p>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3">
               <div className="flex items-center rounded-sm border border-gold-300/70">
                 <button
                   onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  disabled={!buyable}
                   aria-label="Decrease quantity"
-                  className="grid size-10 place-items-center text-plum-800 hover:text-gold-600"
+                  className="grid size-10 place-items-center text-plum-800 hover:text-gold-600 disabled:opacity-40"
                 >
                   <Minus className="size-3.5" />
                 </button>
                 <span className="w-9 text-center text-sm text-plum-800">{qty}</span>
                 <button
-                  onClick={() => setQty((q) => q + 1)}
+                  onClick={() => setQty((q) => Math.min(MAX_QTY, q + 1))}
+                  disabled={!buyable}
                   aria-label="Increase quantity"
-                  className="grid size-10 place-items-center text-plum-800 hover:text-gold-600"
+                  className="grid size-10 place-items-center text-plum-800 hover:text-gold-600 disabled:opacity-40"
                 >
                   <Plus className="size-3.5" />
                 </button>
               </div>
 
-              <Button onClick={handleAdd} size="lg" className="flex-1 sm:flex-none">
+              <Button onClick={handleAdd} disabled={!buyable} size="lg" className="flex-1 sm:flex-none">
                 {added ? (
                   <>
                     <Check className="size-3.5" /> Added
                   </>
+                ) : comingSoon ? (
+                  "Coming Soon"
+                ) : !product.inStock ? (
+                  "Out of Stock"
                 ) : (
                   "Add to Cart"
                 )}
               </Button>
-              <Button href="/checkout" variant="gold" size="lg" className="flex-1 sm:flex-none">
-                Buy Now
-              </Button>
+              {buyable && (
+                <Button onClick={buyNow} variant="gold" size="lg" className="flex-1 sm:flex-none">
+                  Buy Now
+                </Button>
+              )}
             </div>
 
             <div className="mt-5 flex items-center gap-6 text-[0.75rem]">
@@ -233,7 +335,10 @@ export default function ProductDetail({ product }: { product: Product }) {
                 <Heart className="size-4" fill={wished ? "currentColor" : "none"} />
                 {wished ? "In Wishlist" : "Add to Wishlist"}
               </button>
-              <button className="inline-flex items-center gap-1.5 text-ink-soft transition-colors hover:text-plum-800">
+              <button
+                onClick={share}
+                className="inline-flex items-center gap-1.5 text-ink-soft transition-colors hover:text-plum-800"
+              >
                 <Share2 className="size-4" /> Share
               </button>
             </div>
@@ -245,7 +350,7 @@ export default function ProductDetail({ product }: { product: Product }) {
       <section className="border-y border-gold-200/60 bg-cream-100">
         <div className="container-vel py-12">
           <div className="no-scrollbar -mx-4 flex gap-8 overflow-x-auto border-b border-gold-200/70 px-4">
-            {TABS.map((t) => (
+            {tabs.map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -263,7 +368,7 @@ export default function ProductDetail({ product }: { product: Product }) {
           <div className="mt-8">
             {tab === "Why You'll Love It" && (
               <ul className="grid gap-3 sm:grid-cols-2">
-                {(product.benefits ?? []).map((b) => (
+                {product.benefits.map((b) => (
                   <li key={b} className="flex items-start gap-2.5 text-sm text-ink-soft">
                     <Check className="mt-0.5 size-4 shrink-0 text-gold-600" />
                     {b}
@@ -288,7 +393,7 @@ export default function ProductDetail({ product }: { product: Product }) {
 
             {tab === "How to Use" && (
               <ol className="space-y-3">
-                {HOW_TO_USE.map((step, i) => (
+                {LIP_HOW_TO_USE.map((step, i) => (
                   <li key={step} className="flex items-start gap-3 text-sm text-ink-soft">
                     <span className="grid size-6 shrink-0 place-items-center rounded-full bg-plum-800 text-[0.65rem] text-gold-300">
                       {i + 1}
@@ -301,7 +406,7 @@ export default function ProductDetail({ product }: { product: Product }) {
 
             {tab === "Shipping & Returns" && (
               <ul className="space-y-3">
-                {SHIPPING_NOTES.map((n) => (
+                {shippingNotes.map((n) => (
                   <li key={n} className="flex items-start gap-2.5 text-sm text-ink-soft">
                     <Check className="mt-0.5 size-4 shrink-0 text-gold-600" />
                     {n}
@@ -322,18 +427,16 @@ export default function ProductDetail({ product }: { product: Product }) {
           </div>
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {shades.map((s) => (
-              <li key={s.name}>
+              <li key={s.code}>
                 <button
                   onClick={() => setShade(s.name)}
+                  aria-pressed={shade === s.name}
                   className={cn(
                     "block w-full overflow-hidden rounded-[var(--radius-card)] border transition-colors",
                     shade === s.name ? "border-gold-600" : "border-gold-200/70 hover:border-gold-400",
                   )}
                 >
-                  <span
-                    className="block aspect-4/3 w-full"
-                    style={{ backgroundColor: s.hex }}
-                  />
+                  <span className="block aspect-4/3 w-full" style={{ backgroundColor: s.hex }} />
                   <span className="block bg-cream-100 py-2.5 text-center text-[0.65rem] text-plum-800">
                     {s.code} {s.name.toUpperCase()}
                   </span>
@@ -345,81 +448,106 @@ export default function ProductDetail({ product }: { product: Product }) {
       )}
 
       {/* Ingredients that care */}
-      <section className="bg-cream-100 py-14">
-        <div className="container-vel">
-          <div className="mb-8 text-center">
-            <h2 className="font-display text-2xl tracking-[0.05em] text-plum-800">
-              INGREDIENTS THAT CARE
-            </h2>
-            <p className="mt-1 text-xs text-ink-soft">
-              Thoughtfully selected. Scientifically crafted.
-            </p>
+      {isLip && (
+        <section className="bg-cream-100 py-14">
+          <div className="container-vel">
+            <div className="mb-8 text-center">
+              <h2 className="font-display text-2xl tracking-[0.05em] text-plum-800">
+                INGREDIENTS THAT CARE
+              </h2>
+              <p className="mt-1 text-xs text-ink-soft">
+                Thoughtfully selected. Scientifically crafted.
+              </p>
+            </div>
+            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+              {INGREDIENTS.map((ing) => (
+                <li
+                  key={ing.name}
+                  className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-50 p-5 text-center"
+                >
+                  <span className="mx-auto grid size-11 place-items-center rounded-full bg-blush-100">
+                    <Leaf className="size-5 text-gold-600" />
+                  </span>
+                  <p className="mt-3 text-sm font-medium text-plum-800">{ing.name}</p>
+                  <p className="mt-1 text-[0.68rem] leading-relaxed text-ink-soft">{ing.benefit}</p>
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            {INGREDIENTS.map((ing) => (
-              <li
-                key={ing.name}
-                className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-50 p-5 text-center"
-              >
-                <span className="mx-auto grid size-11 place-items-center rounded-full bg-blush-100">
-                  <Leaf className="size-5 text-gold-600" />
-                </span>
-                <p className="mt-3 text-sm font-medium text-plum-800">{ing.name}</p>
-                <p className="mt-1 text-[0.68rem] leading-relaxed text-ink-soft">{ing.benefit}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Reviews */}
-      <section className="container-vel py-14">
+      <section id="reviews" className="container-vel scroll-mt-28 py-14">
         <h2 className="mb-8 text-center font-display text-2xl tracking-[0.05em] text-plum-800">
           CUSTOMER REVIEWS
         </h2>
 
         <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
           <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6 text-center">
-            <p className="font-display text-[3rem] font-semibold leading-none text-plum-800">
-              {RATING_SUMMARY.average}
-            </p>
-            <StarRating value={RATING_SUMMARY.average} size={16} className="mt-2 w-full justify-center" />
-            <p className="mt-1.5 text-[0.68rem] text-ink-soft">
-              Based on {product.reviewCount?.toLocaleString("en-IN")} reviews
-            </p>
-            <ul className="mt-5 space-y-1.5">
-              {RATING_SUMMARY.breakdown.map((b) => (
-                <li key={b.stars} className="flex items-center gap-2 text-[0.65rem] text-ink-soft">
-                  <span className="w-2 text-right">{b.stars}</span>
-                  <span className="text-gold-500">★</span>
-                  <span className="h-1 flex-1 overflow-hidden rounded-full bg-cream-300">
-                    <span className="block h-full rounded-full bg-gold-500" style={{ width: `${b.pct}%` }} />
-                  </span>
-                  <span className="w-7 text-right">{b.pct}%</span>
-                </li>
-              ))}
-            </ul>
+            {reviewSummary.total > 0 ? (
+              <>
+                <p className="font-display text-[3rem] font-semibold leading-none text-plum-800">
+                  {reviewSummary.average.toFixed(1)}
+                </p>
+                <StarRating value={reviewSummary.average} size={16} className="mt-2 w-full justify-center" />
+                <p className="mt-1.5 text-[0.68rem] text-ink-soft">
+                  Based on {reviewSummary.total.toLocaleString("en-IN")}{" "}
+                  {reviewSummary.total === 1 ? "review" : "reviews"}
+                </p>
+                <RatingBars rating={reviewSummary} />
+              </>
+            ) : (
+              <p className="py-4 text-sm leading-relaxed text-ink-soft">
+                No reviews yet. Tried it? Be the first to share your thoughts.
+              </p>
+            )}
+            {!comingSoon && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-5 w-full"
+                onClick={() => setWriting((w) => !w)}
+                aria-expanded={writing}
+              >
+                <PenLine className="size-3.5" /> Write a Review
+              </Button>
+            )}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {TESTIMONIALS.map((t) => (
-              <figure
-                key={t.name}
-                className="flex flex-col rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-4"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Image src={t.avatar} alt="" width={32} height={32} className="size-8 rounded-full object-cover" />
-                  <div>
-                    <figcaption className="text-[0.75rem] font-medium text-plum-800">{t.name}</figcaption>
-                    <p className="text-[0.6rem] text-success">Verified Buyer</p>
-                  </div>
-                </div>
-                <StarRating value={t.rating} size={11} className="mt-2.5" />
-                <blockquote className="mt-2 text-[0.73rem] leading-relaxed text-ink-soft">
-                  {t.quote}
-                </blockquote>
-              </figure>
-            ))}
+          <div className="space-y-4">
+            {writing && (
+              <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-5 sm:p-6">
+                <ReviewForm productSlug={product.slug} />
+              </div>
+            )}
+
+            {reviews.length > 0 && (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {reviews.map((r) => (
+                  <figure
+                    key={r.id}
+                    className="flex flex-col rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-4"
+                  >
+                    <figcaption className="text-[0.75rem] font-medium text-plum-800">
+                      {r.authorName}
+                    </figcaption>
+                    {r.isVerified && <p className="text-[0.6rem] text-success">Verified Buyer</p>}
+                    <StarRating value={r.rating} size={11} className="mt-2.5" />
+                    <blockquote className="mt-2 text-[0.73rem] leading-relaxed text-ink-soft">
+                      {r.body}
+                    </blockquote>
+                    <p className="mt-auto pt-3 text-[0.62rem] text-ink-soft/80">
+                      {new Date(r.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </figure>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -431,79 +559,86 @@ export default function ProductDetail({ product }: { product: Product }) {
       </section>
 
       {/* Frequently bought together */}
-      <section className="bg-cream-100 py-14">
-        <div className="container-vel">
-          <h2 className="mb-8 text-center font-display text-2xl tracking-[0.05em] text-plum-800">
-            FREQUENTLY BOUGHT TOGETHER
-          </h2>
+      {bundleItems.length > 1 && (
+        <section className="bg-cream-100 py-14">
+          <div className="container-vel">
+            <h2 className="mb-8 text-center font-display text-2xl tracking-[0.05em] text-plum-800">
+              FREQUENTLY BOUGHT TOGETHER
+            </h2>
 
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center">
-            <ul className="flex flex-wrap items-center justify-center gap-4">
-              {bundleItems.map((p, i) => (
-                <li key={p.slug} className="flex items-center gap-4">
-                  <div className="flex w-36 flex-col items-center text-center">
-                    <div className="relative aspect-square w-full overflow-hidden rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-50">
-                      <Image src={p.image} alt={p.name} fill sizes="144px" className="object-contain p-2" />
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center">
+              <ul className="flex flex-wrap items-center justify-center gap-4">
+                {bundleItems.map((p, i) => (
+                  <li key={p.slug} className="flex items-center gap-4">
+                    <div className="flex w-36 flex-col items-center text-center">
+                      <div className="relative aspect-square w-full overflow-hidden rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-50">
+                        <Image src={productImage(p)} alt={p.name} fill sizes="144px" className="object-contain p-2" />
+                      </div>
+                      <p className="mt-2 line-clamp-2 text-[0.7rem] text-ink">{p.name}</p>
+                      <p className="text-[0.75rem] font-medium text-plum-800">{inrPaise(p.pricePaise)}</p>
                     </div>
-                    <p className="mt-2 line-clamp-2 text-[0.7rem] text-ink">{p.name}</p>
-                    <p className="text-[0.75rem] font-medium text-plum-800">{inr(p.price)}</p>
-                  </div>
-                  {i < bundleItems.length - 1 && (
-                    <Plus className="size-4 shrink-0 text-gold-600" />
-                  )}
-                </li>
-              ))}
-            </ul>
+                    {i < bundleItems.length - 1 && <Plus className="size-4 shrink-0 text-gold-600" />}
+                  </li>
+                ))}
+              </ul>
 
-            <div className="rounded-[var(--radius-card)] border border-gold-300/60 bg-blush-100 p-6 text-center">
-              <p className="label-caps text-[0.62rem] text-plum-800">Buy All 3 &amp; Save 15%</p>
-              <p className="mt-3">
-                <span className="text-sm text-ink-soft line-through">{inr(bundleFull)}</span>{" "}
-                <span className="font-display text-2xl font-semibold text-plum-800">
-                  {inr(bundlePrice)}
-                </span>
-              </p>
-              <Button
-                className="mt-4 w-full"
-                onClick={() => bundleItems.forEach((p) => add(p.slug, 1, p.shades?.[0]?.name))}
-              >
-                Add Bundle to Cart
-              </Button>
+              <div className="rounded-[var(--radius-card)] border border-gold-300/60 bg-blush-100 p-6 text-center">
+                <p className="label-caps text-[0.62rem] text-plum-800">
+                  Buy All {bundleItems.length} Together
+                </p>
+                <p className="mt-3 font-display text-2xl font-semibold text-plum-800">
+                  {inrPaise(bundleTotal)}
+                </p>
+                <Button
+                  className="mt-4 w-full"
+                  onClick={() =>
+                    bundleItems.forEach((p) =>
+                      add(p.slug, 1, p.slug === product.slug ? shade : p.shades[0]?.name),
+                    )
+                  }
+                >
+                  Add All to Cart
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* You may also love */}
-      <section className="container-vel py-14">
-        <h2 className="mb-8 text-center font-display text-2xl tracking-[0.05em] text-plum-800">
-          YOU MAY ALSO LOVE
-        </h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          {related.map((p) => (
-            <ProductCard key={p.slug} product={p} />
-          ))}
-        </div>
-      </section>
+      {related.length > 0 && (
+        <section className="container-vel py-14">
+          <h2 className="mb-8 text-center font-display text-2xl tracking-[0.05em] text-plum-800">
+            YOU MAY ALSO LOVE
+          </h2>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {related.map((p) => (
+              <ProductCard key={p.slug} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Sticky buy bar */}
-      <div className="sticky bottom-0 z-40 border-t border-gold-500/25 bg-plum-800/97 backdrop-blur lg:hidden">
-        <div className="container-vel flex items-center gap-3 py-3">
-          <div className="relative size-10 shrink-0 overflow-hidden rounded-md bg-cream-100">
-            <Image src={product.image} alt="" fill sizes="40px" className="object-contain p-0.5" />
+      {buyable && (
+        <div className="sticky bottom-0 z-40 border-t border-gold-500/25 bg-plum-800/97 backdrop-blur lg:hidden">
+          <div className="container-vel flex items-center gap-3 py-3">
+            <div className="relative size-10 shrink-0 overflow-hidden rounded-md bg-cream-100">
+              <Image src={images[0].url} alt="" fill sizes="40px" className="object-contain p-0.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[0.7rem] text-cream-100">{product.name}</p>
+              <p className="text-[0.75rem] font-medium text-gold-300">{inrPaise(product.pricePaise)}</p>
+            </div>
+            <Button onClick={handleAdd} variant="gold" size="sm">
+              {added ? "Added" : "Add"}
+            </Button>
+            <Button onClick={buyNow} size="sm" className="bg-cream-50 text-plum-800 hover:bg-cream-200">
+              Buy Now
+            </Button>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[0.7rem] text-cream-100">{product.name}</p>
-            <p className="text-[0.75rem] font-medium text-gold-300">{inr(product.price)}</p>
-          </div>
-          <Button onClick={handleAdd} variant="gold" size="sm">
-            {added ? "Added" : "Add"}
-          </Button>
-          <Button href="/checkout" size="sm" className="bg-cream-50 text-plum-800 hover:bg-cream-200">
-            Buy Now
-          </Button>
         </div>
-      </div>
+      )}
     </>
   );
 }

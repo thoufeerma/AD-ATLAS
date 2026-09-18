@@ -9,6 +9,8 @@ Built from 22 design reference PNGs. They live in a local `reference/` folder th
 
 - Next.js 16 (App Router) + React 19 + TypeScript
 - Tailwind CSS v4 (CSS-first `@theme` tokens in [`app/globals.css`](app/globals.css))
+- Data from the Velastia API ([`backend/`](backend/)) — products, prices, stock,
+  reviews, content, settings, orders
 - `zustand` for cart + wishlist (persisted to `localStorage`)
 - `lucide-react` for icons — note that lucide has **dropped its brand icons**, so
   Instagram / YouTube / Facebook / X / Pinterest are hand-inlined in
@@ -16,39 +18,82 @@ Built from 22 design reference PNGs. They live in a local `reference/` folder th
 
 ## Running
 
+The storefront needs the API running (see [`backend/README.md`](backend/README.md)).
+
 ```bash
+cp .env.example .env.local   # API_URL=http://localhost:4000
 npm install
-npm run dev
+npm run dev                  # http://localhost:3000
 ```
 
-`npm run build` and `npm run lint` both pass clean.
+`npm run build` pre-renders every page from the API, so **the API must be running
+during a build** too. `npm run build` and `npm run lint` both pass clean.
+
+## How it talks to the API
+
+- **Pages** are server components that read from the API through
+  [`lib/api/server.ts`](lib/api/server.ts). Responses are cached for 60 seconds, so
+  an edit in the admin shows on the live site within about a minute. If the API
+  is briefly down, the last good page keeps being served.
+- **The browser** (cart pricing, checkout, forms, order tracking) calls this site's
+  own `/api/v1/*`, which [`next.config.ts`](next.config.ts) forwards to the API —
+  same origin, so no CORS setup is needed for the store.
+- **Prices are never computed in the browser.** The cart and checkout show the
+  API's quote ([`lib/cart.ts`](lib/cart.ts)); the API re-prices again when the
+  order is placed.
 
 ## Project phases
 
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 1 | Storefront frontend (repo root) | **Done** |
-| 2 | Admin / CMS frontend ([`admin/`](admin/)) | **Done** |
-| 3 | Backend API — Express + TypeScript + Prisma + PostgreSQL (`backend/`) | In progress |
+| 2 | Admin / CMS frontend ([`admin/`](admin/)) | **Done** — 15 screens still on sample data |
+| 3 | Backend API — Express + TypeScript + Prisma + PostgreSQL ([`backend/`](backend/)) | **Done** |
+| 3b | Storefront connected to the API | **Done** |
 | 4 | Razorpay — UPI, cards, netbanking, wallets | Not started |
 
-Everything renders from local data. There is no backend, no database and no auth
-yet: the login form, contact form, collab form and newsletter inputs are UI only,
-and checkout stashes the order in `sessionStorage` instead of charging a card.
+Until Razorpay is connected, **cash on delivery is the only payment method** at
+checkout; the online methods are shown as "Coming soon".
+
+## What the admin controls on the site
+
+| Admin screen | Where it shows |
+| --- | --- |
+| Products, Inventory, Categories | Shop, product pages, cart, wishlist — price, stock, shades, "out of stock", "only a few left" |
+| Reviews | Product pages, Reviews page, homepage rating panel (published reviews only) |
+| Coupons | Cart / checkout. The hero "10% OFF" medallion and Offers page callout follow the `welcomeOffer` coupon and disappear if it's switched off |
+| Banners | `global.topbar` → announcement bar, `shop.sidebar` → shop offer card, `cart.inline` → cart promo |
+| Offers & Deals | Offers page (display only — discounts come from coupons) |
+| FAQs, Testimonials, Collaborators | FAQs page, homepage, cart, Collabs page |
+| Pages | Shipping, Returns, Terms and Privacy policies |
+| Settings | Support contacts and company name (header, footer, contact, policies), the welcome offer, and marketing copy ("Loved by Thousands", "10K+ Happy Customers", "Why Velastia?") |
+| Orders | Track Order page |
+
+Policy text can include live values — `{{free_shipping_above}}`, `{{shipping_fee}}`,
+`{{support_email}}`, `{{legal_entity}}` and others listed in the page editor — so it
+stays correct when settings change.
+
+Shoppers' reviews, contact messages, newsletter sign-ups and collab applications
+are saved through the API. New reviews wait for approval in the admin.
 
 ## Where things live
 
 ```
 app/                    one folder per route
 components/
-  layout/               Header, Footer, Logo — the global shell
-  ui/                   Button, ProductCard, PageBanner, StarRating, …
+  layout/               Header, Footer, Logo, NewsletterForm — the global shell
+  providers/            SettingsProvider — store settings for client components
+  ui/                   Button, ProductCard, PageBanner, StarRating, Avatar, …
+  forms/ reviews/       contact, collab and review forms
   home/ shop/ product/ cart/ checkout/ auth/ order/
 lib/
-  products.ts           CATALOG SOURCE OF TRUTH — start here
-  content.ts            testimonials, collaborators, ingredients, FAQs
-  legal.ts              shipping / returns / terms / privacy copy
-  store.ts              cart + wishlist state and totals
+  api/server.ts         server-side reads (cached 60s)
+  api/client.ts         browser-side calls via /api/v1
+  api/types.ts          API response shapes (money in integer paise)
+  cart.ts               cart lines vs. live catalog, server quote hook
+  store.ts              cart + wishlist state (localStorage)
+  content.ts            ingredient cards + Instagram tiles (not in the CMS yet)
+  tokens.ts             fills {{tokens}} in CMS page text from settings
 public/                 imagery cropped out of the reference PNGs
 ```
 
@@ -63,21 +108,25 @@ other. These were resolved as follows:
    alongside `OFFERS` so the Contact page stays reachable.
 2. **Homepage** follows `B-1-Home-page-1.0v.png` (Our Story + stats + collab CTA),
    not the older `A-Home-page.png`.
-3. **Catalog conflicts** are resolved in favour of the newest screen and flagged
-   inline in `lib/products.ts`. The live ones:
+3. **Catalog conflicts** were resolved in favour of the newest screen when the
+   catalog was seeded (see `backend/prisma/seed.ts`):
    - Foundation is priced ₹1,099 / ₹1,299 / ₹1,499 across three screens → using ₹1,499
    - Cart, Wishlist and Order Success show a shade **"Royal Rose"** that isn't in
-     the product page's list of six → treated as an alias of "Rose Desire"
+     the product page's list of six → not seeded; "Rose Desire" is the first shade
    - Shop marks most products `COMING SOON` while Cart/Wishlist show six of them
-     purchasable → those six are `active`, the rest coming-soon
+     purchasable → those six are active, the rest coming-soon
    - Day Cream and Night Cream both at ₹1,987 looks like placeholder copy
 4. **Cart arithmetic** follows `M-Cart`, which is correct. `N-Order-Success`
    prints `Subtotal ₹4,031 / Discount ₹403` for lines that sum to ₹4,830 — its
    subtotal and discount are wrong, though its total (₹4,347) is right.
+   Discounts are exact to the paisa (10% of ₹799 is ₹79.90).
 5. **Checkout** had no full design, only a thumbnail on `web-page-design-Passed-01.png`.
    Built as Shipping → Payment → Review in the Cart's visual language.
-6. **Offers** had no design at all; assembled from the promotions the other
-   screens advertise.
+6. **Offers** had no design at all; it lists the offers switched on in the admin.
+7. **Claims the store can't honour yet were removed**: "Buy 2 Get 1 Free" and the
+   product page's "Buy all 3 & save 15%" (nothing at checkout applies them), and
+   "32 answered questions". The product page's lipstick feature list, lip
+   ingredients and how-to steps only show on lip products.
 
 ## Imagery
 
@@ -88,11 +137,15 @@ real brand assets before launch.** Product shots came from the Wishlist screen
 
 ## Known gaps
 
-- No designs exist for Account/Profile, Order History or Search results
-- The Track Order lookup reveals the sample order from the design; it does not query anything
-- Legal copy in `lib/legal.ts` was written to match the policies stated elsewhere
-  in the designs (7-day returns, free shipping above ₹999, Razorpay, Mumbai) because
-  the body text in screens I–L is not legible at the supplied resolution.
-  **Have it reviewed before launch.**
-- Node 22.7 is below the 22.13 that ESLint 9.39 wants. Linting works; a Node
-  bump would clear the `EBADENGINE` warning.
+- No designs exist for Account/Profile, Order History or Search results; customer
+  accounts don't exist yet, so the login page is UI only
+- The homepage hero slides are still in code (not banner-driven)
+- Marketing claims carried over from the designs ("Loved by Thousands",
+  "Trusted by 10,000+ Beautiful Souls", "10K+ Happy Customers") are editable under
+  Settings → Site Copy. Confirm or reword them before launch; the review counts
+  shown beside them are real
+- The policy text (seeded from `backend/prisma/content/policies.json`) was written
+  to match the policies stated elsewhere in the designs, because the body text in
+  screens I–L is not legible at the supplied resolution. It mentions email/SMS
+  tracking links and Razorpay, which aren't live yet. **Have it reviewed before
+  launch** — edit it under Pages in the admin

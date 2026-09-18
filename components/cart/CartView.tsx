@@ -16,30 +16,35 @@ import {
   Truck,
   Gift,
   ShoppingBag,
+  AlertCircle,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import StarRating from "@/components/ui/StarRating";
-import { useStore, useHydrated, resolveLines, cartTotals } from "@/lib/store";
-import { inr } from "@/lib/utils";
-import { STORE } from "@/lib/products";
-import { TESTIMONIALS } from "@/lib/content";
+import Avatar from "@/components/ui/Avatar";
+import QuoteSummary from "./QuoteSummary";
+import { useSettings } from "@/components/providers/SettingsProvider";
+import { MAX_QTY, useStore, useHydrated } from "@/lib/store";
+import { resolveCart, quoteItems, useQuote } from "@/lib/cart";
+import { api } from "@/lib/api/client";
+import type { Product, Quote, RatingSummary, Testimonial } from "@/lib/api/types";
+import { inrPaise, cn, productImage } from "@/lib/utils";
 
-const ASSURANCES = [
-  { Icon: BadgeCheck, title: "100% Authentic", note: "Products" },
-  { Icon: RotateCcw, title: "Easy Returns", note: "& Refunds" },
-  { Icon: ShieldCheck, title: "Secure Payments", note: "Razorpay" },
-  { Icon: Truck, title: "Free Shipping", note: `Above ₹${STORE.freeShippingAbove}` },
-];
-
-const WHY = [
-  "Dermatologically Tested",
-  "No Harmful Chemicals",
-  "Cruelty Free",
-  "Loved by Thousands",
-];
-
-export default function CartView() {
+export default function CartView({
+  products,
+  giftBanner,
+  rating,
+  testimonials,
+}: {
+  products: Product[];
+  /** The admin's "cart.inline" banner headline, if one is active. */
+  giftBanner: string | null;
+  rating: RatingSummary;
+  testimonials: Testimonial[];
+}) {
+  // The marketing lines here are editable in the admin (Settings → Site Copy).
+  const { shipping, copy } = useSettings();
   const [code, setCode] = useState("");
+  const [applying, setApplying] = useState(false);
   const [couponError, setCouponError] = useState("");
 
   const hydrated = useHydrated();
@@ -47,17 +52,28 @@ export default function CartView() {
   const coupon = useStore((s) => s.coupon);
   const setQty = useStore((s) => s.setQty);
   const remove = useStore((s) => s.remove);
-  const applyCoupon = useStore((s) => s.applyCoupon);
+  const setCoupon = useStore((s) => s.setCoupon);
   const removeCoupon = useStore((s) => s.removeCoupon);
 
-  const resolved = resolveLines(lines);
-  const t = cartTotals(resolved, coupon);
+  const rows = resolveCart(lines, products);
+  const items = quoteItems(rows);
+  const blocked = rows.some((r) => r.problem);
+  const { quote, error, stale } = useQuote(hydrated ? { items, couponCode: coupon } : null);
+
+  const assurances = [
+    { Icon: BadgeCheck, title: "100% Authentic", note: "Products" },
+    { Icon: RotateCcw, title: "Easy Returns", note: "& Refunds" },
+    { Icon: ShieldCheck, title: "Secure Payments", note: "Razorpay" },
+    shipping?.freeAbovePaise != null
+      ? { Icon: Truck, title: "Free Shipping", note: `Above ${inrPaise(shipping.freeAbovePaise)}` }
+      : { Icon: Truck, title: "Fast Shipping", note: "Across India" },
+  ];
 
   if (!hydrated) {
     return <div className="container-vel py-20" aria-hidden />;
   }
 
-  if (resolved.length === 0) {
+  if (rows.length === 0) {
     return (
       <div className="container-vel py-20 text-center">
         <ShoppingBag className="mx-auto size-10 text-gold-500" />
@@ -72,15 +88,36 @@ export default function CartView() {
     );
   }
 
-  function handleCoupon(e: React.FormEvent) {
+  // The code is checked against the API before it's kept, so an unknown code
+  // is reported right away instead of silently doing nothing.
+  async function handleCoupon(e: React.FormEvent) {
     e.preventDefault();
-    if (applyCoupon(code)) {
-      setCouponError("");
-      setCode("");
-    } else {
-      setCouponError(`That code is not valid. Try ${STORE.welcomeCode}.`);
+    const entered = code.trim();
+    if (!entered) return;
+    if (items.length === 0) {
+      setCouponError("Add an available item to your cart first.");
+      return;
+    }
+    setApplying(true);
+    setCouponError("");
+    try {
+      const q = await api<Quote>("POST", "/cart/quote", { items, couponCode: entered });
+      if (q.coupon) {
+        setCoupon(q.coupon.code);
+        setCode("");
+      } else {
+        setCouponError(q.couponError ?? "That code is not valid");
+      }
+    } catch (err) {
+      setCouponError((err as Error).message);
+    } finally {
+      setApplying(false);
     }
   }
+
+  // A kept code can stop applying later, e.g. when the cart drops below its
+  // minimum. Say why, rather than quietly dropping the discount.
+  const keptCodeProblem = coupon && quote && !stale && !quote.coupon ? quote.couponError : null;
 
   return (
     <div className="container-vel py-10">
@@ -97,82 +134,106 @@ export default function CartView() {
             </div>
 
             <ul>
-              {resolved.map((l) => (
-                <li
-                  key={`${l.slug}-${l.shade ?? ""}`}
-                  className="grid grid-cols-[64px_minmax(0,1fr)_36px] items-center gap-3 border-b border-gold-200/50 px-5 py-5 last:border-0 sm:grid-cols-[minmax(0,1fr)_84px_120px_88px_36px]"
-                >
-                  <div className="col-span-2 flex items-center gap-4 sm:col-span-1">
-                    <div className="relative size-16 shrink-0 overflow-hidden rounded-md border border-gold-200/70 bg-cream-50">
-                      <Image
-                        src={l.product.image}
-                        alt={l.product.name}
-                        fill
-                        sizes="64px"
-                        className="object-contain p-1"
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <Link
-                        href={`/product/${l.slug}`}
-                        className="text-sm text-plum-800 hover:text-gold-600"
-                      >
-                        {l.product.name}
-                      </Link>
-                      {l.product.descriptor && (
-                        <p className="mt-0.5 text-[0.68rem] text-ink-soft">
-                          {l.product.descriptor}
-                        </p>
-                      )}
-                      <p className="mt-0.5 text-[0.68rem] text-ink-soft">
-                        {[l.product.size, l.shade].filter(Boolean).join(" · ")}
-                      </p>
-                    </div>
-                  </div>
-
-                  <span className="hidden text-sm text-plum-800 sm:block">
-                    {inr(l.product.price)}
-                  </span>
-
-                  <div className="col-start-2 sm:col-start-auto">
-                    <div className="flex w-fit items-center rounded-sm border border-gold-300/70">
-                      <button
-                        onClick={() => setQty(l.slug, l.shade, l.qty - 1)}
-                        aria-label={`Decrease quantity of ${l.product.name}`}
-                        className="grid size-8 place-items-center text-plum-800 hover:text-gold-600"
-                      >
-                        <Minus className="size-3" />
-                      </button>
-                      <span className="w-8 text-center text-sm text-plum-800">{l.qty}</span>
-                      <button
-                        onClick={() => setQty(l.slug, l.shade, l.qty + 1)}
-                        aria-label={`Increase quantity of ${l.product.name}`}
-                        className="grid size-8 place-items-center text-plum-800 hover:text-gold-600"
-                      >
-                        <Plus className="size-3" />
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => remove(l.slug, l.shade)}
-                      className="mt-1.5 text-[0.65rem] text-ink-soft hover:text-plum-800"
-                    >
-                      Remove
-                    </button>
-                  </div>
-
-                  <span className="hidden text-sm font-medium text-plum-800 sm:block">
-                    {inr(l.lineTotal)}
-                  </span>
-
-                  <button
-                    onClick={() => remove(l.slug, l.shade)}
-                    aria-label={`Remove ${l.product.name}`}
-                    className="grid size-7 place-items-center justify-self-end rounded-full border border-gold-200 text-ink-soft transition-colors hover:border-plum-800 hover:text-plum-800"
+              {rows.map((r) => {
+                const p = r.product;
+                const name = p?.name ?? "Unavailable product";
+                return (
+                  <li
+                    key={`${r.slug}-${r.shade ?? ""}`}
+                    className={cn(
+                      "grid grid-cols-[64px_minmax(0,1fr)_36px] items-center gap-3 border-b border-gold-200/50 px-5 py-5 last:border-0 sm:grid-cols-[minmax(0,1fr)_84px_120px_88px_36px]",
+                      r.problem && "bg-blush-100/50",
+                    )}
                   >
-                    <X className="size-3" />
-                  </button>
-                </li>
-              ))}
+                    <div className="col-span-2 flex items-center gap-4 sm:col-span-1">
+                      <div
+                        className={cn(
+                          "relative size-16 shrink-0 overflow-hidden rounded-md border border-gold-200/70 bg-cream-50",
+                          r.problem && "opacity-50",
+                        )}
+                      >
+                        {p && (
+                          <Image
+                            src={productImage(p)}
+                            alt={p.name}
+                            fill
+                            sizes="64px"
+                            className="object-contain p-1"
+                          />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        {p ? (
+                          <Link
+                            href={`/product/${r.slug}`}
+                            className="text-sm text-plum-800 hover:text-gold-600"
+                          >
+                            {p.name}
+                          </Link>
+                        ) : (
+                          <p className="text-sm text-plum-800">{name}</p>
+                        )}
+                        {p?.descriptor && (
+                          <p className="mt-0.5 text-[0.68rem] text-ink-soft">{p.descriptor}</p>
+                        )}
+                        <p className="mt-0.5 text-[0.68rem] text-ink-soft">
+                          {[p?.size, r.shade].filter(Boolean).join(" · ")}
+                        </p>
+                        {r.problem && (
+                          <p className="mt-1 flex items-center gap-1 text-[0.68rem] font-medium text-danger">
+                            <AlertCircle className="size-3.5 shrink-0" /> {r.problem}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <span className="hidden text-sm text-plum-800 sm:block">
+                      {p ? inrPaise(p.pricePaise) : "—"}
+                    </span>
+
+                    <div className="col-start-2 sm:col-start-auto">
+                      {!r.problem && (
+                        <div className="flex w-fit items-center rounded-sm border border-gold-300/70">
+                          <button
+                            onClick={() => setQty(r.slug, r.shade, r.qty - 1)}
+                            aria-label={`Decrease quantity of ${name}`}
+                            className="grid size-8 place-items-center text-plum-800 hover:text-gold-600"
+                          >
+                            <Minus className="size-3" />
+                          </button>
+                          <span className="w-8 text-center text-sm text-plum-800">{r.qty}</span>
+                          <button
+                            onClick={() => setQty(r.slug, r.shade, r.qty + 1)}
+                            disabled={r.qty >= MAX_QTY}
+                            aria-label={`Increase quantity of ${name}`}
+                            className="grid size-8 place-items-center text-plum-800 hover:text-gold-600 disabled:opacity-40"
+                          >
+                            <Plus className="size-3" />
+                          </button>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => remove(r.slug, r.shade)}
+                        className="mt-1.5 text-[0.65rem] text-ink-soft hover:text-plum-800"
+                      >
+                        Remove
+                      </button>
+                    </div>
+
+                    <span className="hidden text-sm font-medium text-plum-800 sm:block">
+                      {p && !r.problem ? inrPaise(p.pricePaise * r.qty) : "—"}
+                    </span>
+
+                    <button
+                      onClick={() => remove(r.slug, r.shade)}
+                      aria-label={`Remove ${name}`}
+                      className="grid size-7 place-items-center justify-self-end rounded-full border border-gold-200 text-ink-soft transition-colors hover:border-plum-800 hover:text-plum-800"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -183,7 +244,7 @@ export default function CartView() {
           </div>
 
           <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {ASSURANCES.map(({ Icon, title, note }) => (
+            {assurances.map(({ Icon, title, note }) => (
               <li key={title} className="flex items-center gap-2.5">
                 <span className="grid size-9 shrink-0 place-items-center rounded-full border border-gold-300/70">
                   <Icon className="size-4 text-gold-600" />
@@ -211,8 +272,13 @@ export default function CartView() {
               </div>
               {coupon ? (
                 <div className="flex items-center gap-3">
-                  <span className="label-caps rounded-sm bg-gold-600 px-3 py-1.5 text-[0.6rem] text-white">
-                    {coupon} applied
+                  <span
+                    className={cn(
+                      "label-caps rounded-sm px-3 py-1.5 text-[0.6rem]",
+                      keptCodeProblem ? "bg-cream-200/20 text-cream-100" : "bg-gold-600 text-white",
+                    )}
+                  >
+                    {keptCodeProblem ? coupon : `${coupon} applied`}
                   </span>
                   <button
                     type="button"
@@ -232,31 +298,34 @@ export default function CartView() {
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
                     placeholder="Enter coupon code"
-                    className="w-full rounded-sm border border-gold-500/35 bg-cream-50 px-3 py-2 text-sm text-plum-800 placeholder:text-ink-soft/60 focus:border-gold-400 focus:outline-none sm:w-52"
+                    autoCapitalize="characters"
+                    className="w-full rounded-sm border border-gold-500/35 bg-cream-50 px-3 py-2 text-sm uppercase text-plum-800 placeholder:normal-case placeholder:text-ink-soft/60 focus:border-gold-400 focus:outline-none sm:w-52"
                   />
-                  <Button type="submit" variant="gold">
-                    Apply
+                  <Button type="submit" variant="gold" disabled={applying || !code.trim()}>
+                    {applying ? "…" : "Apply"}
                   </Button>
                 </div>
               )}
             </div>
-            {couponError && (
-              <p className="mt-3 text-[0.68rem] text-blush-200">{couponError}</p>
+            {(couponError || keptCodeProblem) && (
+              <p role="alert" className="mt-3 text-[0.68rem] text-blush-200">
+                {couponError || `${coupon} isn't applied: ${keptCodeProblem}.`}
+              </p>
             )}
           </form>
 
           {/* Gift banner */}
-          <div className="mt-6 flex items-center gap-5 rounded-[var(--radius-card)] bg-blush-100 p-6">
-            <Gift className="size-8 shrink-0 text-gold-600" />
-            <div>
-              <h3 className="font-display text-lg text-plum-800">
-                Complimentary gift on orders above {inr(STORE.giftAbove)}
-              </h3>
-              <p className="mt-0.5 text-xs text-ink-soft">
-                Luxury deserves a little extra. Treat yourself!
-              </p>
+          {giftBanner && (
+            <div className="mt-6 flex items-center gap-5 rounded-[var(--radius-card)] bg-blush-100 p-6">
+              <Gift className="size-8 shrink-0 text-gold-600" />
+              <div>
+                <h3 className="font-display text-lg text-plum-800">{giftBanner}</h3>
+                <p className="mt-0.5 text-xs text-ink-soft">
+                  Luxury deserves a little extra. Treat yourself!
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Summary */}
@@ -264,36 +333,33 @@ export default function CartView() {
           <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6">
             <h2 className="font-display text-xl text-plum-800">Order Summary</h2>
 
-            <dl className="mt-5 space-y-3 text-sm">
-              <Row label={`Subtotal (${t.itemCount} Items)`} value={inr(t.subtotal)} />
-              {t.discount > 0 && (
-                <Row label="Discount" value={`- ${inr(t.discount)}`} tone="success" />
-              )}
-              <Row
-                label="Shipping"
-                value={t.shipping === 0 ? "FREE" : inr(t.shipping)}
-                tone={t.shipping === 0 ? "success" : undefined}
+            {items.length > 0 ? (
+              <QuoteSummary
+                quote={quote}
+                stale={stale || !!error}
+                totalLabel="Estimated Total"
+                showSavings
               />
-              {t.discount > 0 && (
-                <div className="border-t border-gold-200/70 pt-3">
-                  <Row label="You Save" value={inr(t.discount)} tone="success" />
-                </div>
-              )}
-            </dl>
+            ) : (
+              <p className="mt-4 text-sm text-ink-soft">None of the items in your cart can be bought right now.</p>
+            )}
 
-            <div className="mt-4 flex items-end justify-between border-t border-gold-200/70 pt-4">
-              <div>
-                <p className="text-sm font-medium text-plum-800">Estimated Total</p>
-                <p className="text-[0.65rem] text-ink-soft">Inclusive of all taxes</p>
-              </div>
-              <p className="font-display text-2xl font-semibold text-plum-800">
-                {inr(t.total)}
+            {(error || blocked) && (
+              <p role="alert" className="mt-4 flex items-start gap-2 rounded-sm bg-blush-100 px-3 py-2.5 text-[0.72rem] text-plum-800">
+                <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-danger" />
+                {error ?? "Remove the unavailable items above to continue."}
               </p>
-            </div>
+            )}
 
-            <Button href="/checkout" className="mt-5 w-full" size="lg">
-              <Lock className="size-3.5" /> Proceed to Checkout
-            </Button>
+            {error || blocked || items.length === 0 ? (
+              <Button className="mt-5 w-full" size="lg" disabled>
+                <Lock className="size-3.5" /> Proceed to Checkout
+              </Button>
+            ) : (
+              <Button href="/checkout" className="mt-5 w-full" size="lg">
+                <Lock className="size-3.5" /> Proceed to Checkout
+              </Button>
+            )}
             <p className="mt-2.5 text-center text-[0.65rem] text-ink-soft">
               Guaranteed safe &amp; secure checkout
             </p>
@@ -313,7 +379,7 @@ export default function CartView() {
           <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6">
             <h3 className="font-display text-lg text-plum-800">Why Velastia?</h3>
             <ul className="mt-4 space-y-3">
-              {WHY.map((w) => (
+              {copy.whyVelastia.map((w) => (
                 <li key={w} className="flex items-center gap-2.5 text-[0.75rem] text-ink-soft">
                   <BadgeCheck className="size-4 shrink-0 text-gold-600" />
                   {w}
@@ -325,58 +391,40 @@ export default function CartView() {
       </div>
 
       {/* Social proof */}
-      <section className="mt-12 rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-7">
-        <div className="grid gap-7 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-center">
-          <div>
-            <h2 className="font-display text-xl leading-snug text-plum-800">
-              Trusted by 10,000+ Beautiful Souls
-            </h2>
-            <div className="mt-2 flex items-center gap-2">
-              <StarRating value={4.8} size={15} />
-              <span className="text-[0.7rem] text-ink-soft">4.8/5 (2,345 Reviews)</span>
-            </div>
-          </div>
-          <ul className="grid gap-5 sm:grid-cols-3">
-            {TESTIMONIALS.slice(0, 3).map((t) => (
-              <li key={t.name}>
-                <div className="flex items-center gap-2.5">
-                  <Image
-                    src={t.avatar}
-                    alt=""
-                    width={30}
-                    height={30}
-                    className="size-[30px] rounded-full object-cover"
-                  />
-                  <div>
-                    <p className="text-[0.72rem] font-medium text-plum-800">{t.name}</p>
-                    <StarRating value={t.rating} size={9} />
-                  </div>
+      {testimonials.length > 0 && (
+        <section className="mt-12 rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-7">
+          <div className="grid gap-7 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-center">
+            <div>
+              <h2 className="font-display text-xl leading-snug text-plum-800">
+                {copy.socialProofHeadline}
+              </h2>
+              {rating.total > 0 && (
+                <div className="mt-2 flex items-center gap-2">
+                  <StarRating value={rating.average} size={15} />
+                  <span className="text-[0.7rem] text-ink-soft">
+                    {rating.average.toFixed(1)}/5 ({rating.total.toLocaleString("en-IN")}{" "}
+                    {rating.total === 1 ? "Review" : "Reviews"})
+                  </span>
                 </div>
-                <p className="mt-2 text-[0.7rem] leading-relaxed text-ink-soft">{t.quote}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function Row({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone?: "success";
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <dt className="text-ink-soft">{label}</dt>
-      <dd className={tone === "success" ? "font-medium text-success" : "text-plum-800"}>
-        {value}
-      </dd>
+              )}
+            </div>
+            <ul className="grid gap-5 sm:grid-cols-3">
+              {testimonials.slice(0, 3).map((t) => (
+                <li key={t.id}>
+                  <div className="flex items-center gap-2.5">
+                    <Avatar src={t.avatarUrl} name={t.author} size={30} />
+                    <div>
+                      <p className="text-[0.72rem] font-medium text-plum-800">{t.author}</p>
+                      <StarRating value={t.rating} size={9} />
+                    </div>
+                  </div>
+                  <p className="mt-2 text-[0.7rem] leading-relaxed text-ink-soft">{t.quote}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

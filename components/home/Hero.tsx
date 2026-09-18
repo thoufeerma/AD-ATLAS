@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, FlaskConical, Leaf, ShieldCheck, Heart } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { STORE } from "@/lib/products";
+import { useSettings } from "@/components/providers/SettingsProvider";
 import { cn } from "@/lib/utils";
 
 const SLIDES = [
@@ -33,6 +33,7 @@ const BADGES = [
 ];
 
 export default function Hero() {
+  const { welcomeOffer } = useSettings();
   const [i, setI] = useState(0);
   const slide = SLIDES[i];
 
@@ -105,17 +106,21 @@ export default function Hero() {
           />
         </div>
 
-        {/* Introductory offer medallion */}
-        <div className="pointer-events-none absolute right-6 top-10 hidden size-[132px] flex-col items-center justify-center rounded-full border border-gold-400/70 bg-plum-800/92 text-center xl:flex">
-          <span className="label-caps text-[0.44rem] text-gold-300">Introductory Offer</span>
-          <span className="mt-1 font-display text-3xl font-semibold leading-none text-gold-300">
-            {STORE.welcomeDiscountPct}% OFF
-          </span>
-          <span className="mt-1 text-[0.5rem] text-cream-200/80">on your first order</span>
-          <span className="label-caps mt-1.5 bg-gold-600 px-2 py-0.5 text-[0.48rem] text-white">
-            Code: {STORE.welcomeCode}
-          </span>
-        </div>
+        {/* Introductory offer medallion — only while the welcome code is live */}
+        {welcomeOffer && (
+          <div className="pointer-events-none absolute right-6 top-10 hidden size-[132px] flex-col items-center justify-center rounded-full border border-gold-400/70 bg-plum-800/92 text-center xl:flex">
+            <span className="label-caps text-[0.44rem] text-gold-300">Introductory Offer</span>
+            <span className="mt-1 font-display text-3xl font-semibold leading-none text-gold-300">
+              {welcomeOffer.percent}% OFF
+            </span>
+            <span className="mt-1 text-[0.5rem] text-cream-200/80">
+              {welcomeOffer.firstOrderOnly ? "on your first order" : "on your order"}
+            </span>
+            <span className="label-caps mt-1.5 bg-gold-600 px-2 py-0.5 text-[0.48rem] text-white">
+              Code: {welcomeOffer.code}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Controls */}

@@ -16,11 +16,11 @@ export default function Logo({
 
   return (
     <Link href="/" className={cn("flex shrink-0 items-center gap-2.5", className)}>
-      <Mark className="size-9 shrink-0" />
+      <Mark className="size-8 shrink-0 sm:size-9" />
       <span className="flex flex-col leading-none">
         <span
           className={cn(
-            "font-display text-[1.45rem] font-semibold tracking-[0.14em]",
+            "font-display text-[1.2rem] font-semibold tracking-[0.14em] sm:text-[1.45rem]",
             wordmark,
           )}
         >

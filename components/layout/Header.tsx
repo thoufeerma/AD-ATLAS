@@ -7,7 +7,6 @@ import { Search, User, Heart, ShoppingBag, Menu, X } from "lucide-react";
 import { Instagram, Youtube, Facebook } from "@/components/ui/SocialIcons";
 import { useStore, useHydrated } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { STORE } from "@/lib/products";
 import Logo from "./Logo";
 
 /**
@@ -26,13 +25,8 @@ const NAV = [
   { href: "/contact", label: "Contact" },
 ];
 
-const TICKER = [
-  `FREE SHIPPING ON ORDERS ABOVE ₹${STORE.freeShippingAbove}`,
-  "BUY 2 GET 1 FREE",
-  `10% OFF ON FIRST ORDER – USE CODE: ${STORE.welcomeCode}`,
-];
-
-export default function Header() {
+/** `announcements` are the admin's active "global.topbar" banners, in order. */
+export default function Header({ announcements }: { announcements: string[] }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -49,9 +43,9 @@ export default function Header() {
       <div className="bg-plum-900 text-cream-100">
         <div className="container-vel flex h-9 items-center justify-between gap-4">
           <ul className="flex flex-1 items-center justify-center gap-6 overflow-hidden lg:justify-start">
-            {TICKER.map((t, i) => (
+            {announcements.map((t, i) => (
               <li
-                key={t}
+                key={`${i}:${t}`}
                 className={cn(
                   "label-caps whitespace-nowrap text-[0.62rem] text-cream-200/90",
                   i === 0 ? "block" : "hidden md:block",
@@ -77,7 +71,7 @@ export default function Header() {
 
       {/* Main bar */}
       <div className="border-b border-gold-200/50 bg-cream-50/95 backdrop-blur">
-        <div className="container-vel flex h-[72px] items-center justify-between gap-6">
+        <div className="container-vel flex h-[72px] items-center justify-between gap-3 sm:gap-6">
           <button
             className="lg:hidden"
             onClick={() => setOpen(true)}
@@ -110,7 +104,7 @@ export default function Header() {
             })}
           </nav>
 
-          <div className="flex items-center gap-4 text-plum-800 sm:gap-5">
+          <div className="flex items-center gap-3.5 text-plum-800 sm:gap-5">
             <Link href="/shop" aria-label="Search" className="hover:text-gold-600">
               <Search className="size-[19px]" />
             </Link>

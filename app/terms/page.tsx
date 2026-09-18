@@ -1,12 +1,8 @@
-import type { Metadata } from "next";
-import PolicyPage from "@/components/ui/PolicyPage";
-import { TERMS } from "@/lib/legal";
+import PolicyPage, { policyMetadata } from "@/components/ui/PolicyPage";
 
-export const metadata: Metadata = {
-  title: "Terms & Conditions",
-  description: "The terms that govern your use of the Velastia store.",
-};
+// Text is edited in the admin on the Pages screen.
+export const generateMetadata = () => policyMetadata("terms");
 
 export default function Page() {
-  return <PolicyPage policy={TERMS} />;
+  return <PolicyPage slug="terms" />;
 }

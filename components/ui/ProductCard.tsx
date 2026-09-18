@@ -4,8 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { useStore } from "@/lib/store";
-import { inr, cn } from "@/lib/utils";
-import type { Product } from "@/lib/products";
+import { inrPaise, cn, productImage } from "@/lib/utils";
+import type { Product } from "@/lib/api/types";
 import StarRating from "./StarRating";
 
 export default function ProductCard({
@@ -21,7 +21,8 @@ export default function ProductCard({
   const wishlist = useStore((s) => s.wishlist);
   const toggleWish = useStore((s) => s.toggleWish);
   const wished = wishlist.includes(product.slug);
-  const comingSoon = product.status === "coming-soon";
+  const comingSoon = product.status === "COMING_SOON";
+  const soldOut = !comingSoon && !product.inStock;
 
   return (
     <article
@@ -30,7 +31,7 @@ export default function ProductCard({
         className,
       )}
     >
-      {product.bestseller && (
+      {product.isBestseller && (
         <span className="label-caps absolute left-0 top-3 z-10 bg-plum-800 px-2.5 py-1 text-[0.55rem] text-gold-300">
           Best Seller
         </span>
@@ -50,7 +51,7 @@ export default function ProductCard({
       <Link href={`/product/${product.slug}`} className="block">
         <div className="relative aspect-4/3 overflow-hidden bg-cream-200/50">
           <Image
-            src={product.image}
+            src={productImage(product)}
             alt={product.name}
             fill
             sizes="(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 90vw"
@@ -67,22 +68,27 @@ export default function ProductCard({
           {product.name}
         </Link>
 
-        {showRating && product.rating && (
-          <StarRating value={product.rating} size={12} className="mt-1.5" />
+        {showRating && product.rating.count > 0 && (
+          <StarRating value={product.rating.average} size={12} className="mt-1.5" />
         )}
 
         <p className="mt-1.5 font-display text-[1.05rem] font-semibold text-plum-800">
-          {inr(product.price)}
+          {inrPaise(product.pricePaise)}
+          {product.compareAtPaise != null && product.compareAtPaise > product.pricePaise && (
+            <span className="ml-1.5 font-sans text-[0.72rem] font-normal text-ink-soft line-through">
+              {inrPaise(product.compareAtPaise)}
+            </span>
+          )}
         </p>
 
         <div className="mt-auto w-full pt-3">
-          {comingSoon ? (
+          {comingSoon || soldOut ? (
             <span className="label-caps block w-full rounded-sm bg-cream-300 py-2.5 text-[0.6rem] text-ink-soft">
-              Coming Soon
+              {comingSoon ? "Coming Soon" : "Out of Stock"}
             </span>
           ) : (
             <button
-              onClick={() => add(product.slug, 1, product.shades?.[0]?.name)}
+              onClick={() => add(product.slug, 1, product.shades[0]?.name)}
               className="label-caps block w-full rounded-sm bg-plum-800 py-2.5 text-[0.6rem] text-cream-50 transition-colors hover:bg-gold-600"
             >
               Add to Cart

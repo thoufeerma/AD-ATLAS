@@ -3,43 +3,43 @@
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Lock, ChevronLeft, Truck, ShoppingBag } from "lucide-react";
+import { Check, Lock, ChevronLeft, Truck, ShoppingBag, AlertCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { useStore, useHydrated, resolveLines, cartTotals } from "@/lib/store";
-import { inr, cn } from "@/lib/utils";
-import { STORE } from "@/lib/products";
+import QuoteSummary from "@/components/cart/QuoteSummary";
+import { useSettings } from "@/components/providers/SettingsProvider";
+import { useStore, useHydrated } from "@/lib/store";
+import { resolveCart, quoteItems, useQuote } from "@/lib/cart";
+import { api } from "@/lib/api/client";
+import type { PaymentMethod, PlacedOrder, Product } from "@/lib/api/types";
+import { inrPaise, cn, looksLikeEmail, productImage } from "@/lib/utils";
+import { LAST_ORDER_KEY, type LastOrder } from "./lastOrder";
 
 /**
  * No full checkout design exists in the reference set — only the small
  * Shipping / Payment / Review thumbnail on web-page-design-Passed-01.png.
  * This follows that three-step structure, styled to match M-Cart.
  *
- * Razorpay is not wired up yet: PAY_METHODS mirrors what Razorpay Checkout
- * will offer (UPI, cards, netbanking, wallets) plus COD, and placing an order
- * currently just clears the cart and routes to the success page. The real
- * integration lands in the backend phase.
+ * Orders are created by the API, which re-prices everything from the database
+ * and reserves stock. Online payment (Razorpay) isn't connected yet, so cash
+ * on delivery is the only method that can be chosen for now.
  */
 const STEPS = ["Shipping", "Payment", "Review"] as const;
 type Step = (typeof STEPS)[number];
 
-const PAY_METHODS = [
-  { id: "upi", label: "UPI", note: "Google Pay, PhonePe, Paytm & more" },
-  { id: "card", label: "Credit / Debit Card", note: "Visa, Mastercard, RuPay, Amex" },
-  { id: "netbanking", label: "Net Banking", note: "All major Indian banks" },
-  { id: "wallet", label: "Wallets", note: "Paytm, Amazon Pay, Mobikwik" },
-  { id: "cod", label: "Cash on Delivery", note: "Pay when your order arrives" },
+const PAY_METHODS: { id: PaymentMethod; label: string; note: string; available: boolean }[] = [
+  { id: "UPI", label: "UPI", note: "Google Pay, PhonePe, Paytm & more", available: false },
+  { id: "CARD", label: "Credit / Debit Card", note: "Visa, Mastercard, RuPay, Amex", available: false },
+  { id: "NETBANKING", label: "Net Banking", note: "All major Indian banks", available: false },
+  { id: "WALLET", label: "Wallets", note: "Paytm, Amazon Pay, Mobikwik", available: false },
+  { id: "COD", label: "Cash on Delivery", note: "Pay when your order arrives", available: true },
 ];
-
-/** Placeholder until the backend issues real order numbers. */
-function makeOrderId() {
-  return `VL${Date.now().toString().slice(-8)}`;
-}
 
 type Address = {
   fullName: string;
   phone: string;
   email: string;
-  address: string;
+  line1: string;
+  line2: string;
   city: string;
   state: string;
   pincode: string;
@@ -49,30 +49,70 @@ const EMPTY: Address = {
   fullName: "",
   phone: "",
   email: "",
-  address: "",
+  line1: "",
+  line2: "",
   city: "",
   state: "",
   pincode: "",
 };
 
-export default function CheckoutFlow() {
+/** "+91 98765 43210" → "9876543210", matching what the API accepts. */
+const mobileDigits = (s: string) => s.replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
+
+/** Same rules the API applies, with wording meant for shoppers. */
+function validate(a: Address): Partial<Record<keyof Address, string>> {
+  const errors: Partial<Record<keyof Address, string>> = {};
+  if (a.fullName.trim().length < 2) errors.fullName = "Enter your full name.";
+  if (!/^[6-9]\d{9}$/.test(mobileDigits(a.phone))) errors.phone = "Enter a 10-digit mobile number.";
+  if (!looksLikeEmail(a.email)) errors.email = "Enter a valid email address.";
+  if (a.line1.trim().length < 3) errors.line1 = "Enter your street address.";
+  if (a.city.trim().length < 2) errors.city = "Enter your city.";
+  if (a.state.trim().length < 2) errors.state = "Enter your state.";
+  if (!/^[1-9]\d{5}$/.test(a.pincode.trim())) errors.pincode = "Enter a 6-digit pincode.";
+  return errors;
+}
+
+export default function CheckoutFlow({ products }: { products: Product[] }) {
   const router = useRouter();
+  const { shipping } = useSettings();
   const [step, setStep] = useState<Step>("Shipping");
   const [addr, setAddr] = useState<Address>(EMPTY);
-  const [method, setMethod] = useState("upi");
+  const [showErrors, setShowErrors] = useState(false);
+  const [method, setMethod] = useState<PaymentMethod>("COD");
   const [placing, setPlacing] = useState(false);
+  const [placeError, setPlaceError] = useState("");
+  const [placed, setPlaced] = useState(false);
 
   const hydrated = useHydrated();
   const lines = useStore((s) => s.lines);
   const coupon = useStore((s) => s.coupon);
   const clear = useStore((s) => s.clear);
 
-  const resolved = resolveLines(lines);
-  const t = cartTotals(resolved, coupon);
+  const rows = resolveCart(lines, products);
+  const items = quoteItems(rows);
+  const blocked = rows.some((r) => r.problem);
+  const errors = validate(addr);
+  const shippingValid = Object.keys(errors).length === 0;
+
+  // With a valid email the quote also checks first-order-only codes.
+  const email = looksLikeEmail(addr.email) ? addr.email.trim() : null;
+  const { quote, error, stale } = useQuote(
+    hydrated && !blocked ? { items, couponCode: coupon, email } : null,
+  );
 
   if (!hydrated) return <div className="container-vel py-20" aria-hidden />;
 
-  if (resolved.length === 0) {
+  // The cart is emptied the moment the order exists; hold this screen until
+  // the confirmation page takes over, instead of flashing "cart is empty".
+  if (placed) {
+    return (
+      <div role="status" className="container-vel py-24 text-center text-sm text-ink-soft">
+        Order placed — taking you to your confirmation…
+      </div>
+    );
+  }
+
+  if (rows.length === 0) {
     return (
       <div className="container-vel py-20 text-center">
         <ShoppingBag className="mx-auto size-10 text-gold-500" />
@@ -85,39 +125,90 @@ export default function CheckoutFlow() {
     );
   }
 
-  const shippingValid =
-    addr.fullName.trim() !== "" &&
-    /^\d{10}$/.test(addr.phone.replace(/\D/g, "")) &&
-    /\S+@\S+\.\S+/.test(addr.email) &&
-    addr.address.trim() !== "" &&
-    addr.city.trim() !== "" &&
-    addr.state.trim() !== "" &&
-    /^\d{6}$/.test(addr.pincode);
+  if (blocked) {
+    return (
+      <div className="container-vel py-20 text-center">
+        <AlertCircle className="mx-auto size-10 text-gold-500" />
+        <h2 className="mt-5 font-display text-2xl text-plum-800">Your cart needs a look</h2>
+        <p className="mt-2 text-sm text-ink-soft">
+          Some items are no longer available. Remove them from your cart to continue.
+        </p>
+        <Button href="/cart" className="mt-7">
+          Back to Cart
+        </Button>
+      </div>
+    );
+  }
 
-  function placeOrder() {
-    setPlacing(true);
-    // Stands in for the Razorpay order + payment handshake.
-    const orderId = makeOrderId();
-    try {
-      sessionStorage.setItem(
-        "velastia-last-order",
-        JSON.stringify({
-          orderId,
-          placedAt: new Date().toISOString(),
-          addr,
-          method,
-          lines: resolved,
-          totals: t,
-        }),
-      );
-    } catch {
-      // sessionStorage can throw in private modes; the success page has defaults.
+  const couponProblem = coupon && quote && !stale && !quote.coupon ? quote.couponError : null;
+  const ready = !!quote && !stale && !error;
+
+  // How far the discounted subtotal is from free shipping.
+  const freeAbove = shipping?.freeAbovePaise;
+  const shortOfFree =
+    quote && freeAbove != null ? freeAbove - (quote.subtotalPaise - quote.discountPaise) : null;
+
+  function continueToPayment() {
+    if (!shippingValid) {
+      setShowErrors(true);
+      return;
     }
-    clear();
-    router.push(`/order-success?order=${orderId}`);
+    setStep("Payment");
+  }
+
+  async function placeOrder() {
+    if (!quote || !ready || placing) return;
+    setPlacing(true);
+    setPlaceError("");
+    try {
+      const order = await api<PlacedOrder>("POST", "/orders", {
+        items,
+        // Only send a code the latest quote actually applied; the API refuses
+        // an order whose entered code no longer applies.
+        couponCode: quote.coupon ? coupon : null,
+        email: addr.email.trim(),
+        name: addr.fullName.trim(),
+        phone: mobileDigits(addr.phone),
+        shipping: {
+          line1: addr.line1.trim(),
+          line2: addr.line2.trim() || null,
+          city: addr.city.trim(),
+          state: addr.state.trim(),
+          pincode: addr.pincode.trim(),
+        },
+        paymentMethod: method,
+      });
+
+      const saved: LastOrder = {
+        order,
+        email: addr.email.trim(),
+        address: {
+          name: addr.fullName.trim(),
+          phone: mobileDigits(addr.phone),
+          line1: addr.line1.trim(),
+          line2: addr.line2.trim(),
+          city: addr.city.trim(),
+          state: addr.state.trim(),
+          pincode: addr.pincode.trim(),
+        },
+      };
+      try {
+        sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify(saved));
+      } catch {
+        // Storage can throw in private modes; the success page copes without it.
+      }
+      setPlaced(true);
+      clear();
+      router.push(`/order-success?order=${order.number}`);
+    } catch (err) {
+      setPlaceError((err as Error).message);
+      setPlacing(false);
+    }
   }
 
   const stepIndex = STEPS.indexOf(step);
+  const fieldError = (k: keyof Address) => (showErrors ? errors[k] : undefined);
+  const set = (k: keyof Address) => (v: string) => setAddr((a) => ({ ...a, [k]: v }));
 
   return (
     <div className="container-vel py-10">
@@ -168,75 +259,104 @@ export default function CheckoutFlow() {
               <h2 className="font-display text-xl text-plum-800">Shipping Details</h2>
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 <Field
+                  id="fullName"
                   label="Full Name"
                   value={addr.fullName}
-                  onChange={(v) => setAddr({ ...addr, fullName: v })}
+                  onChange={set("fullName")}
+                  error={fieldError("fullName")}
                   placeholder="Ananya Sharma"
+                  autoComplete="name"
                 />
                 <Field
-                  label="Phone Number"
+                  id="phone"
+                  label="Mobile Number"
                   value={addr.phone}
-                  onChange={(v) => setAddr({ ...addr, phone: v })}
+                  onChange={set("phone")}
+                  error={fieldError("phone")}
                   placeholder="98765 43210"
-                  inputMode="numeric"
+                  inputMode="tel"
+                  autoComplete="tel-national"
                 />
                 <Field
+                  id="email"
                   label="Email Address"
                   value={addr.email}
-                  onChange={(v) => setAddr({ ...addr, email: v })}
+                  onChange={set("email")}
+                  error={fieldError("email")}
                   placeholder="you@example.com"
                   type="email"
+                  autoComplete="email"
                   className="sm:col-span-2"
                 />
                 <Field
+                  id="line1"
                   label="Address"
-                  value={addr.address}
-                  onChange={(v) => setAddr({ ...addr, address: v })}
+                  value={addr.line1}
+                  onChange={set("line1")}
+                  error={fieldError("line1")}
                   placeholder="123, Lotus Residency, MG Road, Andheri West"
+                  autoComplete="address-line1"
                   className="sm:col-span-2"
                 />
                 <Field
+                  id="line2"
+                  label="Apartment, Landmark (optional)"
+                  value={addr.line2}
+                  onChange={set("line2")}
+                  placeholder="Near City Mall"
+                  autoComplete="address-line2"
+                  className="sm:col-span-2"
+                />
+                <Field
+                  id="city"
                   label="City"
                   value={addr.city}
-                  onChange={(v) => setAddr({ ...addr, city: v })}
+                  onChange={set("city")}
+                  error={fieldError("city")}
                   placeholder="Mumbai"
+                  autoComplete="address-level2"
                 />
                 <Field
+                  id="state"
                   label="State"
                   value={addr.state}
-                  onChange={(v) => setAddr({ ...addr, state: v })}
+                  onChange={set("state")}
+                  error={fieldError("state")}
                   placeholder="Maharashtra"
+                  autoComplete="address-level1"
                 />
                 <Field
+                  id="pincode"
                   label="Pincode"
                   value={addr.pincode}
-                  onChange={(v) => setAddr({ ...addr, pincode: v })}
+                  onChange={set("pincode")}
+                  error={fieldError("pincode")}
                   placeholder="400053"
                   inputMode="numeric"
+                  autoComplete="postal-code"
                 />
               </div>
 
-              <div className="mt-6 flex items-center gap-3 rounded-sm bg-blush-100 px-4 py-3">
-                <Truck className="size-4 shrink-0 text-gold-600" />
-                <p className="text-[0.72rem] text-ink-soft">
-                  Standard shipping, 3–5 business days.{" "}
-                  {t.shipping === 0
-                    ? "Free on this order."
-                    : `${inr(t.shipping)} — add ${inr(STORE.freeShippingAbove - t.subtotal)} more for free shipping.`}
-                </p>
-              </div>
+              {quote && (
+                <div className="mt-6 flex items-center gap-3 rounded-sm bg-blush-100 px-4 py-3">
+                  <Truck className="size-4 shrink-0 text-gold-600" />
+                  <p className="text-[0.72rem] text-ink-soft">
+                    Standard shipping, 3–5 business days.{" "}
+                    {quote.shippingPaise === 0
+                      ? "Free on this order."
+                      : shortOfFree != null && shortOfFree > 0
+                        ? `${inrPaise(quote.shippingPaise)} — add ${inrPaise(shortOfFree)} more for free shipping.`
+                        : `${inrPaise(quote.shippingPaise)}.`}
+                  </p>
+                </div>
+              )}
 
-              <Button
-                className="mt-7 w-full sm:w-auto"
-                size="lg"
-                disabled={!shippingValid}
-                onClick={() => setStep("Payment")}
-              >
+              <Button className="mt-7 w-full sm:w-auto" size="lg" onClick={continueToPayment}>
                 Continue to Payment
               </Button>
-              {!shippingValid && (
-                <p className="mt-2.5 text-[0.68rem] text-ink-soft">
-                  Enter a 10-digit phone, a valid email and a 6-digit pincode to continue.
+              {showErrors && !shippingValid && (
+                <p role="alert" className="mt-2.5 text-[0.72rem] text-danger">
+                  Please fix the highlighted fields to continue.
                 </p>
               )}
             </>
@@ -246,7 +366,8 @@ export default function CheckoutFlow() {
             <>
               <h2 className="font-display text-xl text-plum-800">Payment Method</h2>
               <p className="mt-1 text-[0.72rem] text-ink-soft">
-                Processed securely through Razorpay.
+                Online payment through Razorpay is coming soon. For now, pay in cash when
+                your order arrives.
               </p>
 
               <ul className="mt-6 space-y-3">
@@ -254,23 +375,31 @@ export default function CheckoutFlow() {
                   <li key={m.id}>
                     <label
                       className={cn(
-                        "flex cursor-pointer items-center gap-3.5 rounded-sm border px-4 py-3.5 transition-colors",
-                        method === m.id
-                          ? "border-gold-500 bg-cream-50"
-                          : "border-gold-200 hover:border-gold-400",
+                        "flex items-center gap-3.5 rounded-sm border px-4 py-3.5 transition-colors",
+                        !m.available
+                          ? "cursor-not-allowed border-gold-200/60 opacity-55"
+                          : method === m.id
+                            ? "cursor-pointer border-gold-500 bg-cream-50"
+                            : "cursor-pointer border-gold-200 hover:border-gold-400",
                       )}
                     >
                       <input
                         type="radio"
                         name="pay"
                         checked={method === m.id}
+                        disabled={!m.available}
                         onChange={() => setMethod(m.id)}
                         className="size-4 accent-plum-800"
                       />
-                      <span>
+                      <span className="flex-1">
                         <span className="block text-sm text-plum-800">{m.label}</span>
                         <span className="block text-[0.68rem] text-ink-soft">{m.note}</span>
                       </span>
+                      {!m.available && (
+                        <span className="label-caps rounded-sm bg-cream-300 px-2 py-0.5 text-[0.52rem] text-ink-soft">
+                          Coming Soon
+                        </span>
+                      )}
                     </label>
                   </li>
                 ))}
@@ -296,7 +425,13 @@ export default function CheckoutFlow() {
                   <h3 className="label-caps text-[0.6rem] text-gold-700">Deliver To</h3>
                   <p className="mt-2 text-sm text-plum-800">{addr.fullName}</p>
                   <p className="mt-0.5 text-[0.72rem] leading-relaxed text-ink-soft">
-                    {addr.address}
+                    {addr.line1}
+                    {addr.line2 && (
+                      <>
+                        <br />
+                        {addr.line2}
+                      </>
+                    )}
                     <br />
                     {addr.city}, {addr.state} – {addr.pincode}
                     <br />
@@ -308,34 +443,51 @@ export default function CheckoutFlow() {
                   <p className="mt-2 text-sm text-plum-800">
                     {PAY_METHODS.find((m) => m.id === method)?.label}
                   </p>
-                  <p className="mt-0.5 text-[0.72rem] text-ink-soft">via Razorpay</p>
+                  <p className="mt-0.5 text-[0.72rem] text-ink-soft">
+                    {method === "COD" ? "Pay when your order arrives" : "via Razorpay"}
+                  </p>
                 </div>
               </div>
 
               <ul className="mt-6 divide-y divide-gold-200/60 border-y border-gold-200/60">
-                {resolved.map((l) => (
-                  <li key={`${l.slug}-${l.shade ?? ""}`} className="flex items-center gap-3.5 py-3.5">
-                    <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-cream-50">
-                      <Image src={l.product.image} alt="" fill sizes="48px" className="object-contain p-1" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[0.8rem] text-plum-800">{l.product.name}</p>
-                      <p className="text-[0.68rem] text-ink-soft">
-                        {[l.shade, l.product.size, `Qty: ${l.qty}`].filter(Boolean).join(" · ")}
-                      </p>
-                    </div>
-                    <span className="text-sm text-plum-800">{inr(l.lineTotal)}</span>
-                  </li>
-                ))}
+                {rows.map((r) =>
+                  r.product ? (
+                    <li key={`${r.slug}-${r.shade ?? ""}`} className="flex items-center gap-3.5 py-3.5">
+                      <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-cream-50">
+                        <Image src={productImage(r.product)} alt="" fill sizes="48px" className="object-contain p-1" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[0.8rem] text-plum-800">{r.product.name}</p>
+                        <p className="text-[0.68rem] text-ink-soft">
+                          {[r.shade, r.product.size, `Qty: ${r.qty}`].filter(Boolean).join(" · ")}
+                        </p>
+                      </div>
+                      <span className="text-sm text-plum-800">
+                        {inrPaise(r.product.pricePaise * r.qty)}
+                      </span>
+                    </li>
+                  ) : null,
+                )}
               </ul>
 
+              {placeError && (
+                <p role="alert" className="mt-5 flex items-start gap-2 rounded-sm bg-blush-100 px-3.5 py-3 text-[0.75rem] text-plum-800">
+                  <AlertCircle className="mt-0.5 size-4 shrink-0 text-danger" />
+                  {placeError}
+                </p>
+              )}
+
               <div className="mt-7 flex flex-wrap gap-3">
-                <Button variant="outline" onClick={() => setStep("Payment")}>
+                <Button variant="outline" onClick={() => setStep("Payment")} disabled={placing}>
                   <ChevronLeft className="size-3.5" /> Back
                 </Button>
-                <Button size="lg" onClick={placeOrder} disabled={placing}>
+                <Button size="lg" onClick={placeOrder} disabled={placing || !ready}>
                   <Lock className="size-3.5" />
-                  {placing ? "Placing Order…" : `Place Order · ${inr(t.total)}`}
+                  {placing
+                    ? "Placing Order…"
+                    : quote && ready
+                      ? `Place Order · ${inrPaise(quote.totalPaise)}`
+                      : "Updating total…"}
                 </Button>
               </div>
             </>
@@ -346,31 +498,13 @@ export default function CheckoutFlow() {
         <aside className="lg:sticky lg:top-28 lg:self-start">
           <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6">
             <h2 className="font-display text-xl text-plum-800">Order Summary</h2>
-            <dl className="mt-5 space-y-3 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-ink-soft">Subtotal ({t.itemCount} Items)</dt>
-                <dd className="text-plum-800">{inr(t.subtotal)}</dd>
-              </div>
-              {t.discount > 0 && (
-                <div className="flex justify-between">
-                  <dt className="text-ink-soft">Discount ({coupon})</dt>
-                  <dd className="font-medium text-success">- {inr(t.discount)}</dd>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <dt className="text-ink-soft">Shipping</dt>
-                <dd className={t.shipping === 0 ? "font-medium text-success" : "text-plum-800"}>
-                  {t.shipping === 0 ? "FREE" : inr(t.shipping)}
-                </dd>
-              </div>
-            </dl>
-            <div className="mt-4 flex items-end justify-between border-t border-gold-200/70 pt-4">
-              <div>
-                <p className="text-sm font-medium text-plum-800">Total</p>
-                <p className="text-[0.65rem] text-ink-soft">Inclusive of all taxes</p>
-              </div>
-              <p className="font-display text-2xl font-semibold text-plum-800">{inr(t.total)}</p>
-            </div>
+            <QuoteSummary quote={quote} stale={stale || !!error} totalLabel="Total" />
+            {(error || couponProblem) && (
+              <p role="alert" className="mt-4 flex items-start gap-2 rounded-sm bg-blush-100 px-3 py-2.5 text-[0.72rem] text-plum-800">
+                <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-danger" />
+                {error ?? `${coupon} isn't applied: ${couponProblem}.`}
+              </p>
+            )}
           </div>
         </aside>
       </div>
@@ -379,37 +513,54 @@ export default function CheckoutFlow() {
 }
 
 function Field({
+  id,
   label,
   value,
   onChange,
+  error,
   placeholder,
   type = "text",
   inputMode,
+  autoComplete,
   className,
 }: {
+  id: string;
   label: string;
   value: string;
   onChange: (v: string) => void;
+  error?: string;
   placeholder?: string;
   type?: string;
-  inputMode?: "numeric" | "text";
+  inputMode?: "numeric" | "tel" | "text";
+  autoComplete?: string;
   className?: string;
 }) {
-  const id = label.toLowerCase().replace(/\s+/g, "-");
+  const inputId = `co-${id}`;
   return (
     <div className={className}>
-      <label htmlFor={id} className="label-caps mb-1.5 block text-[0.6rem] text-gold-700">
+      <label htmlFor={inputId} className="label-caps mb-1.5 block text-[0.6rem] text-gold-700">
         {label}
       </label>
       <input
-        id={id}
+        id={inputId}
         type={type}
         inputMode={inputMode}
+        autoComplete={autoComplete}
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-sm border border-gold-200 bg-cream-50 px-3.5 py-2.5 text-sm text-plum-800 placeholder:text-ink-soft/50 focus:border-gold-500 focus:outline-none"
+        aria-invalid={!!error}
+        aria-describedby={error ? `${inputId}-error` : undefined}
+        className={cn(
+          "w-full rounded-sm border bg-cream-50 px-3.5 py-2.5 text-sm text-plum-800 placeholder:text-ink-soft/50 focus:outline-none",
+          error ? "border-danger focus:border-danger" : "border-gold-200 focus:border-gold-500",
+        )}
       />
+      {error && (
+        <p id={`${inputId}-error`} className="mt-1 text-[0.68rem] text-danger">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
