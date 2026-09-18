@@ -24,6 +24,7 @@ import {
   adminCollaboratorsRouter,
   adminOffersRouter,
 } from "./routes/admin/resources.js";
+import { adminSettingsRouter, adminPagesRouter } from "./routes/admin/settings.js";
 
 export function createApp() {
   const app = express();
@@ -76,6 +77,8 @@ export function createApp() {
   admin.use("/banners", adminBannersRouter);
   admin.use("/collaborators", adminCollaboratorsRouter);
   admin.use("/activity", adminActivityRouter);
+  admin.use("/settings", adminSettingsRouter);
+  admin.use("/pages", adminPagesRouter);
 
   v1.use("/admin", admin);
   app.use("/api/v1", v1);

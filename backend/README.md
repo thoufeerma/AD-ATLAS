@@ -65,13 +65,19 @@ All routes are under `/api/v1`. Every error has the same shape:
 | --- | --- | --- |
 | GET | `/categories` | Visible categories with product counts |
 | GET | `/products?category=&bestseller=&sort=` | Active + coming-soon products |
-| GET | `/products/:slug` | Detail with shades, images, rating, reviews |
+| GET | `/products/:slug` | Detail with shades, images, rating breakdown, latest reviews |
+| GET | `/reviews?limit=` · `/reviews/summary` | Published reviews; store-wide rating |
+| POST | `/reviews` | Submit a review — held as pending until an admin publishes it |
 | GET | `/content/home` | Testimonials, collaborators, banners |
-| GET | `/faqs` · `/pages/:slug` · `/settings/public` | CMS content |
+| GET | `/banners` · `/offers` | Active banners (by placement); offers in their date window |
+| GET | `/faqs` · `/pages/:slug` · `/settings/public` | CMS content. `welcomeOffer` is read from the live coupon and is `null` when it's off |
 | POST | `/cart/quote` | Authoritative cart pricing — writes nothing |
 | POST | `/orders` | Place an order |
 | GET | `/orders/track?number=&email=` | Needs **both** — see Security |
 | POST | `/contact` · `/newsletter` · `/collab-applications` | Forms |
+
+Public POSTs are rate-limited per IP (in memory): orders 20, reviews 5 and each
+form 10 per 10 minutes. Behind a proxy, make sure it sets `X-Forwarded-For`.
 
 ### Admin — session cookie required (except `/auth/login`)
 
@@ -88,6 +94,10 @@ All routes are under `/api/v1`. Every error has the same shape:
 | `/admin/categories` · `/coupons` · `/offers` | CRUD | — |
 | `/admin/faqs` · `/testimonials` · `/banners` · `/collaborators` | CRUD | Content Manager |
 | `/admin/activity` | GET | — |
+| `/admin/settings` | GET | Content Manager |
+| `/admin/settings/store` · `/welcome-offer` | PUT | super admin only |
+| `/admin/settings/copy` | PUT | Content Manager |
+| `/admin/pages` · `/:slug` | GET · PATCH | Content Manager |
 
 Roles follow the permissions drawn on the admin's Users & Roles screen.
 
@@ -149,9 +159,9 @@ but localhost**, because it places orders and edits stock.
 - **Media uploads.** Image URLs are stored as storefront-relative paths. Real
   uploads need object storage (S3, Cloudinary, R2).
 - **Email / SMS** for order confirmations and shipping updates.
-- **Remaining CMS resources**: blog posts, pages, media library, campaigns,
-  subscribers, settings, shipping/tax editing, admin user management. The tables
-  exist; the routes don't.
-- **Login throttling is in-memory** — correct for one instance, needs Redis once
-  the API runs on several.
+- **Remaining CMS resources**: blog posts, media library, campaigns, subscribers,
+  shipping/tax editing, admin user management. The tables exist; the routes don't.
+  (Pages and store settings are done.)
+- **Login throttling and rate limits are in-memory** — correct for one instance,
+  need Redis once the API runs on several.
 - The smoke suite is end-to-end only; there are no unit tests yet.

@@ -5,6 +5,7 @@ import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../db.js";
 import { quoteCart } from "../../lib/pricing.js";
 import { conflict, notFound, parse } from "../../lib/http.js";
+import { rateLimit } from "../../middleware/rateLimit.js";
 
 export const checkoutRouter = Router();
 
@@ -67,7 +68,10 @@ async function uniqueOrderNumber(tx: Prisma.TransactionClient) {
   throw conflict("Could not allocate an order number, please retry");
 }
 
-checkoutRouter.post("/orders", async (req, res) => {
+// A real shopper places one order, maybe retries a couple of times.
+const orderLimit = rateLimit({ name: "order", max: 20, windowMs: 10 * 60_000 });
+
+checkoutRouter.post("/orders", orderLimit, async (req, res) => {
   const body = parse(OrderBody, req.body);
 
   const order = await prisma.$transaction(async (tx) => {
@@ -162,7 +166,7 @@ checkoutRouter.post("/orders", async (req, res) => {
           },
         },
       },
-      include: { items: true },
+      include: { items: { include: { product: { select: { slug: true } } } } },
     });
   });
 
@@ -180,6 +184,7 @@ checkoutRouter.post("/orders", async (req, res) => {
       couponCode: order.couponCode,
       placedAt: order.placedAt,
       items: order.items.map((i) => ({
+        slug: i.product?.slug ?? null,
         name: i.productName,
         shade: i.shadeName,
         quantity: i.quantity,
@@ -205,7 +210,7 @@ checkoutRouter.get("/orders/track", async (req, res) => {
   const order = await prisma.order.findFirst({
     where: { number: q.number, email: q.email },
     include: {
-      items: true,
+      items: { include: { product: { select: { slug: true } } } },
       events: { orderBy: { createdAt: "asc" } },
     },
   });
@@ -232,6 +237,8 @@ checkoutRouter.get("/orders/track", async (req, res) => {
         pincode: order.shipPincode,
       },
       items: order.items.map((i) => ({
+        // null once the product has been deleted; the snapshot name remains.
+        slug: i.product?.slug ?? null,
         name: i.productName,
         shade: i.shadeName,
         quantity: i.quantity,

@@ -190,8 +190,15 @@ async function evaluateCoupon(
   }
 
   if (coupon.firstOrderOnly && email) {
+    // A previous order counts once it's real: paid online, or cash on delivery
+    // that wasn't cancelled (COD stays unpaid until the courier collects, so
+    // checking payment alone would let the code be reused on every COD order).
+    // Abandoned online checkouts that were never paid don't count.
     const previous = await db.order.count({
-      where: { email: email.toLowerCase(), paymentStatus: { in: ["PAID"] } },
+      where: {
+        email: email.toLowerCase(),
+        OR: [{ paymentStatus: "PAID" }, { paymentMethod: "COD", status: { not: "CANCELLED" } }],
+      },
     });
     if (previous > 0) return { ok: false, reason: "That code is for first orders only" };
   }

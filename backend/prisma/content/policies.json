@@ -1,0 +1,202 @@
+[
+  {
+    "slug": "shipping",
+    "title": "Shipping & Delivery",
+    "body": {
+      "lead": "How and when your Velastia order reaches you.",
+      "sections": [
+        {
+          "heading": "Delivery Timelines",
+          "body": [
+            "Orders are dispatched within 24 to 48 hours of being placed, excluding Sundays and public holidays.",
+            "Standard delivery takes 3 to 5 business days. Metro cities are usually served faster, while remote pin codes may take up to 7 business days."
+          ]
+        },
+        {
+          "heading": "Shipping Charges",
+          "body": [
+            "Shipping is free on all orders above {{free_shipping_above}}.",
+            "A flat shipping fee of {{shipping_fee}} applies to orders below that value. The exact amount is always shown at checkout before you pay."
+          ]
+        },
+        {
+          "heading": "Order Tracking",
+          "body": [
+            "Once your order ships you will receive an email and SMS containing your tracking link.",
+            "You can also check the current status any time from the Track Order page using your order number and the email address on the order."
+          ]
+        },
+        {
+          "heading": "Serviceable Locations",
+          "body": [
+            "We currently ship across India only. International shipping is not available yet.",
+            "If your pin code is not serviceable by our delivery partners, we will contact you within one business day to arrange an alternative or issue a full refund."
+          ]
+        },
+        {
+          "heading": "Delays",
+          "body": [
+            "Deliveries may be delayed by weather, regional restrictions or courier disruptions. We will keep you informed by email if your order is affected."
+          ]
+        }
+      ]
+    },
+    "metaDescription": "How and when your Velastia order reaches you."
+  },
+  {
+    "slug": "returns",
+    "title": "Returns & Refunds",
+    "body": {
+      "lead": "Changed your mind? Here is how returns work.",
+      "sections": [
+        {
+          "heading": "Return Window",
+          "body": [
+            "Unopened products in their original packaging can be returned within 7 days of delivery.",
+            "For hygiene and safety reasons, opened or used cosmetics cannot be returned unless the product is damaged or defective."
+          ]
+        },
+        {
+          "heading": "Damaged or Wrong Items",
+          "body": [
+            "If your order arrives damaged, defective, or is not what you ordered, contact us within 48 hours of delivery with photographs of the product and the packaging.",
+            "We will arrange a free pickup and send a replacement, or refund you in full — whichever you prefer."
+          ]
+        },
+        {
+          "heading": "How to Start a Return",
+          "body": [
+            "Email {{support_email}} with your order number and the reason for the return, or call us during support hours.",
+            "Once approved, a pickup is scheduled within 2 to 3 business days at no cost to you."
+          ]
+        },
+        {
+          "heading": "Refund Processing",
+          "body": [
+            "Refunds are issued to the original payment method once the returned item reaches our warehouse and passes inspection.",
+            "The amount typically reflects in your account within 5 to 7 business days, depending on your bank or payment provider.",
+            "For Cash on Delivery orders, refunds are made by bank transfer to details you provide."
+          ]
+        },
+        {
+          "heading": "Non-Returnable",
+          "body": [
+            "Gift cards, promotional items and free gifts received as part of an offer are not eligible for return or refund."
+          ]
+        }
+      ]
+    },
+    "metaDescription": "Changed your mind? Here is how returns work."
+  },
+  {
+    "slug": "terms",
+    "title": "Terms & Conditions",
+    "body": {
+      "lead": "The terms that govern your use of the Velastia website and store.",
+      "sections": [
+        {
+          "heading": "About Us",
+          "body": [
+            "Velastia is a premium cosmetics brand operated by {{legal_entity}}, registered in Mumbai, India.",
+            "By accessing this website or placing an order, you agree to these terms."
+          ]
+        },
+        {
+          "heading": "Products & Pricing",
+          "body": [
+            "All prices are listed in Indian Rupees and are inclusive of applicable taxes.",
+            "We make every effort to display product colours accurately, but actual shades may vary slightly depending on your screen.",
+            "We reserve the right to correct pricing errors and to change or discontinue products without prior notice."
+          ]
+        },
+        {
+          "heading": "Orders",
+          "body": [
+            "Placing an order constitutes an offer to purchase. We may decline or cancel an order where a product is unavailable, where payment cannot be verified, or where we suspect fraudulent activity.",
+            "You are responsible for providing accurate delivery and contact details."
+          ]
+        },
+        {
+          "heading": "Promotions & Coupons",
+          "body": [
+            "Discount codes apply only to eligible products and cannot be combined unless expressly stated.",
+            "Introductory offers such as VEL10 are limited to a customer's first order."
+          ]
+        },
+        {
+          "heading": "Intellectual Property",
+          "body": [
+            "All content on this site, including text, imagery, product photography, logos and the Velastia name, is owned by {{legal_entity}} and may not be reproduced without written permission."
+          ]
+        },
+        {
+          "heading": "Limitation of Liability",
+          "body": [
+            "Our products are cosmetics intended for external use. Please read the ingredient list and patch test if you have sensitive skin or known allergies.",
+            "To the extent permitted by law, our liability for any claim relating to a product is limited to the amount you paid for it."
+          ]
+        },
+        {
+          "heading": "Governing Law",
+          "body": [
+            "These terms are governed by the laws of India. Any dispute is subject to the exclusive jurisdiction of the courts of Mumbai, Maharashtra."
+          ]
+        }
+      ]
+    },
+    "metaDescription": "The terms that govern your use of the Velastia website and store."
+  },
+  {
+    "slug": "privacy",
+    "title": "Privacy Policy",
+    "body": {
+      "lead": "What we collect, why we collect it, and the control you have over it.",
+      "sections": [
+        {
+          "heading": "Information We Collect",
+          "body": [
+            "Details you give us directly: name, email address, phone number, delivery address, and order history.",
+            "Technical information collected automatically: device type, browser, and pages visited, used to improve the store.",
+            "We do not store your card details. Payments are handled by Razorpay, and card data goes directly to them."
+          ]
+        },
+        {
+          "heading": "How We Use It",
+          "body": [
+            "To process and deliver your orders, and to send you order and shipping updates.",
+            "To respond to support requests.",
+            "To send marketing emails, but only if you have opted in. Every such email includes an unsubscribe link."
+          ]
+        },
+        {
+          "heading": "Sharing",
+          "body": [
+            "We share the minimum necessary information with delivery partners, our payment gateway, and communication providers who send order notifications on our behalf.",
+            "We do not sell your personal data to anyone."
+          ]
+        },
+        {
+          "heading": "Cookies",
+          "body": [
+            "We use cookies to keep your cart and preferences between visits and to understand how the store is used. You can disable cookies in your browser, though parts of the site may not work as expected."
+          ]
+        },
+        {
+          "heading": "Your Rights",
+          "body": [
+            "You may request a copy of the personal data we hold about you, ask us to correct it, or ask us to delete it.",
+            "Write to {{support_email}} and we will respond within 30 days."
+          ]
+        },
+        {
+          "heading": "Data Retention & Security",
+          "body": [
+            "Order records are retained as required for tax and accounting purposes. Marketing preferences are kept until you withdraw consent.",
+            "We use industry-standard safeguards to protect your data, though no method of transmission over the internet is completely secure."
+          ]
+        }
+      ]
+    },
+    "metaDescription": "What we collect, why we collect it, and the control you have over it."
+  }
+]

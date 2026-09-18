@@ -205,6 +205,53 @@ console.log("\n[Content & activity]");
   ok(a.status === 200 && a.json.data.length >= 8, "activity log recorded admin actions", `latest: "${a.json.data[0].action}"`);
 }
 
+console.log("\n[Settings & pages]");
+{
+  const get = await call("GET", "/admin/settings");
+  const before = get.json.data;
+  ok(get.status === 200 && before.store?.name && before.copy?.ratingHeadline, "read store settings and site copy");
+
+  // Site copy flows to the public settings the storefront reads.
+  const copy = { ...before.copy, ratingHeadline: `Rated by our customers ${RUN}` };
+  const put = await call("PUT", "/admin/settings/copy", copy);
+  const seen = await pub("GET", "/settings/public");
+  ok(put.status === 200 && seen.json.data.copy.ratingHeadline === copy.ratingHeadline, "site copy edit reaches the storefront settings");
+  const badCopy = await call("PUT", "/admin/settings/copy", { ...copy, whyVelastia: [] });
+  ok(badCopy.status === 400, "site copy needs at least one 'Why Velastia' point");
+  await call("PUT", "/admin/settings/copy", before.copy);
+
+  const badStore = await call("PUT", "/admin/settings/store", { ...before.store, supportEmail: "not-an-email" });
+  ok(badStore.status === 400, "store details are validated", badStore.json.error.details?.[0]?.path);
+
+  // The welcome offer must be a real percentage coupon; "none" hides it.
+  const fixed = await call("PUT", "/admin/settings/welcome-offer", { code: "WELCOME200" });
+  ok(fixed.status === 400, "welcome offer refuses a fixed-amount coupon", fixed.json.error.message);
+  const ghost = await call("PUT", "/admin/settings/welcome-offer", { code: `NOPE${RUN}` });
+  ok(ghost.status === 400, "welcome offer refuses a coupon that doesn't exist");
+  await call("PUT", "/admin/settings/welcome-offer", { code: null });
+  const off = await pub("GET", "/settings/public");
+  ok(off.json.data.welcomeOffer === null, "no welcome offer -> storefront stops advertising one");
+  const back = await call("PUT", "/admin/settings/welcome-offer", { code: before.welcomeOffer.code });
+  ok(back.status === 200 && back.json.data.welcomeOffer.code === before.welcomeOffer.code, "welcome offer restored", before.welcomeOffer.code);
+
+  // Policy pages.
+  const list = await call("GET", "/admin/pages");
+  ok(list.status === 200 && ["shipping", "returns", "terms", "privacy"].every((s) => list.json.data.some((p) => p.slug === s)), "four policy pages", list.json.data.map((p) => p.slug).join(", "));
+  const page = (await call("GET", "/admin/pages/shipping")).json.data;
+  ok(page.tokens?.includes("free_shipping_above") && JSON.stringify(page.body).includes("{{free_shipping_above}}"), "policy text uses live-value tokens");
+  const edited = { ...page.body, lead: `Edited in the admin ${RUN}` };
+  const patch = await call("PATCH", "/admin/pages/shipping", { body: edited });
+  const live = await pub("GET", "/pages/shipping");
+  ok(patch.status === 200 && live.json.data.body.lead === edited.lead && live.json.data.title === page.title, "page edit is public, and untouched fields survive");
+  const empty = await call("PATCH", "/admin/pages/shipping", { body: { lead: "", sections: [] } });
+  ok(empty.status === 400, "a page needs at least one section");
+  const missing = await call("PATCH", `/admin/pages/nope-${RUN}`, { title: "Nope" });
+  ok(missing.status === 404, "unknown page -> 404");
+  await call("PATCH", "/admin/pages/shipping", { body: page.body });
+  const restored = await pub("GET", "/pages/shipping");
+  ok(JSON.stringify(restored.json.data.body.sections) === JSON.stringify(page.body.sections), "page restored");
+}
+
 console.log("\n[Race: two shoppers, one stock pool]");
 {
   const nc = (await call("GET", "/admin/products?q=night%20cream")).json.data[0];

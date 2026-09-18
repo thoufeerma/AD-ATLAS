@@ -2,6 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../db.js";
 import { notFound, param, parse } from "../../lib/http.js";
+import { rateLimit } from "../../middleware/rateLimit.js";
+import { readCopy } from "../../lib/settings.js";
 
 export const contentRouter = Router();
 
@@ -26,6 +28,30 @@ contentRouter.get("/content/home", async (_req, res) => {
   res.json({ data: { testimonials, collaborators, banners } });
 });
 
+/**
+ * Every active banner, in admin order. The storefront picks them by placement:
+ * `global.topbar` feeds the announcement bar, `cart.inline` the cart promo.
+ */
+contentRouter.get("/banners", async (_req, res) => {
+  const banners = await prisma.banner.findMany({
+    where: { isActive: true },
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, name: true, placement: true, headline: true, imageUrl: true, href: true },
+  });
+  res.json({ data: banners });
+});
+
+/** Offers switched on in the admin and inside their date window right now. */
+contentRouter.get("/offers", async (_req, res) => {
+  const now = new Date();
+  const offers = await prisma.offer.findMany({
+    where: { isActive: true, startsAt: { lte: now }, endsAt: { gte: now } },
+    orderBy: { endsAt: "asc" },
+    select: { id: true, name: true, scope: true, startsAt: true, endsAt: true },
+  });
+  res.json({ data: offers });
+});
+
 contentRouter.get("/faqs", async (_req, res) => {
   const faqs = await prisma.faq.findMany({
     where: { isPublished: true },
@@ -33,6 +59,16 @@ contentRouter.get("/faqs", async (_req, res) => {
     select: { id: true, question: true, answer: true, category: true },
   });
   res.json({ data: faqs });
+});
+
+/** Published pages, for the storefront's policy navigation. */
+contentRouter.get("/pages", async (_req, res) => {
+  const pages = await prisma.page.findMany({
+    where: { status: "PUBLISHED" },
+    orderBy: { createdAt: "asc" },
+    select: { slug: true, title: true },
+  });
+  res.json({ data: pages });
 });
 
 contentRouter.get("/pages/:slug", async (req, res) => {
@@ -49,7 +85,7 @@ contentRouter.get("/pages/:slug", async (req, res) => {
  * cart — so changing the free-shipping threshold in the admin changes the site.
  * Only keys on this allow-list are public; other settings stay private.
  */
-const PUBLIC_SETTING_KEYS = ["store", "welcomeOffer"] as const;
+const PUBLIC_SETTING_KEYS = ["store", "welcomeOffer", "copy"] as const;
 
 contentRouter.get("/settings/public", async (_req, res) => {
   const [settings, shipping] = await Promise.all([
@@ -60,15 +96,50 @@ contentRouter.get("/settings/public", async (_req, res) => {
       select: { pricePaise: true, freeAbovePaise: true },
     }),
   ]);
+  const values = Object.fromEntries(settings.map((s) => [s.key, s.value]));
+
   res.json({
     data: {
-      ...Object.fromEntries(settings.map((s) => [s.key, s.value])),
+      store: values.store ?? null,
+      welcomeOffer: await liveWelcomeOffer(values.welcomeOffer),
+      copy: readCopy(values.copy),
       shipping,
     },
   });
 });
 
+/**
+ * The welcome code the site advertises, read from the coupon itself. If an
+ * admin switches the coupon off, lets it expire or it runs out, the storefront
+ * stops promoting it instead of advertising a code checkout would refuse.
+ */
+async function liveWelcomeOffer(setting: unknown) {
+  const code = (setting as { code?: unknown } | undefined)?.code;
+  if (typeof code !== "string" || !code) return null;
+
+  const coupon = await prisma.coupon.findUnique({ where: { code: code.toUpperCase() } });
+  const now = new Date();
+  const live =
+    coupon?.isActive &&
+    coupon.type === "PERCENTAGE" &&
+    (!coupon.startsAt || coupon.startsAt <= now) &&
+    (!coupon.expiresAt || coupon.expiresAt >= now) &&
+    (coupon.usageLimit == null || coupon.usedCount < coupon.usageLimit);
+  if (!coupon || !live) return null;
+
+  return {
+    code: coupon.code,
+    // Basis points → percent: 1000 → 10, 1250 → 12.5.
+    percent: coupon.value / 100,
+    firstOrderOnly: coupon.firstOrderOnly,
+    minOrderPaise: coupon.minOrderPaise,
+  };
+}
+
 /* ── Public forms ─────────────────────────────────────────────────────── */
+
+/** Ten submissions per form per visitor every ten minutes — plenty for a person. */
+const formLimit = (name: string) => rateLimit({ name, max: 10, windowMs: 10 * 60_000 });
 
 const ContactBody = z.object({
   name: z.string().trim().min(2).max(100),
@@ -78,7 +149,7 @@ const ContactBody = z.object({
   message: z.string().trim().min(5).max(5000),
 });
 
-contentRouter.post("/contact", async (req, res) => {
+contentRouter.post("/contact", formLimit("contact form"), async (req, res) => {
   const body = parse(ContactBody, req.body);
   await prisma.contactMessage.create({ data: body });
   res.status(201).json({ data: { received: true } });
@@ -93,7 +164,7 @@ const SubscribeBody = z.object({
  * Idempotent. Re-subscribing an existing address succeeds quietly, and the
  * response never reveals whether an email was already on the list.
  */
-contentRouter.post("/newsletter", async (req, res) => {
+contentRouter.post("/newsletter", formLimit("newsletter"), async (req, res) => {
   const body = parse(SubscribeBody, req.body);
   await prisma.subscriber.upsert({
     where: { email: body.email },
@@ -111,7 +182,7 @@ const CollabBody = z.object({
   about: z.string().trim().min(10).max(5000),
 });
 
-contentRouter.post("/collab-applications", async (req, res) => {
+contentRouter.post("/collab-applications", formLimit("application"), async (req, res) => {
   const body = parse(CollabBody, req.body);
   await prisma.collabApplication.create({ data: body });
   res.status(201).json({ data: { received: true } });

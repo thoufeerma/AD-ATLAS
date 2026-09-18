@@ -12,9 +12,11 @@
  * /public). They become absolute URLs once media moves to object storage.
  */
 import "dotenv/config";
+import { readFileSync } from "node:fs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import { PrismaClient, type ProductStatus } from "../src/generated/prisma/client.js";
+import { DEFAULT_COPY } from "../src/lib/settings.js";
 
 // bcrypt used directly (same cost as the server) rather than importing the
 // server's auth module, which would drag in its environment validation.
@@ -199,7 +201,12 @@ async function main() {
   await prisma.setting.upsert({
     where: { key: "welcomeOffer" },
     update: {},
-    create: { key: "welcomeOffer", value: { code: "VEL10", percent: 10 } },
+    create: { key: "welcomeOffer", value: { code: "VEL10" } },
+  });
+  await prisma.setting.upsert({
+    where: { key: "copy" },
+    update: {},
+    create: { key: "copy", value: DEFAULT_COPY },
   });
   log("settings");
 
@@ -296,22 +303,38 @@ async function main() {
       data: [
         { name: "Homepage Hero — Luxury. Science. You.", placement: "home.hero", headline: "Luxury. Science. You.", imageUrl: "/brand/hero-products.png", href: "/shop", sortOrder: 1 },
         { name: "Announcement — Free Shipping ₹999", placement: "global.topbar", headline: "FREE SHIPPING ON ORDERS ABOVE ₹999", sortOrder: 2 },
-        { name: "Shop Sidebar — VEL10", placement: "shop.sidebar", headline: "Get 10% OFF on your first order", sortOrder: 3 },
-        { name: "Cart — Complimentary Gift", placement: "cart.inline", headline: "Complimentary gift on orders above ₹1,999", sortOrder: 4 },
+        { name: "Announcement — VEL10", placement: "global.topbar", headline: "10% OFF ON FIRST ORDER – USE CODE: VEL10", sortOrder: 3 },
+        { name: "Shop Sidebar — VEL10", placement: "shop.sidebar", headline: "Get 10% OFF on your first order", sortOrder: 4 },
+        { name: "Cart — Complimentary Gift", placement: "cart.inline", headline: "Complimentary gift on orders above ₹1,999", sortOrder: 5 },
       ],
     });
   }
   if ((await prisma.offer.count()) === 0) {
     const year = new Date().getFullYear();
+    // Offers are display-only; discounts are applied by coupons. The designs'
+    // "Buy 2 Get 1 Free" is left out because nothing at checkout applies it.
     await prisma.offer.createMany({
       data: [
-        { name: "Buy 2 Get 1 Free", scope: "All full-priced products", startsAt: new Date(`${year}-01-01`), endsAt: new Date(`${year}-12-31`) },
         { name: "10% Off First Order", scope: "New customers only", startsAt: new Date(`${year}-01-01`), endsAt: new Date(`${year}-12-31`) },
         { name: "Free Shipping Above ₹999", scope: "Storewide", startsAt: new Date(`${year}-01-01`), endsAt: new Date(`${year}-12-31`) },
       ],
     });
   }
   log("FAQs, testimonials, collaborators, banners, offers");
+
+  // Policy pages. Text uses {{tokens}} (free shipping threshold, support email…)
+  // that the storefront fills from settings; admins edit them on the Pages screen.
+  const policies = JSON.parse(
+    readFileSync(new URL("./content/policies.json", import.meta.url), "utf8"),
+  ) as { slug: string; title: string; body: object; metaDescription: string }[];
+  for (const p of policies) {
+    await prisma.page.upsert({
+      where: { slug: p.slug },
+      update: {},
+      create: { ...p, status: "PUBLISHED" },
+    });
+  }
+  log(`${policies.length} policy pages`);
 
   if ((await prisma.review.count()) === 0) {
     const idFor = async (slug: string) =>

@@ -57,6 +57,11 @@ console.log("\n[Content]");
   ok(f.status === 200 && f.json.data.length >= 6, "published FAQs", `${f.json.data.length}`);
   const s = await call("GET", "/settings/public");
   ok(s.json.data.store?.name === "Velastia" && s.json.data.shipping.freeAbovePaise === 99900, "public settings", `free shipping above ${rs(s.json.data.shipping.freeAbovePaise)}`);
+  ok(s.json.data.welcomeOffer?.code === "VEL10" && s.json.data.welcomeOffer.percent === 10, "welcome offer read from the live VEL10 coupon");
+  const b = await call("GET", "/banners");
+  ok(b.status === 200 && b.json.data.some((x) => x.placement === "global.topbar"), "active banners by placement", `${b.json.data.length} banners`);
+  const rsum = await call("GET", "/reviews/summary");
+  ok(rsum.status === 200 && rsum.json.data.breakdown.length === 5, "store-wide review summary", `${rsum.json.data.average} from ${rsum.json.data.total}`);
 }
 
 console.log("\n[Cart pricing - server-authoritative]");
@@ -120,6 +125,31 @@ let placed;
 
   const inactive = await call("POST", "/orders", { ...shopper, items: [lip()], couponCode: "DIWALI25", paymentMethod: "UPI" });
   ok(inactive.status === 409, "order with an inactive coupon is refused, not silently undiscounted", inactive.json.error.message);
+}
+
+console.log("\n[First-order codes]");
+{
+  // COD orders stay unpaid until delivery, so "first order" must count them.
+  const first = { ...shopper, email: `first.order.${Date.now().toString(36)}@example.com` };
+  const o1 = await call("POST", "/orders", { ...first, items: [lip()], couponCode: "VEL10", paymentMethod: "COD" });
+  ok(o1.status === 201 && o1.json.data.discountPaise === 7990, "VEL10 on a first COD order", o1.json.data?.number);
+  const o2 = await call("POST", "/orders", { ...first, items: [lip()], couponCode: "VEL10", paymentMethod: "COD" });
+  ok(o2.status === 409, "VEL10 refused on the same email's second order", o2.json.error?.message);
+}
+
+console.log("\n[Reviews]");
+{
+  const author = `Smoke Reviewer ${Date.now().toString(36)}`;
+  const r = await call("POST", "/reviews", { productSlug: "velvet-matte-lipstick", name: author, email: "smoke.tester@example.com", rating: 4, body: "Smoke test review, safe to delete." });
+  ok(r.status === 201, "review submitted");
+  const pub = await call("GET", "/reviews?limit=60");
+  ok(!pub.json.data.some((x) => x.authorName === author), "held for moderation - not public until an admin publishes it");
+  const bad = await call("POST", "/reviews", { productSlug: "velvet-matte-lipstick", name: "A", email: "nope", rating: 9, body: "short" });
+  ok(bad.status === 400, "review validation", `${bad.json.error.details?.length} field errors`);
+  const soon = await call("POST", "/reviews", { productSlug: "perfume", name: "Smoke", email: "smoke.tester@example.com", rating: 5, body: "Not on sale, can't be reviewed." });
+  ok(soon.status === 404, "can't review a product that isn't on sale");
+  const detail = await call("GET", "/products/velvet-matte-lipstick");
+  ok(detail.json.data.reviewSummary?.breakdown?.length === 5, "product detail carries its own rating breakdown");
 }
 
 console.log("\n[Forms]");
