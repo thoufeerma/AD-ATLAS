@@ -57,6 +57,37 @@ export function readCopy(stored: unknown): CopySettings {
   return { ...DEFAULT_COPY, ...(parsed.success ? parsed.data : {}) };
 }
 
+/** Which emails the store sends, and who receives the store's own alerts. */
+export const NotificationSettings = z.object({
+  /** To the customer when an order is placed. */
+  orderConfirmation: z.boolean(),
+  /** To the customer when an order ships, is out for delivery, delivered, cancelled or refunded. */
+  shippingUpdates: z.boolean(),
+  /** To the team when an order is placed. */
+  alertNewOrder: z.boolean(),
+  /** To the team when a contact message or collab application arrives. */
+  alertNewMessage: z.boolean(),
+  alertRecipients: z
+    .array(z.email().transform((e) => e.toLowerCase()))
+    .max(10)
+    .refine((list) => new Set(list).size === list.length, "Each address only once"),
+});
+
+export type NotificationSettings = z.infer<typeof NotificationSettings>;
+
+export const DEFAULT_NOTIFICATIONS: NotificationSettings = {
+  orderConfirmation: true,
+  shippingUpdates: true,
+  alertNewOrder: true,
+  alertNewMessage: true,
+  alertRecipients: [],
+};
+
+export function readNotifications(stored: unknown): NotificationSettings {
+  const parsed = NotificationSettings.partial().safeParse(stored ?? {});
+  return { ...DEFAULT_NOTIFICATIONS, ...(parsed.success ? parsed.data : {}) };
+}
+
 /**
  * Body of a CMS page (the shipping, returns, terms and privacy policies):
  * a lead line and numbered sections of paragraphs. Text may contain tokens

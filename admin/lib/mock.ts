@@ -361,15 +361,6 @@ export const TAX_RATES = [
   { id: "tx-2", name: "GST — Accessories", rate: "12%", region: "India (all states)", inclusive: true },
 ];
 
-export const NOTIFICATION_PREFS = [
-  { id: "n-1", label: "New order placed", email: true, sms: true, push: true },
-  { id: "n-2", label: "Order shipped", email: true, sms: true, push: false },
-  { id: "n-3", label: "Low stock warning", email: true, sms: false, push: true },
-  { id: "n-4", label: "New review submitted", email: true, sms: false, push: false },
-  { id: "n-5", label: "Refund requested", email: true, sms: true, push: true },
-  { id: "n-6", label: "Weekly sales digest", email: true, sms: false, push: false },
-];
-
 export const BACKUPS = [
   { id: "bk-1", name: "Nightly automated", date: "2025-05-29 02:00", size: "412 MB", type: "Automatic" as const },
   { id: "bk-2", name: "Nightly automated", date: "2025-05-28 02:00", size: "409 MB", type: "Automatic" as const },

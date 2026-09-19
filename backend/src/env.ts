@@ -23,6 +23,13 @@ const schema = z
     JWT_SECRET: z.string().min(1),
     SEED_ADMIN_EMAIL: z.email().optional(),
     SEED_ADMIN_PASSWORD: z.string().optional(),
+    // ── Email ── without a key, emails are kept in the admin's Email Log
+    // instead of being sent.
+    RESEND_API_KEY: z.string().trim().min(1).optional(),
+    EMAIL_FROM: z.string().trim().min(3).default("Velastia <onboarding@resend.dev>"),
+    // Public addresses of the two sites, for links and the logo in emails.
+    STORE_URL: z.url().default("http://localhost:3000"),
+    ADMIN_URL: z.url().default("http://localhost:3001"),
   })
   .superRefine((e, ctx) => {
     // A weak or placeholder signing secret in production would let anyone

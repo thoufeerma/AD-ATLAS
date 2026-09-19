@@ -310,10 +310,21 @@ export type SiteCopy = {
   whyVelastia: string[];
 };
 
+export type NotificationSettings = {
+  orderConfirmation: boolean;
+  shippingUpdates: boolean;
+  alertNewOrder: boolean;
+  alertNewMessage: boolean;
+  alertRecipients: string[];
+};
+
 export type SiteSettings = {
   store: StoreDetails | null;
   welcomeOffer: { code: string | null };
   copy: SiteCopy;
+  notifications: NotificationSettings;
+  /** Whether an email service is connected; if not, emails are only logged. */
+  email: { connected: boolean; from: string };
   shipping: { name: string; pricePaise: number; freeAbovePaise: number | null } | null;
 };
 
@@ -337,6 +348,7 @@ export type PageDetail = PageListItem & {
 
 /** Mirrors the API's role gates (backend/src/middleware/auth.ts). */
 export const can = {
+  readOrders: (role: AdminRole) => role !== "CONTENT_MANAGER",
   editContent: (role: AdminRole) => role === "SUPER_ADMIN" || role === "CONTENT_MANAGER",
   editStore: (role: AdminRole) => role === "SUPER_ADMIN",
 };
@@ -387,5 +399,37 @@ export type ShippingMethod = {
   freeAbovePaise: number | null;
   isEnabled: boolean;
   sortOrder: number;
+};
+
+/* ── Email log ── */
+
+export type EmailStatus = "SENT" | "FAILED" | "CAPTURED";
+
+export type EmailLogRow = {
+  id: string;
+  to: string;
+  subject: string;
+  kind: string;
+  status: EmailStatus;
+  detail: string | null;
+  orderId: string | null;
+  createdAt: string;
+};
+
+export type EmailLogDetail = EmailLogRow & { html: string };
+
+export const EMAIL_KIND_LABEL: Record<string, string> = {
+  "order.confirmation": "Order confirmation",
+  "order.status": "Order update",
+  "alert.order": "New-order alert",
+  "alert.message": "Message alert",
+  "alert.collab": "Collab alert",
+  test: "Test",
+};
+
+export const EMAIL_STATUS_LABEL: Record<EmailStatus, string> = {
+  SENT: "Sent",
+  FAILED: "Failed",
+  CAPTURED: "Not sent",
 };
 

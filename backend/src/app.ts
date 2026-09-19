@@ -28,6 +28,7 @@ import { adminSettingsRouter, adminPagesRouter } from "./routes/admin/settings.j
 import { adminInboxRouter, adminSubscribersRouter } from "./routes/admin/inbox.js";
 import { adminUsersRouter } from "./routes/admin/users.js";
 import { adminShippingRouter } from "./routes/admin/shipping.js";
+import { adminEmailsRouter } from "./routes/admin/emails.js";
 
 export function createApp() {
   const app = express();
@@ -87,6 +88,7 @@ export function createApp() {
   admin.use("/subscribers", adminSubscribersRouter);
   admin.use("/users", adminUsersRouter);
   admin.use("/shipping-methods", adminShippingRouter);
+  admin.use("/emails", adminEmailsRouter);
 
   v1.use("/admin", admin);
   app.use("/api/v1", v1);

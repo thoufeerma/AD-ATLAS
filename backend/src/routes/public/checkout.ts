@@ -6,6 +6,8 @@ import { prisma } from "../../db.js";
 import { quoteCart } from "../../lib/pricing.js";
 import { conflict, notFound, parse } from "../../lib/http.js";
 import { rateLimit } from "../../middleware/rateLimit.js";
+import { afterResponse, type Email } from "../../lib/mail.js";
+import { alertNewOrder, mailContext, orderConfirmation } from "../../lib/emails.js";
 
 export const checkoutRouter = Router();
 
@@ -184,6 +186,16 @@ checkoutRouter.post("/orders", orderLimit, async (req, res) => {
       },
       include: { items: { include: { product: { select: { slug: true } } } } },
     });
+  });
+
+  // Confirmation to the shopper and an alert to the team, sent after this
+  // response so a slow or failing email can never affect the order.
+  afterResponse(async () => {
+    const { store, notifications: n } = await mailContext();
+    const emails: Email[] = [];
+    if (n.orderConfirmation) emails.push(orderConfirmation(order, store));
+    if (n.alertNewOrder) emails.push(...n.alertRecipients.map((to) => alertNewOrder(order, store, to)));
+    return emails;
   });
 
   res.status(201).json({

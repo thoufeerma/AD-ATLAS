@@ -47,7 +47,7 @@ during a build** too. `npm run build` and `npm run lint` both pass clean.
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 1 | Storefront frontend (repo root) | **Done** |
-| 2 | Admin / CMS frontend ([`admin/`](admin/)) | **Done** — 12 screens still on sample data |
+| 2 | Admin / CMS frontend ([`admin/`](admin/)) | **Done** — 11 screens still on sample data |
 | 3 | Backend API — Express + TypeScript + Prisma + PostgreSQL ([`backend/`](backend/)) | **Done** |
 | 3b | Storefront connected to the API | **Done** |
 | 4 | Razorpay — UPI, cards, netbanking, wallets | Not started |
@@ -68,7 +68,8 @@ checkout; the online methods are shown as "Coming soon".
 | Pages | Shipping, Returns, Terms and Privacy policies |
 | Settings | Support contacts and company name (header, footer, contact, policies), the welcome offer, and marketing copy ("Loved by Thousands", "10K+ Happy Customers", "Why Velastia?") |
 | Shipping Methods | Delivery options at checkout (price, delivery time, free-above amount, order); the first one on is the default behind every "free shipping above…" note |
-| Orders | Track Order page |
+| Orders | Track Order page; marking an order shipped, out for delivery, delivered, cancelled or refunded emails the customer |
+| Notifications, Email Log | Which emails go out (order confirmation, order updates, team alerts) and a copy of every one. Until an email service is connected nothing is sent — each email is kept in the log instead |
 
 Policy text can include live values — `{{free_shipping_above}}`, `{{shipping_fee}}`,
 `{{support_email}}`, `{{legal_entity}}` and others listed in the page editor — so it

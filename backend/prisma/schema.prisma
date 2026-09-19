@@ -570,3 +570,31 @@ model Setting {
 
   @@map("settings")
 }
+
+/* ───────────────────────────── Email ─────────────────────────────── */
+
+enum EmailStatus {
+  SENT
+  FAILED
+  /// Kept here but not sent: no email service connected, or a test address.
+  CAPTURED
+}
+
+/// Every email the store sends (or would have sent), for the admin's Email Log.
+model EmailLog {
+  id         String      @id @default(cuid())
+  to         String
+  subject    String
+  /// order.confirmation, order.status, alert.order, alert.message, alert.collab, test
+  kind       String
+  status     EmailStatus
+  /// Why it was captured, or the provider's error when it failed.
+  detail     String?
+  providerId String?
+  html       String
+  orderId    String?
+  createdAt  DateTime    @default(now())
+
+  @@index([createdAt])
+  @@map("email_logs")
+}

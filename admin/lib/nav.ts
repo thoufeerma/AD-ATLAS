@@ -29,6 +29,7 @@ import {
   Receipt,
   Bell,
   ScrollText,
+  MailCheck,
   DatabaseBackup,
   type LucideIcon,
 } from "lucide-react";
@@ -105,7 +106,8 @@ export const NAV: NavGroup[] = [
       { href: "/settings/payments", label: "Payment Methods", Icon: CreditCard, sample: true },
       { href: "/settings/shipping", label: "Shipping Methods", Icon: Truck },
       { href: "/settings/tax", label: "Tax Settings", Icon: Receipt, sample: true },
-      { href: "/settings/notifications", label: "Notifications", Icon: Bell, sample: true },
+      { href: "/settings/notifications", label: "Notifications", Icon: Bell },
+      { href: "/emails", label: "Email Log", Icon: MailCheck },
       { href: "/activity", label: "Activity Logs", Icon: ScrollText },
       { href: "/backup", label: "Backup & Restore", Icon: DatabaseBackup, sample: true },
     ],

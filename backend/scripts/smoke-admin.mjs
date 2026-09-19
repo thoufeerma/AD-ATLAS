@@ -398,6 +398,66 @@ console.log("\n[Shipping methods]");
   ok(del.status === 204 && after.map((a) => `${a.id}:${a.isEnabled}`).join() === before.map((b) => `${b.id}:${b.isEnabled}`).join(), "method deleted; original methods and order restored");
 }
 
+console.log("\n[Emails]");
+{
+  // Emails go out just after the response, so wait (briefly) for them to land.
+  const waitFor = async (pred, ms = 5000) => {
+    const end = Date.now() + ms;
+    for (;;) {
+      const hit = (await call("GET", "/admin/emails?take=100")).json.data.find(pred);
+      if (hit || Date.now() > end) return hit;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  };
+  const body = async (id) => (await call("GET", `/admin/emails/${id}`)).json.data.html;
+
+  const settings = (await call("GET", "/admin/settings")).json.data;
+  const before = settings.notifications;
+  ok(typeof settings.email?.connected === "boolean", "settings say whether an email service is connected",
+    settings.email.connected ? `sending as ${settings.email.from}` : "not connected - emails are kept in the log");
+  const team = `team.${RUN}@example.com`;
+  try {
+    const put = await call("PUT", "/admin/settings/notifications", {
+      orderConfirmation: true, shippingUpdates: true, alertNewOrder: true, alertNewMessage: true, alertRecipients: [team],
+    });
+    ok(put.status === 200 && put.json.data.notifications.alertRecipients[0] === team, "save notification settings");
+    ok((await call("PUT", "/admin/settings/notifications", { ...before, alertRecipients: ["not-an-email"] })).status === 400, "alert recipients must be email addresses");
+
+    const buyer = `mail.${RUN}@example.com`;
+    const o = await pub("POST", "/orders", { email: buyer, name: "Mail Tester", ...shipTo, items: [{ slug: "lip-liner", quantity: 1 }], paymentMethod: "COD" });
+    const number = o.json.data.number;
+    const conf = await waitFor((e) => e.to === buyer && e.kind === "order.confirmation");
+    ok(conf?.subject.includes(number) && conf.status === "CAPTURED", "order confirmation to the customer (kept, not sent: test address)", conf?.subject);
+    const html = conf ? await body(conf.id) : "";
+    ok(html.includes(number) && html.includes("Track your order") && html.includes("in cash"), "confirmation shows the order, cash-on-delivery amount and tracking link");
+    const alert = await waitFor((e) => e.to === team && e.kind === "alert.order" && e.subject.includes(number));
+    ok(!!alert, "new-order alert to the team", alert?.subject);
+
+    await call("PATCH", `/admin/orders/${number}/status`, { status: "PROCESSING" });
+    await call("PATCH", `/admin/orders/${number}/status`, { status: "SHIPPED", note: `AWB <b>${RUN}</b>` });
+    const shipped = await waitFor((e) => e.to === buyer && e.kind === "order.status");
+    const shippedHtml = shipped ? await body(shipped.id) : "";
+    ok(shipped?.subject.includes("on its way") && shippedHtml.includes(`AWB &lt;b&gt;${RUN}&lt;/b&gt;`), "shipped email carries the team's note, escaped");
+    const statusMails = (await call("GET", "/admin/emails?take=100")).json.data.filter((e) => e.to === buyer && e.kind === "order.status");
+    ok(statusMails.length === 1, "no email for internal steps like Processing");
+
+    await pub("POST", "/contact", { name: "Mallory", email: `m.${RUN}@example.com`, subject: `Help ${RUN}`, message: "<script>alert(1)</script>" });
+    const msg = await waitFor((e) => e.kind === "alert.message" && e.subject.includes(`Help ${RUN}`));
+    const msgHtml = msg ? await body(msg.id) : "";
+    ok(msgHtml.includes("&lt;script&gt;") && !msgHtml.includes("<script>"), "contact alert escapes what the customer typed");
+
+    await call("PUT", "/admin/settings/notifications", { ...before, orderConfirmation: false, alertNewOrder: false, alertRecipients: [] });
+    const quiet = `quiet.${RUN}@example.com`;
+    await pub("POST", "/orders", { email: quiet, name: "Quiet Buyer", ...shipTo, items: [{ slug: "lip-liner", quantity: 1 }], paymentMethod: "COD" });
+    ok(!(await waitFor((e) => e.to === quiet, 1500)), "no confirmation when that email is switched off");
+
+    const test = await call("POST", "/admin/emails/test", { to: `test.${RUN}@example.com` });
+    ok(test.status === 201 && test.json.data.status === "CAPTURED", "test email recorded (test addresses are never really emailed)");
+  } finally {
+    await call("PUT", "/admin/settings/notifications", before);
+  }
+}
+
 console.log("\n[Race: two shoppers, one stock pool]");
 {
   const nc = (await call("GET", "/admin/products?q=night%20cream")).json.data[0];

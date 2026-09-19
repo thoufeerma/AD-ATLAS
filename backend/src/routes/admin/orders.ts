@@ -5,6 +5,8 @@ import { prisma } from "../../db.js";
 import { badRequest, notFound, param, parse } from "../../lib/http.js";
 import { allow, ROLES } from "../../middleware/auth.js";
 import { logActivity } from "../../lib/activity.js";
+import { afterResponse } from "../../lib/mail.js";
+import { customerHearsAbout, mailContext, orderStatusUpdate } from "../../lib/emails.js";
 
 export const adminOrdersRouter = Router();
 
@@ -156,5 +158,17 @@ adminOrdersRouter.patch("/:number/status", allow(...ROLES.ordersWrite), async (r
     updated.id,
     body.note ? { note: body.note } : undefined,
   );
+
+  // Tell the customer about the milestones they care about (shipped,
+  // out for delivery, delivered, cancelled, refunded), with any note.
+  if (customerHearsAbout(body.status)) {
+    afterResponse(async () => {
+      const { store, notifications } = await mailContext();
+      if (!notifications.shippingUpdates) return [];
+      const email = orderStatusUpdate(updated, body.status, body.note, store);
+      return email ? [email] : [];
+    });
+  }
+
   res.json({ data: updated });
 });

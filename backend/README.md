@@ -54,7 +54,7 @@ under **Users & Roles**.
 | `db:seed` | Idempotent seed — safe to rerun, never overwrites edited data |
 | `db:studio` | Prisma Studio, a GUI over the database |
 | `db:up` / `db:down` | Start / stop the Docker database |
-| `smoke` | 148 end-to-end API checks — **dev databases only**, see below |
+| `smoke` | 159 end-to-end API checks — **dev databases only**, see below |
 
 ## API
 
@@ -89,6 +89,9 @@ form 10 per 10 minutes. Behind a proxy, make sure it sets `X-Forwarded-For`.
 | `/admin/auth/password` | POST (change your own) | any signed-in admin |
 | `/admin/users` · `/:id` · `/:id/reset-password` | GET · POST · PATCH · POST | super admin only |
 | `/admin/shipping-methods` · `/:id` · `/order` | GET · POST · PATCH · DELETE · PUT | super admin only |
+| `/admin/settings/notifications` | PUT | super admin only |
+| `/admin/emails` · `/:id` | GET (the Email Log; filter by `status`, `q`, `orderId`) | Order Manager, Support |
+| `/admin/emails/test` | POST (send a test email) | super admin only |
 | `/admin/dashboard` | GET | all |
 | `/admin/products` · `/:id` | GET · POST · PATCH · DELETE (archives) | read: Order Manager, Support |
 | `/admin/products/:id/stock` | PATCH `{ set }` or `{ adjust }` | Order Manager |
@@ -107,6 +110,25 @@ form 10 per 10 minutes. Behind a proxy, make sure it sets `X-Forwarded-For`.
 | `/admin/subscribers` · `/:id` | GET · PATCH | Content Manager |
 
 Roles follow the permissions drawn on the admin's Users & Roles screen.
+
+## Email
+
+The store emails customers an **order confirmation** and **order updates**
+(shipped, out for delivery, delivered, cancelled, refunded — with any note the
+team adds, such as a tracking number), and emails the team **alerts** for new
+orders, contact messages and collab applications. Each can be switched off, and
+alert recipients set, under Settings → Notifications in the admin.
+
+Emails are sent through [Resend](https://resend.com) when `RESEND_API_KEY` is set
+(see `.env.example`). **Without it nothing is sent**: every email is still built
+and kept in the admin's Email Log, marked "Not sent", so you can see exactly
+what customers would receive. Addresses on reserved test domains
+(`example.com`, `*.test`, …) are never really emailed, so the smoke suite can't
+bounce mail off a real provider.
+
+Emails go out after the API has answered, and a failure is only logged — email
+can never slow down, fail or undo an order. Everything a shopper typed is
+HTML-escaped in the templates (`src/lib/emails.ts`).
 
 ## Conventions that matter
 
@@ -159,7 +181,7 @@ npm run dev      # in one terminal
 npm run smoke    # in another
 ```
 
-Runs 45 storefront and 103 admin checks, including a concurrent-purchase race,
+Runs 45 storefront and 114 admin checks, including a concurrent-purchase race,
 the admin account lifecycle and regression tests for the partial-update bug.
 Rerunnable against a used database: every fixture it creates is suffixed per
 run. It **refuses to target anything but localhost**, because it places orders
@@ -178,9 +200,9 @@ show up, turned off, on the Users & Roles screen.
   after an expiry window — see the `TODO(payments)` in `routes/public/checkout.ts`.
 - **Customer accounts.** Checkout works as a guest; customer login, saved
   addresses and order history are not wired.
+- **SMS / WhatsApp** order updates (email only for now).
 - **Media uploads.** Image URLs are stored as storefront-relative paths. Real
   uploads need object storage (S3, Cloudinary, R2).
-- **Email / SMS** for order confirmations and shipping updates.
 - **Remaining CMS resources**: blog posts, media library, campaigns, tax
   editing. The tables exist; the routes don't. (Pages, store settings, the
   inbox, subscribers, Users & Roles and shipping methods are done.)

@@ -4,6 +4,19 @@ import { prisma } from "../../db.js";
 import { notFound, param, parse } from "../../lib/http.js";
 import { rateLimit } from "../../middleware/rateLimit.js";
 import { readCopy } from "../../lib/settings.js";
+import { afterResponse, type Email } from "../../lib/mail.js";
+import { alertCollabApplication, alertContactMessage, mailContext } from "../../lib/emails.js";
+
+type Store = Awaited<ReturnType<typeof mailContext>>["store"];
+
+/** Tells the team about a new message or application, if they want to hear. */
+function alertTeam(build: (store: Store, to: string) => Email) {
+  afterResponse(async () => {
+    const { store, notifications } = await mailContext();
+    if (!notifications.alertNewMessage) return [];
+    return notifications.alertRecipients.map((to) => build(store, to));
+  });
+}
 
 export const contentRouter = Router();
 
@@ -153,6 +166,7 @@ const ContactBody = z.object({
 contentRouter.post("/contact", formLimit("contact form"), async (req, res) => {
   const body = parse(ContactBody, req.body);
   await prisma.contactMessage.create({ data: body });
+  alertTeam((store, to) => alertContactMessage(body, store, to));
   res.status(201).json({ data: { received: true } });
 });
 
@@ -186,5 +200,6 @@ const CollabBody = z.object({
 contentRouter.post("/collab-applications", formLimit("application"), async (req, res) => {
   const body = parse(CollabBody, req.body);
   await prisma.collabApplication.create({ data: body });
+  alertTeam((store, to) => alertCollabApplication(body, store, to));
   res.status(201).json({ data: { received: true } });
 });

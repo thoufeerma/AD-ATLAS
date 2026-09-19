@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MapPin, CreditCard, User, Mail, Phone, Tag, Truck } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, User, Mail, Phone, Tag, Truck, MailCheck } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import Card from "@/components/ui/Card";
 import Badge, { toneFor } from "@/components/ui/Badge";
 import StatusControl from "@/components/orders/StatusControl";
 import { ApiError, apiGet } from "@/lib/api/server";
-import { humanize, type OrderDetail } from "@/lib/api/types";
+import {
+  EMAIL_KIND_LABEL,
+  EMAIL_STATUS_LABEL,
+  humanize,
+  type EmailLogRow,
+  type OrderDetail,
+} from "@/lib/api/types";
 import { inr } from "@/lib/utils";
 
 export async function generateMetadata({ params }: PageProps<"/orders/[number]">): Promise<Metadata> {
@@ -37,6 +43,7 @@ export default async function OrderDetailPage({ params }: PageProps<"/orders/[nu
     if (err instanceof ApiError && err.status === 404) notFound();
     throw err;
   }
+  const emails = await apiGet<EmailLogRow[]>(`/admin/emails?orderId=${encodeURIComponent(order.id)}`);
 
   const itemCount = order.items.reduce((n, i) => n + i.quantity, 0);
 
@@ -193,6 +200,30 @@ export default async function OrderDetailPage({ params }: PageProps<"/orders/[nu
             <div className="mt-3">
               <Badge tone={toneFor(order.paymentStatus)}>{humanize(order.paymentStatus)}</Badge>
             </div>
+          </Card>
+
+          <Card title="Emails">
+            {emails.length === 0 ? (
+              <p className="text-[0.76rem] text-ink-2">No emails about this order yet.</p>
+            ) : (
+              <ul className="space-y-2.5">
+                {emails.map((e) => (
+                  <li key={e.id}>
+                    <Link href={`/emails?id=${e.id}`} className="group flex gap-2.5 text-[0.76rem]">
+                      <MailCheck className="mt-0.5 size-4 shrink-0 text-series-1" />
+                      <span className="min-w-0">
+                        <span className="block truncate text-ink group-hover:text-series-1">
+                          {EMAIL_KIND_LABEL[e.kind] ?? e.kind} → {e.to}
+                        </span>
+                        <span className="block text-[0.68rem] text-muted">
+                          {EMAIL_STATUS_LABEL[e.status]} · {when(e.createdAt)}
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card>
         </div>
       </div>

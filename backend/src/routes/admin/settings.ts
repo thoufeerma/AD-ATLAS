@@ -7,12 +7,16 @@ import { logActivity } from "../../lib/activity.js";
 import { allow, ROLES } from "../../middleware/auth.js";
 import {
   CopySettings,
+  NotificationSettings,
   PAGE_TOKENS,
   PageBody,
   StoreSettings,
   WelcomeOfferSettings,
   readCopy,
+  readNotifications,
 } from "../../lib/settings.js";
+import { emailServiceConnected } from "../../lib/mail.js";
+import { env } from "../../env.js";
 
 /* ── Settings ─────────────────────────────────────────────────────────── */
 
@@ -20,7 +24,7 @@ export const adminSettingsRouter = Router();
 
 const readSettings = async () => {
   const [rows, shipping] = await Promise.all([
-    prisma.setting.findMany({ where: { key: { in: ["store", "welcomeOffer", "copy"] } } }),
+    prisma.setting.findMany({ where: { key: { in: ["store", "welcomeOffer", "copy", "notifications"] } } }),
     prisma.shippingMethod.findFirst({
       where: { isEnabled: true },
       orderBy: { sortOrder: "asc" },
@@ -33,6 +37,9 @@ const readSettings = async () => {
     store: values.store ?? null,
     welcomeOffer: { code: welcome?.code ?? null },
     copy: readCopy(values.copy),
+    notifications: readNotifications(values.notifications),
+    // Read-only: whether emails really go out, and from which address.
+    email: { connected: emailServiceConnected(), from: env.EMAIL_FROM },
     // Read-only here; shown so page editors can see what shipping tokens become.
     shipping,
   };
@@ -65,6 +72,13 @@ adminSettingsRouter.put("/welcome-offer", allow(...ROLES.catalog), async (req, r
   }
   await save("welcomeOffer", { code: code || null });
   await logActivity(req, code ? `Set welcome offer to ${code}` : "Turned off the welcome offer", "Setting", "welcomeOffer");
+  res.json({ data: await readSettings() });
+});
+
+adminSettingsRouter.put("/notifications", allow(...ROLES.catalog), async (req, res) => {
+  const notifications = parse(NotificationSettings, req.body);
+  await save("notifications", notifications);
+  await logActivity(req, "Updated email notifications", "Setting", "notifications");
   res.json({ data: await readSettings() });
 });
 
