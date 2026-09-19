@@ -14,6 +14,7 @@ import {
   verifyPassword,
 } from "../../lib/auth.js";
 import { badRequest, parse, tooMany, unauthorized } from "../../lib/http.js";
+import { clientIp } from "../../lib/clientIp.js";
 import { requireAdmin } from "../../middleware/auth.js";
 import { logActivity } from "../../lib/activity.js";
 
@@ -26,7 +27,7 @@ const LoginBody = z.object({
 
 adminAuthRouter.post("/login", async (req, res) => {
   const body = parse(LoginBody, req.body);
-  const throttleKey = `${req.ip}:${body.email}`;
+  const throttleKey = `${clientIp(req)}:${body.email}`;
 
   if (isLoginLocked(throttleKey)) {
     throw tooMany("Too many failed attempts. Try again in 15 minutes.");

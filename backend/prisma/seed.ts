@@ -17,13 +17,14 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import { PrismaClient, type ProductStatus } from "../src/generated/prisma/client.js";
 import { DEFAULT_COPY } from "../src/lib/settings.js";
+import { pgConnection } from "../src/lib/pgConnection.js";
 
 // bcrypt used directly (same cost as the server) rather than importing the
 // server's auth module, which would drag in its environment validation.
 const hashPassword = (plain: string) => bcrypt.hash(plain, 12);
 
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
+  adapter: new PrismaPg(pgConnection(process.env.DATABASE_URL!, process.env.DATABASE_CA_CERT)),
 });
 
 const rs = (rupees: number) => rupees * 100; // → paise
@@ -180,7 +181,8 @@ const COLLABORATORS = [
 
 async function main() {
   const log = (s: string) => console.log(`  ✓ ${s}`);
-  console.log("Seeding Velastia database…");
+  // Say which database, so seeding the online one is never a surprise.
+  console.log(`Seeding Velastia database at ${new URL(process.env.DATABASE_URL!).host}…`);
 
   await prisma.setting.upsert({
     where: { key: "store" },
@@ -355,15 +357,19 @@ async function main() {
   if (adminCount === 0) {
     const email = process.env.SEED_ADMIN_EMAIL?.toLowerCase();
     const password = process.env.SEED_ADMIN_PASSWORD;
-    const isProd = process.env.NODE_ENV === "production";
+    // Seeding the online database from a laptop doesn't set NODE_ENV, so any
+    // database that isn't on this machine counts as live too.
+    const localDb = /@(localhost|127\.0\.0\.1)(:\d+)?\//.test(process.env.DATABASE_URL ?? "");
+    const isLive = process.env.NODE_ENV === "production" || !localDb;
     const weak = !password || password.length < 12 || password.startsWith("change-me");
     if (!email || !password) {
       console.warn("  ! No admin created — set SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD in .env");
-    } else if (isProd && weak) {
-      // The .env.example placeholder is fine on a laptop, never on a live store.
+    } else if (isLive && weak) {
+      // The .env.example placeholder is fine on a laptop, never on a live store:
+      // anyone who has read it could sign in before you do.
       throw new Error(
-        "Refusing to create a production admin with a weak or placeholder password. " +
-          "Set SEED_ADMIN_PASSWORD to a strong value (12+ characters).",
+        "Refusing to create an admin on an online database with a weak or placeholder password. " +
+          "Set SEED_ADMIN_PASSWORD to a strong value (12+ characters) — you'll replace it at first sign-in.",
       );
     } else {
       await prisma.adminUser.create({

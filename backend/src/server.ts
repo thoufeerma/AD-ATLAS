@@ -1,11 +1,14 @@
 import { createApp } from "./app.js";
 import { env } from "./env.js";
 import { prisma } from "./db.js";
+import { storageName } from "./lib/media.js";
+import { emailServiceConnected } from "./lib/mail.js";
 
 const app = createApp();
 
 const server = app.listen(env.PORT, () => {
   console.log(`Velastia API listening on http://localhost:${env.PORT} (${env.NODE_ENV})`);
+  console.log(`  images: ${storageName} · email: ${emailServiceConnected() ? "Resend" : "Email Log only (no RESEND_API_KEY)"}`);
 });
 
 /** Finish in-flight requests and release database connections before exiting. */

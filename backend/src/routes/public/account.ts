@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Customer } from "../../generated/prisma/client.js";
 import { prisma } from "../../db.js";
 import { badRequest, conflict, HttpError, notFound, param, parse, parsePatch, tooMany, unauthorized } from "../../lib/http.js";
+import { clientIp } from "../../lib/clientIp.js";
 import {
   clearLoginAttempts,
   getDummyHash,
@@ -112,7 +113,7 @@ const LoginBody = z.object({
 
 accountRouter.post("/login", async (req, res) => {
   const body = parse(LoginBody, req.body);
-  const throttleKey = `customer:${req.ip}:${body.email}`;
+  const throttleKey = `customer:${clientIp(req)}:${body.email}`;
   if (isLoginLocked(throttleKey)) throw tooMany("Too many failed attempts. Try again in 15 minutes.");
 
   const customer = await prisma.customer.findUnique({ where: { email: body.email } });

@@ -1,0 +1,34 @@
+# Render Blueprint for the Velastia API (backend/). In Render: New → Blueprint,
+# pick this repository. Step-by-step guide: DEPLOY.md.
+services:
+  - type: web
+    name: velastia-api
+    runtime: node
+    rootDir: backend
+    # Singapore: next to the Supabase project and the Vercel functions (sin1).
+    region: singapore
+    plan: free
+    # --include=dev: TypeScript and the Prisma CLI are dev dependencies, and
+    # NODE_ENV=production would otherwise skip them. Migrations run on every
+    # deploy; they only ever apply what's new.
+    buildCommand: npm ci --include=dev && npm run db:generate && npm run build && npx prisma migrate deploy
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SUPABASE_BUCKET
+        value: media
+      # Asked for when the Blueprint is created — see DEPLOY.md for each value.
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: PROXY_SECRET
+        sync: false

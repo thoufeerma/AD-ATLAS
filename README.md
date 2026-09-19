@@ -36,8 +36,10 @@ during a build** too. `npm run build` and `npm run lint` both pass clean.
   an edit in the admin shows on the live site within about a minute. If the API
   is briefly down, the last good page keeps being served.
 - **The browser** (cart pricing, checkout, forms, order tracking) calls this site's
-  own `/api/v1/*`, which [`next.config.ts`](next.config.ts) forwards to the API —
-  same origin, so no CORS setup is needed for the store.
+  own `/api/v1/*`, which [`proxy.ts`](proxy.ts) forwards to the API — same
+  origin, so no CORS setup is needed for the store. Online it also passes on
+  each shopper's IP address (signed with `PROXY_SECRET`) so the API's rate
+  limits apply per shopper, not to the whole site at once.
 - **Prices are never computed in the browser.** The cart and checkout show the
   API's quote ([`lib/cart.ts`](lib/cart.ts)); the API re-prices again when the
   order is placed.
@@ -50,7 +52,8 @@ during a build** too. `npm run build` and `npm run lint` both pass clean.
 | 2 | Admin / CMS frontend ([`admin/`](admin/)) | **Done** — 10 screens still on sample data |
 | 3 | Backend API — Express + TypeScript + Prisma + PostgreSQL ([`backend/`](backend/)) | **Done** |
 | 3b | Storefront connected to the API | **Done** |
-| 4 | Razorpay — UPI, cards, netbanking, wallets | Not started |
+| 3c | Online test site — Supabase, Render, Vercel ([`DEPLOY.md`](DEPLOY.md)) | **Ready to deploy** |
+| 4 | Razorpay — UPI, cards, netbanking, wallets | On hold |
 
 Until Razorpay is connected, **cash on delivery is the only payment method** at
 checkout; the online methods are shown as "Coming soon".
@@ -87,7 +90,9 @@ the pages and every product (new products join within a minute),
 out of search results, and product pages carry schema.org Product data (price
 in INR, stock, star rating) plus their own share preview. Every other page shares
 [`public/brand/og-image.png`](public/brand/og-image.png). All of these use
-`SITE_URL`, so **set it to the real domain before launch**.
+`SITE_URL`, so **set it to the real domain before launch**. Until
+`ALLOW_INDEXING=true` is set, robots.txt turns every crawler away and each page
+says `noindex`, so a test copy online never appears in Google.
 
 **Customer accounts** (`/login`, `/account`): sign up, sign in ("keep me
 signed in" or just this session), forgot password, profile, saved addresses
@@ -118,8 +123,9 @@ lib/
   cart.ts               cart lines vs. live catalog, server quote hook
   store.ts              cart + wishlist state (localStorage)
   content.ts            ingredient cards + Instagram tiles (not in the CMS yet)
-  site.ts               SITE_URL, for absolute links (sitemap, share previews)
+  site.ts               SITE_URL and ALLOW_INDEXING (sitemap, share previews, robots)
   tokens.ts             fills {{tokens}} in CMS page text from settings
+proxy.ts                forwards /api/v1 to the API
 public/                 imagery cropped out of the reference PNGs
 ```
 

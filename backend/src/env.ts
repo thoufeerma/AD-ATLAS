@@ -34,6 +34,17 @@ const schema = z
     // Public addresses of the two sites, for links and the logo in emails.
     STORE_URL: z.url().default("http://localhost:3000"),
     ADMIN_URL: z.url().default("http://localhost:3001"),
+    // ── Image storage online ── with these set, uploads go to a public
+    // Supabase Storage bucket instead of the local disk.
+    SUPABASE_URL: z.url().optional(),
+    SUPABASE_SERVICE_ROLE_KEY: z.string().trim().min(1).optional(),
+    SUPABASE_BUCKET: z.string().trim().min(1).default("media"),
+    // ── Database TLS ── Supabase's CA certificate (PEM), so the connection
+    // is verified as well as encrypted (see lib/pgConnection.ts).
+    DATABASE_CA_CERT: z.string().trim().min(1).optional(),
+    // ── Behind the store/admin proxies ── shared with both websites, which
+    // pass each visitor's real IP address with it (see lib/clientIp.ts).
+    PROXY_SECRET: z.string().trim().min(32, "must be at least 32 characters").optional(),
   })
   .superRefine((e, ctx) => {
     // A weak or placeholder signing secret in production would let anyone
@@ -46,6 +57,22 @@ const schema = z
         code: "custom",
         path: ["JWT_SECRET"],
         message: "must be a random value of at least 32 characters in production",
+      });
+    }
+    if (e.SUPABASE_URL && !e.SUPABASE_SERVICE_ROLE_KEY) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["SUPABASE_SERVICE_ROLE_KEY"],
+        message: "is required when SUPABASE_URL is set",
+      });
+    }
+    // Online, every request arrives through the store's or admin's server;
+    // without the shared secret all shoppers would share one rate limit.
+    if (e.NODE_ENV === "production" && !e.PROXY_SECRET) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["PROXY_SECRET"],
+        message: "is required in production (the same value as on both websites)",
       });
     }
   });

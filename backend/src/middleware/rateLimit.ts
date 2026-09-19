@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { tooMany } from "../lib/http.js";
+import { clientIp } from "../lib/clientIp.js";
 
 /**
  * Fixed-window limit per client IP, for the public endpoints anyone can POST
@@ -18,7 +19,7 @@ export function rateLimit({ name, max, windowMs }: { name: string; max: number; 
   }, windowMs).unref();
 
   return (req: Request, res: Response, next: NextFunction) => {
-    const key = req.ip ?? "unknown";
+    const key = clientIp(req);
     const now = Date.now();
     const entry = hits.get(key);
 

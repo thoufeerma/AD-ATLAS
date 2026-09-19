@@ -6,7 +6,7 @@ import Footer from "@/components/layout/Footer";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
 import AccountLoader from "@/components/providers/AccountLoader";
 import { bannerHeadlines, getSettings } from "@/lib/api/server";
-import { SITE_URL } from "@/lib/site";
+import { INDEXABLE, SITE_URL } from "@/lib/site";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -48,6 +48,8 @@ export const metadata: Metadata = {
     images: [{ url: "/brand/og-image.png", width: 1200, height: 630, alt: "Velastia" }],
   },
   twitter: { card: "summary_large_image" },
+  // A test site online stays out of search results until ALLOW_INDEXING=true.
+  ...(INDEXABLE ? {} : { robots: { index: false, follow: false } }),
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

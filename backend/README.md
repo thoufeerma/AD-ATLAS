@@ -5,6 +5,9 @@ Neither frontend imports the other; both talk only to this API.
 
 **Stack:** Express 5 · TypeScript · Prisma 7 · PostgreSQL · Zod · JWT (jose)
 
+Online it runs on Render with Supabase for the database and image storage —
+see [`../DEPLOY.md`](../DEPLOY.md) and [`../render.yaml`](../render.yaml).
+
 ## Setup
 
 Requires **Node 20.19+ / 22.12+ / 24+** (Prisma 7 refuses to install on older).
@@ -190,10 +193,21 @@ Each of these is exercised by `npm run smoke`.
   crafted to be two things at once. SVG is refused; files over `MAX_UPLOAD_MB`
   and images over 50 megapixels are rejected. Stored names are random, served
   only from inside the upload folder, and an image still in use can't be deleted.
+  Online (`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`) they go to a public
+  Supabase Storage bucket and are served from its CDN; the key stays on the API.
+- **Rate limits see the real visitor.** Online, the store and admin forward
+  browser calls from their servers, so they send the visitor's IP in
+  `X-Velastia-Client-IP` with `PROXY_SECRET`. The API believes that header only
+  when the secret matches (compared in constant time), so a direct caller can't
+  pick its own address. Without the secret it uses the connection's address.
+- **Database TLS.** `?sslmode=require` in `DATABASE_URL` encrypts the
+  connection; adding Supabase's CA certificate (`DATABASE_CA_CERT`) also
+  verifies it. See `src/lib/pgConnection.ts`.
 - **CORS** is an explicit allow-list (`CORS_ORIGINS`) — never a wildcard with
   credentials.
 - **Refuses to boot in production** with a missing, short or placeholder
-  `JWT_SECRET`.
+  `JWT_SECRET`, or without `PROXY_SECRET`. The seed refuses to create an admin
+  with the placeholder password on any database that isn't on this machine.
 - Order status can only move forward along valid transitions; cancelling
   returns stock. Products are archived, never hard-deleted. Used coupons are
   deactivated rather than deleted.
@@ -223,14 +237,9 @@ show up, turned off, on the Users & Roles screen.
   The gateway integration must also *release* that stock on payment failure or
   after an expiry window — see the `TODO(payments)` in `routes/public/checkout.ts`.
 - **SMS / WhatsApp** order updates (email only for now).
-- **Media uploads.** Image URLs are stored as storefront-relative paths. Real
-  uploads need object storage (S3, Cloudinary, R2).
-- **Remaining CMS resources**: blog posts, media library, campaigns, tax
-  editing. The tables exist; the routes don't. (Pages, store settings, the
-  inbox, subscribers, Users & Roles and shipping methods are done.)
-- **Object storage for uploads.** Images are kept on the API's local disk
-  (`UPLOAD_DIR`), which most hosts wipe on every deploy. Before going live,
-  switch `src/lib/media.ts`'s storage block to Cloudflare R2 or S3.
+- **Remaining CMS resources**: blog posts, campaigns, tax editing. The tables
+  exist; the routes don't. (Pages, store settings, the inbox, subscribers,
+  Users & Roles, shipping methods and the media library are done.)
 - **Login throttling and rate limits are in-memory** — correct for one instance,
   need Redis once the API runs on several.
 - The smoke suite is end-to-end only; there are no unit tests yet.

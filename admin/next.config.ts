@@ -10,16 +10,11 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
 
-  // The browser only ever talks to this app's own origin. `/api/v1/*` is
-  // forwarded to the backend, which means the httpOnly session cookie the API
-  // sets is first-party to the admin — no CORS, no third-party cookies, and
-  // server components can read it to make authenticated calls.
+  // /api/v1/* is forwarded to the backend by proxy.ts (see there for why).
+  // Images uploaded to the API's own disk — local development — load through
+  // here; online they come straight from Supabase Storage.
   async rewrites() {
-    return [
-      { source: "/api/v1/:path*", destination: `${API_URL}/api/v1/:path*` },
-      // Uploaded images, so previews load from the admin's own origin.
-      { source: "/uploads/:path*", destination: `${API_URL}/uploads/:path*` },
-    ];
+    return [{ source: "/uploads/:path*", destination: `${API_URL}/uploads/:path*` }];
   },
 };
 
