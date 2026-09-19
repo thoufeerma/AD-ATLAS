@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../db.js";
 import { notFound, param, parse } from "../../lib/http.js";
 import { rateLimit } from "../../middleware/rateLimit.js";
-import { readCopy } from "../../lib/settings.js";
+import { readCopy, readStore } from "../../lib/settings.js";
 import { afterResponse, type Email } from "../../lib/mail.js";
 import { alertCollabApplication, alertContactMessage, mailContext } from "../../lib/emails.js";
 
@@ -114,7 +114,7 @@ contentRouter.get("/settings/public", async (_req, res) => {
 
   res.json({
     data: {
-      store: values.store ?? null,
+      store: values.store ? readStore(values.store) : null,
       welcomeOffer: await liveWelcomeOffer(values.welcomeOffer),
       copy: readCopy(values.copy),
       shipping,

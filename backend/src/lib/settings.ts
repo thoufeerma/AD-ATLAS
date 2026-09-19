@@ -7,6 +7,21 @@ import { z } from "zod";
  * Imports nothing server-side, so the seed script can use the defaults too.
  */
 
+/** A social profile link: https only, or empty to hide that icon. */
+const SocialUrl = z.union([
+  z.literal("").transform(() => null),
+  z.null(),
+  z.url({ protocol: /^https$/, error: "Use a full https:// link" }).max(300),
+]);
+
+const SocialLinks = z.object({
+  instagram: SocialUrl,
+  youtube: SocialUrl,
+  facebook: SocialUrl,
+  x: SocialUrl,
+  pinterest: SocialUrl,
+});
+
 export const StoreSettings = z.object({
   name: z.string().trim().min(2).max(60),
   legalEntity: z.string().trim().min(2).max(120),
@@ -15,7 +30,31 @@ export const StoreSettings = z.object({
   supportPhone: z.string().trim().min(8).max(20),
   supportHours: z.string().trim().min(2).max(60),
   city: z.string().trim().min(2).max(60),
+  /** Profiles shown as icons in the header and footer; empty ones are hidden. */
+  social: SocialLinks.default({ instagram: null, youtube: null, facebook: null, x: null, pinterest: null }),
+  /** Shown above the Instagram strip on the homepage, e.g. "@velastia.beauty". */
+  instagramHandle: z
+    .string()
+    .trim()
+    .max(40)
+    .nullish()
+    .transform((h) => (h ? (h.startsWith("@") ? h : `@${h}`) : null)),
 });
+
+export type StoreSettings = z.infer<typeof StoreSettings>;
+
+/**
+ * Stored store details with the newer fields (social links) filled in, so
+ * settings saved before they existed still have the full shape.
+ */
+export function readStore(stored: unknown) {
+  const s = (stored ?? {}) as Partial<StoreSettings>;
+  return {
+    ...s,
+    social: { instagram: null, youtube: null, facebook: null, x: null, pinterest: null, ...(s.social ?? {}) },
+    instagramHandle: s.instagramHandle ?? null,
+  };
+}
 
 /** Which coupon the site advertises as its welcome offer, or none. */
 export const WelcomeOfferSettings = z.object({

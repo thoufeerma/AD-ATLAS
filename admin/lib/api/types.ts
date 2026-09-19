@@ -303,6 +303,17 @@ export type StoreDetails = {
   supportPhone: string;
   supportHours: string;
   city: string;
+  /** Profile links for the header/footer icons; null hides that icon. */
+  social: SocialLinks;
+  instagramHandle: string | null;
+};
+
+export type SocialLinks = {
+  instagram: string | null;
+  youtube: string | null;
+  facebook: string | null;
+  x: string | null;
+  pinterest: string | null;
 };
 
 export type SiteCopy = {

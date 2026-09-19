@@ -6,10 +6,18 @@ import { AlertCircle, Check, Loader2, Lock } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { api, ApiError } from "@/lib/api/client";
-import type { Coupon, SiteCopy, SiteSettings, StoreDetails } from "@/lib/api/types";
+import type { Coupon, SiteCopy, SiteSettings, SocialLinks, StoreDetails } from "@/lib/api/types";
 import { cn, same } from "@/lib/utils";
 
-const STORE_FIELDS: { name: keyof StoreDetails; label: string; hint?: string }[] = [
+const SOCIAL_FIELDS: { name: keyof SocialLinks; label: string; placeholder: string }[] = [
+  { name: "instagram", label: "Instagram", placeholder: "https://instagram.com/velastia" },
+  { name: "youtube", label: "YouTube", placeholder: "https://youtube.com/@velastia" },
+  { name: "facebook", label: "Facebook", placeholder: "https://facebook.com/velastia" },
+  { name: "x", label: "X (Twitter)", placeholder: "https://x.com/velastia" },
+  { name: "pinterest", label: "Pinterest", placeholder: "https://pinterest.com/velastia" },
+];
+
+const STORE_FIELDS: { name: Exclude<keyof StoreDetails, "social" | "instagramHandle">; label: string; hint?: string }[] = [
   { name: "name", label: "Store Name" },
   { name: "legalEntity", label: "Legal Entity", hint: "Shown in the footer of every policy page." },
   { name: "tagline", label: "Tagline" },
@@ -27,6 +35,8 @@ const EMPTY_STORE: StoreDetails = {
   supportPhone: "",
   supportHours: "",
   city: "",
+  social: { instagram: null, youtube: null, facebook: null, x: null, pinterest: null },
+  instagramHandle: null,
 };
 
 export default function SettingsForms({
@@ -84,6 +94,35 @@ function StoreCard({ initial, editable }: { initial: StoreDetails; editable: boo
         <p className="text-[0.68rem] text-muted">
           These appear in the storefront header, footer, contact page and policies.
         </p>
+
+        <div className="border-t border-hairline pt-4">
+          <p className="text-[0.78rem] font-medium text-ink">Social links</p>
+          <p className="mt-0.5 text-[0.68rem] text-muted">
+            Full https:// links. Icons appear in the header and footer only for the ones you fill in.
+          </p>
+          <div className="mt-3 space-y-3">
+            {SOCIAL_FIELDS.map((f) => (
+              <Field
+                key={f.name}
+                label={f.label}
+                value={values.social[f.name] ?? ""}
+                error={save.fields[`social.${f.name}`]}
+                disabled={!editable}
+                placeholder={f.placeholder}
+                onChange={(v) => setValues((s) => ({ ...s, social: { ...s.social, [f.name]: v || null } }))}
+              />
+            ))}
+            <Field
+              label="Instagram handle"
+              hint="Shown above the Instagram photos on the homepage, e.g. @velastia.beauty. That section appears once an Instagram link is set."
+              value={values.instagramHandle ?? ""}
+              error={save.fields.instagramHandle}
+              disabled={!editable}
+              placeholder="@velastia.beauty"
+              onChange={(v) => setValues((s) => ({ ...s, instagramHandle: v || null }))}
+            />
+          </div>
+        </div>
         {editable && <SaveRow save={save} dirty={dirty} />}
       </form>
     </Card>
@@ -311,6 +350,7 @@ function Field({
   value,
   error,
   disabled,
+  placeholder,
   onChange,
 }: {
   label: string;
@@ -318,6 +358,7 @@ function Field({
   value: string;
   error?: string;
   disabled: boolean;
+  placeholder?: string;
   onChange: (v: string) => void;
 }) {
   return (
@@ -326,6 +367,7 @@ function Field({
       <input
         value={value}
         disabled={disabled}
+        placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
         className={inputCls(!!error, disabled)}
       />

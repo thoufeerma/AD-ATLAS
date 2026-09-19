@@ -1,12 +1,6 @@
 import Link from "next/link";
 import { Mail, Phone, Clock, MapPin } from "lucide-react";
-import {
-  Instagram,
-  Youtube,
-  Facebook,
-  XIcon,
-  Pinterest,
-} from "@/components/ui/SocialIcons";
+import { socialProfiles } from "@/components/ui/SocialIcons";
 import { getSettings } from "@/lib/api/server";
 import { telHref } from "@/lib/utils";
 import Logo from "./Logo";
@@ -22,9 +16,8 @@ const COLUMNS = [
     links: [
       { label: "All Products", href: "/shop" },
       { label: "Best Sellers", href: "/shop?filter=bestsellers" },
-      { label: "New Arrivals", href: "/shop?filter=new" },
+      { label: "Coming Soon", href: "/shop?filter=coming-soon" },
       { label: "Offers", href: "/offers" },
-      { label: "Gift Cards", href: "/offers#gift-cards" },
     ],
   },
   {
@@ -48,16 +41,9 @@ const COLUMNS = [
   },
 ];
 
-const SOCIALS = [
-  { Icon: Instagram, href: "https://instagram.com", label: "Instagram" },
-  { Icon: Youtube, href: "https://youtube.com", label: "YouTube" },
-  { Icon: Facebook, href: "https://facebook.com", label: "Facebook" },
-  { Icon: XIcon, href: "https://x.com", label: "X" },
-  { Icon: Pinterest, href: "https://pinterest.com", label: "Pinterest" },
-];
-
 export default async function Footer() {
   const { store } = await getSettings();
+  const socials = socialProfiles(store.social);
 
   return (
     <footer className="mt-20 bg-plum-800 text-cream-100">
@@ -69,18 +55,22 @@ export default async function Footer() {
             Clean beauty backed by science and made to make you feel beautiful,
             every day.
           </p>
-          <div className="mt-6 flex items-center gap-3">
-            {SOCIALS.map(({ Icon, href, label }) => (
-              <a
-                key={label}
-                href={href}
-                aria-label={label}
-                className="grid size-8 place-items-center rounded-full border border-gold-500/40 text-gold-300 transition-colors hover:border-gold-400 hover:text-gold-200"
-              >
-                <Icon className="size-[15px]" />
-              </a>
-            ))}
-          </div>
+          {socials.length > 0 && (
+            <div className="mt-6 flex items-center gap-3">
+              {socials.map(({ Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={`Velastia on ${label}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="grid size-8 place-items-center rounded-full border border-gold-500/40 text-gold-300 transition-colors hover:border-gold-400 hover:text-gold-200"
+                >
+                  <Icon className="size-[15px]" />
+                </a>
+              ))}
+            </div>
+          )}
         </div>
 
         {COLUMNS.map((col) => (

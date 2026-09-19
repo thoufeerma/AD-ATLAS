@@ -21,7 +21,7 @@ Built from 22 design reference PNGs. They live in a local `reference/` folder th
 The storefront needs the API running (see [`backend/README.md`](backend/README.md)).
 
 ```bash
-cp .env.example .env.local   # API_URL=http://localhost:4000
+cp .env.example .env.local   # API_URL, and SITE_URL (the public domain, once live)
 npm install
 npm run dev                  # http://localhost:3000
 ```
@@ -66,7 +66,7 @@ checkout; the online methods are shown as "Coming soon".
 | Offers & Deals | Offers page (display only — discounts come from coupons) |
 | FAQs, Testimonials, Collaborators | FAQs page, homepage, cart, Collabs page |
 | Pages | Shipping, Returns, Terms and Privacy policies |
-| Settings | Support contacts and company name (header, footer, contact, policies), the welcome offer, and marketing copy ("Loved by Thousands", "10K+ Happy Customers", "Why Velastia?") |
+| Settings | Support contacts and company name (header, footer, contact, policies), social links (header and footer icons — only the ones filled in are shown — and the homepage Instagram section, which appears once an Instagram link is set), the welcome offer, and marketing copy ("Loved by Thousands", "10K+ Happy Customers", "Why Velastia?") |
 | Shipping Methods | Delivery options at checkout (price, delivery time, free-above amount, order); the first one on is the default behind every "free shipping above…" note |
 | Orders | Track Order page; marking an order shipped, out for delivery, delivered, cancelled or refunded emails the customer |
 | Media Library | Upload images and use them for products, banners, testimonials and collaborators (a picker in each form). Served at `/uploads/…` through this site |
@@ -75,6 +75,19 @@ checkout; the online methods are shown as "Coming soon".
 Policy text can include live values — `{{free_shipping_above}}`, `{{shipping_fee}}`,
 `{{support_email}}`, `{{legal_entity}}` and others listed in the page editor — so it
 stays correct when settings change.
+
+**Search** (`/search?q=`, from the header magnifier or the 404 page) matches
+every word against product names, descriptions, categories and shade names.
+The shop takes `?category=` and `?filter=bestsellers|coming-soon`, which the
+footer links use.
+
+**Search engines and link previews.** [`app/sitemap.ts`](app/sitemap.ts) lists
+the pages and every product (new products join within a minute),
+[`app/robots.ts`](app/robots.ts) keeps cart, checkout, account and search pages
+out of search results, and product pages carry schema.org Product data (price
+in INR, stock, star rating) plus their own share preview. Every other page shares
+[`public/brand/og-image.png`](public/brand/og-image.png). All of these use
+`SITE_URL`, so **set it to the real domain before launch**.
 
 **Customer accounts** (`/login`, `/account`): sign up, sign in ("keep me
 signed in" or just this session), forgot password, profile, saved addresses
@@ -105,6 +118,7 @@ lib/
   cart.ts               cart lines vs. live catalog, server quote hook
   store.ts              cart + wishlist state (localStorage)
   content.ts            ingredient cards + Instagram tiles (not in the CMS yet)
+  site.ts               SITE_URL, for absolute links (sitemap, share previews)
   tokens.ts             fills {{tokens}} in CMS page text from settings
 public/                 imagery cropped out of the reference PNGs
 ```
@@ -157,8 +171,10 @@ choose them on each product (and banner/testimonial) instead of the old paths. P
 
 ## Known gaps
 
-- No designs exist for Account/Profile, Order History or Search results; the
-  account pages follow the Cart's visual language
+- No designs exist for Account/Profile, Order History, Search results or the 404
+  page; they follow the Cart's visual language
+- The homepage "Behind The Beauty" tile was drawn as a video; it links to the
+  About page until there is a brand film
 - **Customer accounts need a connected email service before launch.** Order
   history only appears once a customer confirms their email (guest orders are
   linked by email, so signing up alone must not reveal them), and the

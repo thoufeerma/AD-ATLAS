@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { INSTAGRAM } from "@/lib/content";
 
-export default function InstagramStrip() {
+/** Links out to the store's Instagram; the home page skips it until one is set. */
+export default function InstagramStrip({ href, handle }: { href: string; handle: string | null }) {
   return (
     <section className="bg-cream-50 pb-16">
       <div className="container-vel">
@@ -9,19 +10,25 @@ export default function InstagramStrip() {
           <h2 className="font-display text-2xl tracking-[0.05em] text-plum-800">
             FOLLOW US ON INSTAGRAM
           </h2>
-          <a
-            href="https://instagram.com"
-            className="mt-1 inline-block text-xs text-gold-600 hover:text-gold-500"
-          >
-            @velastia.beauty
-          </a>
+          {handle && (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-block text-xs text-gold-600 hover:text-gold-500"
+            >
+              {handle}
+            </a>
+          )}
         </div>
 
         <ul className="grid grid-cols-3 gap-3 sm:grid-cols-6">
           {INSTAGRAM.map((src, i) => (
             <li key={src}>
               <a
-                href="https://instagram.com"
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group relative block aspect-square overflow-hidden rounded-[var(--radius-card)]"
               >
                 <Image

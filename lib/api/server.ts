@@ -27,10 +27,10 @@ import type {
 const API_URL = process.env.API_URL ?? "http://localhost:4000";
 const REVALIDATE = 60;
 
-async function get<T>(path: string): Promise<T> {
+async function get<T>(path: string, init: RequestInit = { next: { revalidate: REVALIDATE } }): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${API_URL}/api/v1${path}`, { next: { revalidate: REVALIDATE } });
+    res = await fetch(`${API_URL}/api/v1${path}`, init);
   } catch (cause) {
     throw new Error(
       `Velastia API unreachable at ${API_URL}. Start it with \`npm run dev\` in backend/.`,
@@ -61,6 +61,11 @@ async function find<T>(path: string): Promise<T | null> {
 export const getSettings = cache(() => get<Settings>("/settings/public"));
 
 export const getProducts = cache(() => get<Product[]>("/products"));
+
+/** Not cached: every query is different, and results should match the live catalog. */
+export const searchProducts = cache((q: string) =>
+  get<Product[]>(`/products?q=${encodeURIComponent(q)}`, { cache: "no-store" }),
+);
 
 export const getBestsellers = cache(() => get<Product[]>("/products?bestseller=true"));
 

@@ -14,6 +14,7 @@ import {
   WelcomeOfferSettings,
   readCopy,
   readNotifications,
+  readStore,
 } from "../../lib/settings.js";
 import { emailServiceConnected } from "../../lib/mail.js";
 import { env } from "../../env.js";
@@ -34,7 +35,7 @@ const readSettings = async () => {
   const values = Object.fromEntries(rows.map((r) => [r.key, r.value]));
   const welcome = values.welcomeOffer as { code?: string | null } | undefined;
   return {
-    store: values.store ?? null,
+    store: values.store ? readStore(values.store) : null,
     welcomeOffer: { code: welcome?.code ?? null },
     copy: readCopy(values.copy),
     notifications: readNotifications(values.notifications),

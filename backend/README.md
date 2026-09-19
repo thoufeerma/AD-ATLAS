@@ -54,7 +54,7 @@ under **Users & Roles**.
 | `db:seed` | Idempotent seed — safe to rerun, never overwrites edited data |
 | `db:studio` | Prisma Studio, a GUI over the database |
 | `db:up` / `db:down` | Start / stop the Docker database |
-| `smoke` | 197 end-to-end API checks — **dev databases only**, see below |
+| `smoke` | 204 end-to-end API checks — **dev databases only**, see below |
 
 ## API
 
@@ -66,7 +66,7 @@ All routes are under `/api/v1`. Every error has the same shape:
 | Method | Path | |
 | --- | --- | --- |
 | GET | `/categories` | Visible categories with product counts |
-| GET | `/products?category=&bestseller=&sort=` | Active + coming-soon products |
+| GET | `/products?category=&bestseller=&q=&sort=` | Active + coming-soon products. `q` searches: every word must match the name, description, category or a shade (max 100 characters) |
 | GET | `/products/:slug` | Detail with shades, images, rating breakdown, latest reviews |
 | GET | `/reviews?limit=` · `/reviews/summary` | Published reviews; store-wide rating |
 | POST | `/reviews` | Submit a review — held as pending until an admin publishes it |
@@ -205,7 +205,7 @@ npm run dev      # in one terminal
 npm run smoke    # in another
 ```
 
-Runs 45 storefront and 152 admin checks, including a concurrent-purchase race,
+Runs 49 storefront and 155 admin checks, including a concurrent-purchase race,
 the admin account lifecycle and regression tests for the partial-update bug.
 Rerunnable against a used database: every fixture it creates is suffixed per
 run. It **refuses to target anything but localhost**, because it places orders

@@ -47,6 +47,16 @@ console.log("\n[Catalog]");
 
   const nf = await call("GET", "/products/does-not-exist");
   ok(nf.status === 404 && nf.json.error.code === "NOT_FOUND", "unknown product -> 404 with error envelope");
+
+  // Search: every word has to match somewhere (name, description, category or shade).
+  const matte = (await call("GET", "/products?q=matte%20lipstick")).json.data;
+  ok(matte.length >= 2 && matte.every((x) => /matte/i.test(x.name + x.descriptor + x.blurb)), "search matches every word", matte.map((x) => x.slug).join(", "));
+  const byShade = (await call("GET", "/products?q=ROSE")).json.data;
+  ok(byShade.some((x) => x.shades.some((s) => /rose/i.test(s.name))), "search finds products by shade name, ignoring case");
+  const none = await call("GET", "/products?q=zzqx");
+  ok(none.status === 200 && none.json.data.length === 0, "search with no matches is an empty list, not an error");
+  const long = await call("GET", `/products?q=${"a".repeat(101)}`);
+  ok(long.status === 400, "search text is capped at 100 characters");
 }
 
 console.log("\n[Content]");

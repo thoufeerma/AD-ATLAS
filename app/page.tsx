@@ -9,7 +9,7 @@ import TrustStrip from "@/components/ui/TrustStrip";
 import { getBestsellers, getHomeContent, getRatingSummary, getSettings } from "@/lib/api/server";
 
 export default async function HomePage() {
-  const [bestsellers, content, rating, { copy }] = await Promise.all([
+  const [bestsellers, content, rating, { copy, store }] = await Promise.all([
     getBestsellers(),
     getHomeContent(),
     getRatingSummary(),
@@ -29,7 +29,9 @@ export default async function HomePage() {
       <GoldBand />
       <OurStory />
       <Collabs collaborators={content.collaborators} />
-      <InstagramStrip />
+      {store.social.instagram && (
+        <InstagramStrip href={store.social.instagram} handle={store.instagramHandle} />
+      )}
       <TrustStrip />
     </>
   );

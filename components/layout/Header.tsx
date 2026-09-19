@@ -1,10 +1,12 @@
 "use client";
 
+import Form from "next/form";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Search, User, Heart, ShoppingBag, Menu, X } from "lucide-react";
-import { Instagram, Youtube, Facebook } from "@/components/ui/SocialIcons";
+import { socialProfiles } from "@/components/ui/SocialIcons";
+import { useSettings } from "@/components/providers/SettingsProvider";
 import { useStore, useHydrated } from "@/lib/store";
 import { useAccount } from "@/lib/account";
 import { cn } from "@/lib/utils";
@@ -30,7 +32,10 @@ const NAV = [
 export default function Header({ announcements }: { announcements: string[] }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [searching, setSearching] = useState(false);
   const account = useAccount();
+  const { store } = useSettings();
+  const socials = socialProfiles(store.social, ["instagram", "youtube", "facebook"]);
 
   // Counts come out of persisted localStorage, so they stay at zero until the
   // store has rehydrated — otherwise server and client markup disagree.
@@ -57,17 +62,22 @@ export default function Header({ announcements }: { announcements: string[] }) {
               </li>
             ))}
           </ul>
-          <div className="hidden items-center gap-3 text-gold-300 lg:flex">
-            <a href="https://instagram.com" aria-label="Instagram" className="hover:text-gold-400">
-              <Instagram className="size-3.5" />
-            </a>
-            <a href="https://youtube.com" aria-label="YouTube" className="hover:text-gold-400">
-              <Youtube className="size-3.5" />
-            </a>
-            <a href="https://facebook.com" aria-label="Facebook" className="hover:text-gold-400">
-              <Facebook className="size-3.5" />
-            </a>
-          </div>
+          {socials.length > 0 && (
+            <div className="hidden items-center gap-3 text-gold-300 lg:flex">
+              {socials.map(({ Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={`Velastia on ${label}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-gold-400"
+                >
+                  <Icon className="size-3.5" />
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -107,9 +117,16 @@ export default function Header({ announcements }: { announcements: string[] }) {
           </nav>
 
           <div className="flex items-center gap-3.5 text-plum-800 sm:gap-5">
-            <Link href="/shop" aria-label="Search" className="hover:text-gold-600">
+            <button
+              type="button"
+              onClick={() => setSearching((s) => !s)}
+              aria-label="Search"
+              aria-expanded={searching}
+              aria-controls="site-search"
+              className="hover:text-gold-600"
+            >
               <Search className="size-[19px]" />
-            </Link>
+            </button>
             <Link
               href={account.status === "signed-in" ? "/account" : "/login"}
               aria-label={account.status === "signed-in" ? "Your account" : "Sign in"}
@@ -130,6 +147,42 @@ export default function Header({ announcements }: { announcements: string[] }) {
           </div>
         </div>
       </div>
+
+      {/* Search bar, opened from the magnifier */}
+      {searching && (
+        <div id="site-search" className="border-b border-gold-200/50 bg-cream-50">
+          <Form
+            action="/search"
+            role="search"
+            onSubmit={() => setSearching(false)}
+            className="container-vel flex items-center gap-3 py-3"
+          >
+            <Search className="size-4 shrink-0 text-ink-soft" aria-hidden="true" />
+            <input
+              name="q"
+              type="search"
+              required
+              maxLength={100}
+              autoFocus
+              placeholder="Search lipsticks, serums, shades…"
+              aria-label="Search products"
+              onKeyDown={(e) => e.key === "Escape" && setSearching(false)}
+              className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-plum-800 placeholder:text-ink-soft/70 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none"
+            />
+            <button type="submit" className="label-caps text-[0.66rem] text-gold-600 hover:text-gold-500">
+              Search
+            </button>
+            <button
+              type="button"
+              onClick={() => setSearching(false)}
+              aria-label="Close search"
+              className="text-ink-soft hover:text-plum-800"
+            >
+              <X className="size-4" />
+            </button>
+          </Form>
+        </div>
+      )}
 
       {/* Mobile drawer */}
       {open && (

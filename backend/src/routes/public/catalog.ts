@@ -83,6 +83,8 @@ catalogRouter.get("/categories", async (_req, res) => {
 
 const ListQuery = z.object({
   category: z.string().optional(),
+  /** Search words; every word must match the name, description, category or a shade. */
+  q: z.string().trim().max(100).optional(),
   bestseller: z.enum(["true", "false"]).optional(),
   sort: z.enum(["featured", "price-asc", "price-desc", "name"]).default("featured"),
 });
@@ -95,6 +97,23 @@ catalogRouter.get("/products", async (req, res) => {
     status: { in: ["ACTIVE", "COMING_SOON"] },
     category: { isVisible: true, ...(q.category ? { slug: q.category } : {}) },
     ...(q.bestseller === "true" ? { isBestseller: true } : {}),
+    ...(q.q
+      ? {
+          AND: q.q
+            .split(/\s+/)
+            .filter(Boolean)
+            .slice(0, 6)
+            .map((word) => ({
+              OR: [
+                { name: { contains: word, mode: "insensitive" as const } },
+                { descriptor: { contains: word, mode: "insensitive" as const } },
+                { blurb: { contains: word, mode: "insensitive" as const } },
+                { category: { name: { contains: word, mode: "insensitive" as const } } },
+                { shades: { some: { name: { contains: word, mode: "insensitive" as const } } } },
+              ],
+            })),
+        }
+      : {}),
   };
 
   const orderBy: Prisma.ProductOrderByWithRelationInput[] =

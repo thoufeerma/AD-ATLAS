@@ -225,6 +225,22 @@ console.log("\n[Settings & pages]");
   const badStore = await call("PUT", "/admin/settings/store", { ...before.store, supportEmail: "not-an-email" });
   ok(badStore.status === 400, "store details are validated", badStore.json.error.details?.[0]?.path);
 
+  // Social links: only full https:// links; blanks hide the icon on the store.
+  const insecure = await call("PUT", "/admin/settings/store", { ...before.store, social: { ...before.store.social, instagram: "http://instagram.com/velastia" } });
+  ok(insecure.status === 400 && insecure.json.error.details?.[0]?.path === "social.instagram", "social links must be https://", insecure.json.error.details?.[0]?.message);
+  const social = await call("PUT", "/admin/settings/store", {
+    ...before.store,
+    social: { ...before.store.social, instagram: `https://instagram.com/velastia${RUN}`, youtube: "" },
+    instagramHandle: "velastia.beauty",
+  });
+  const shown = (await pub("GET", "/settings/public")).json.data.store;
+  ok(
+    social.status === 200 && shown.social.instagram === `https://instagram.com/velastia${RUN}` && shown.social.youtube === null && shown.instagramHandle === "@velastia.beauty",
+    "social links reach the storefront (blank -> hidden, handle gets its @)",
+  );
+  await call("PUT", "/admin/settings/store", before.store);
+  ok((await pub("GET", "/settings/public")).json.data.store.social.instagram === before.store.social.instagram, "store details restored");
+
   // The welcome offer must be a real percentage coupon; "none" hides it.
   const fixed = await call("PUT", "/admin/settings/welcome-offer", { code: "WELCOME200" });
   ok(fixed.status === 400, "welcome offer refuses a fixed-amount coupon", fixed.json.error.message);

@@ -48,3 +48,21 @@ export function Pinterest({ className }: Props) {
     </svg>
   );
 }
+
+export type SocialLinks = Record<"instagram" | "youtube" | "facebook" | "x" | "pinterest", string | null>;
+
+const NETWORKS = [
+  { key: "instagram", label: "Instagram", Icon: Instagram },
+  { key: "youtube", label: "YouTube", Icon: Youtube },
+  { key: "facebook", label: "Facebook", Icon: Facebook },
+  { key: "x", label: "X", Icon: XIcon },
+  { key: "pinterest", label: "Pinterest", Icon: Pinterest },
+] as const;
+
+/** The profiles the admin has filled in (Settings → Store Details), in display order. */
+export function socialProfiles(social: SocialLinks, only?: (keyof SocialLinks)[]) {
+  return NETWORKS.flatMap((n) => {
+    const href = social[n.key];
+    return href && (!only || only.includes(n.key)) ? [{ ...n, href }] : [];
+  });
+}

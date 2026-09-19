@@ -45,6 +45,9 @@ const CLAIMS = [
 
 type Status = Product["status"];
 
+/** Presets the footer links to: /shop?filter=bestsellers, /shop?filter=coming-soon */
+export type ShopFilter = "bestsellers" | "coming-soon";
+
 /** Chip icons, one per category as drawn on the shop page. */
 const CHIP_ICONS: Record<string, LucideIcon> = {
   all: LayoutGrid,
@@ -61,12 +64,14 @@ export default function ShopBrowser({
   categories,
   promo,
   initialCategory,
+  initialFilter,
 }: {
   products: Product[];
   categories: Category[];
   /** Headline of the admin's "shop.sidebar" banner; the card hides without one. */
   promo: string | null;
   initialCategory?: string;
+  initialFilter?: ShopFilter;
 }) {
   const { welcomeOffer } = useSettings();
 
@@ -82,7 +87,8 @@ export default function ShopBrowser({
   );
   const [checked, setChecked] = useState<string[]>([]);
   const [maxPrice, setMaxPrice] = useState<number | null>(null); // null = no limit
-  const [types, setTypes] = useState<Status[]>([]);
+  const [types, setTypes] = useState<Status[]>(initialFilter === "coming-soon" ? ["COMING_SOON"] : []);
+  const [bestOnly, setBestOnly] = useState(initialFilter === "bestsellers");
   const [sort, setSort] = useState<Sort>("featured");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -93,6 +99,7 @@ export default function ShopBrowser({
     if (category !== "all") list = list.filter((p) => p.category.slug === category);
     if (checked.length) list = list.filter((p) => checked.includes(p.category.slug));
     if (types.length) list = list.filter((p) => types.includes(p.status));
+    if (bestOnly) list = list.filter((p) => p.isBestseller);
 
     switch (sort) {
       case "price-asc":
@@ -106,7 +113,7 @@ export default function ShopBrowser({
         // first, then bestsellers, then newest.
         return list;
     }
-  }, [products, category, checked, types, maxPrice, sort]);
+  }, [products, category, checked, types, bestOnly, maxPrice, sort]);
 
   const toggle = <T,>(arr: T[], v: T) =>
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
@@ -197,6 +204,7 @@ export default function ShopBrowser({
               </FilterGroup>
 
               <FilterGroup title="Product Type">
+                <Check label="Best Sellers" checked={bestOnly} onChange={() => setBestOnly((b) => !b)} />
                 <Check
                   label="Active Products"
                   checked={types.includes("ACTIVE")}
