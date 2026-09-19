@@ -34,7 +34,15 @@ adminCustomersRouter.get("/", allow(...ROLES.ordersRead), async (req, res) => {
       orderBy: { createdAt: "desc" },
       take: q.take,
       skip: q.skip,
-      select: { id: true, name: true, email: true, phone: true, createdAt: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        createdAt: true,
+        passwordHash: true,
+        emailVerifiedAt: true,
+      },
     }),
     prisma.customer.count({ where }),
   ]);
@@ -49,10 +57,12 @@ adminCustomersRouter.get("/", allow(...ROLES.ordersRead), async (req, res) => {
   const byId = new Map(stats.map((s) => [s.customerId, s]));
 
   res.json({
-    data: customers.map((c) => {
+    data: customers.map(({ passwordHash, emailVerifiedAt, ...c }) => {
       const s = byId.get(c.id);
       return {
         ...c,
+        // Guest (checked out only), or an account — verified or not yet.
+        account: !passwordHash ? "GUEST" : emailVerifiedAt ? "VERIFIED" : "UNVERIFIED",
         orderCount: s?._count._all ?? 0,
         lifetimeValuePaise: s?._sum.totalPaise ?? 0,
         lastOrderAt: s?._max.placedAt ?? null,

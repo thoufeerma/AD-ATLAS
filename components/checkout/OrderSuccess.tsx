@@ -24,6 +24,7 @@ import { useSettings } from "@/components/providers/SettingsProvider";
 import type { Product } from "@/lib/api/types";
 import { inrPaise, productImage } from "@/lib/utils";
 import { LAST_ORDER_KEY, type LastOrder } from "./lastOrder";
+import { useAccount } from "@/lib/account";
 
 const TRACKER = [
   { Icon: ClipboardCheck, title: "Order Confirmed", note: "We've received your order" },
@@ -57,6 +58,7 @@ export default function OrderSuccess({ products }: { products: Product[] }) {
   const params = useSearchParams();
   const { shipping } = useSettings();
   const [copied, setCopied] = useState(false);
+  const me = useAccount((s) => s.me);
 
   const number = params.get("order") ?? "";
 
@@ -249,6 +251,11 @@ export default function OrderSuccess({ products }: { products: Product[] }) {
                 <Button href={trackHref}>
                   <Truck className="size-3.5" /> Track Your Order
                 </Button>
+                {me?.emailVerified && (
+                  <Link href="/account" className="text-[0.72rem] text-gold-700 hover:text-gold-600">
+                    View in My Account →
+                  </Link>
+                )}
                 <Link
                   href="/shop"
                   className="text-[0.72rem] text-gold-700 hover:text-gold-600"

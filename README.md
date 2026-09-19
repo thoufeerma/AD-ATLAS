@@ -75,6 +75,12 @@ Policy text can include live values — `{{free_shipping_above}}`, `{{shipping_f
 `{{support_email}}`, `{{legal_entity}}` and others listed in the page editor — so it
 stays correct when settings change.
 
+**Customer accounts** (`/login`, `/account`): sign up, sign in ("keep me
+signed in" or just this session), forgot password, profile, saved addresses
+and order history. Checkout fills in a signed-in shopper's details and default
+address, and can save a new address. Order history appears once the email is
+confirmed through an emailed link.
+
 Shoppers' reviews, contact messages, newsletter sign-ups and collab applications
 are saved through the API. New reviews wait for approval on the admin Reviews
 screen; contact messages and collab applications land in the admin **Inbox**
@@ -149,8 +155,14 @@ real brand assets before launch.** Product shots came from the Wishlist screen
 
 ## Known gaps
 
-- No designs exist for Account/Profile, Order History or Search results; customer
-  accounts don't exist yet, so the login page is UI only
+- No designs exist for Account/Profile, Order History or Search results; the
+  account pages follow the Cart's visual language
+- **Customer accounts need a connected email service before launch.** Order
+  history only appears once a customer confirms their email (guest orders are
+  linked by email, so signing up alone must not reveal them), and the
+  confirmation and forgot-password links are emailed. Until Resend is set up
+  they sit in the admin's Email Log instead of reaching customers
+- The wishlist is kept in the browser, not synced to the account yet
 - The homepage hero slides are still in code (not banner-driven)
 - Marketing claims carried over from the designs ("Loved by Thousands",
   "Trusted by 10,000+ Beautiful Souls", "10K+ Happy Customers") are editable under

@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Lock, ChevronLeft, Truck, ShoppingBag, AlertCircle } from "lucide-react";
+import { Check, Lock, ChevronLeft, Truck, ShoppingBag, AlertCircle, MapPin, UserCheck } from "lucide-react";
 import Button from "@/components/ui/Button";
 import QuoteSummary from "@/components/cart/QuoteSummary";
 import { useStore, useHydrated } from "@/lib/store";
@@ -12,6 +13,8 @@ import { api } from "@/lib/api/client";
 import type { PaymentMethod, PlacedOrder, Product } from "@/lib/api/types";
 import { inrPaise, cn, looksLikeEmail, productImage } from "@/lib/utils";
 import { LAST_ORDER_KEY, type LastOrder } from "./lastOrder";
+import { useAccount } from "@/lib/account";
+import type { SavedAddress } from "@/components/account/AccountView";
 
 /**
  * No full checkout design exists in the reference set — only the small
@@ -75,6 +78,35 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("Shipping");
   const [addr, setAddr] = useState<Address>(EMPTY);
+
+  // Signed in: fill in their details once, fix the email to the account's,
+  // and offer their saved addresses (the default one pre-selected).
+  const { status: accountStatus, me } = useAccount();
+  const [prefilledFor, setPrefilledFor] = useState<string | null>(null);
+  if (me && prefilledFor !== me.id) {
+    setPrefilledFor(me.id);
+    setAddr((a) => ({
+      ...a,
+      fullName: a.fullName || me.name,
+      email: me.email,
+      phone: a.phone || me.phone || "",
+    }));
+  }
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [saveAddress, setSaveAddress] = useState(true);
+  useEffect(() => {
+    if (accountStatus !== "signed-in") return;
+    api<SavedAddress[]>("GET", "/account/addresses")
+      .then((list) => {
+        setSavedAddresses(list);
+        const preferred = list.find((a) => a.isDefault);
+        if (preferred) setAddr((a) => (a.line1 ? a : fromSaved(a, preferred)));
+      })
+      .catch(() => {});
+  }, [accountStatus]);
+  const matchesSaved = savedAddresses.some(
+    (a) => a.line1.toLowerCase() === addr.line1.trim().toLowerCase() && a.pincode === addr.pincode.trim(),
+  );
   const [showErrors, setShowErrors] = useState(false);
   const [method, setMethod] = useState<PaymentMethod>("COD");
   const [placing, setPlacing] = useState(false);
@@ -181,6 +213,7 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
           pincode: addr.pincode.trim(),
         },
         paymentMethod: method,
+        saveAddress: me ? saveAddress && !matchesSaved : undefined,
       });
 
       const saved: LastOrder = {
@@ -261,6 +294,50 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
           {step === "Shipping" && (
             <>
               <h2 className="font-display text-xl text-plum-800">Shipping Details</h2>
+              {me ? (
+                <p className="mt-2 flex items-center gap-2 text-[0.75rem] text-ink-soft">
+                  <UserCheck className="size-4 text-success" /> Signed in as {me.email}
+                </p>
+              ) : accountStatus === "guest" ? (
+                <p className="mt-2 text-[0.75rem] text-ink-soft">
+                  Have an account?{" "}
+                  <Link href="/login?next=/checkout" className="text-gold-700 hover:text-gold-600">
+                    Sign in
+                  </Link>{" "}
+                  to use your saved details — or just continue as a guest.
+                </p>
+              ) : null}
+
+              {savedAddresses.length > 0 && (
+                <div className="mt-5">
+                  <p className="label-caps text-[0.6rem] text-gold-700">Your saved addresses</p>
+                  <ul className="mt-2 flex flex-wrap gap-2">
+                    {savedAddresses.map((a) => {
+                      const chosen =
+                        a.line1.toLowerCase() === addr.line1.trim().toLowerCase() && a.pincode === addr.pincode.trim();
+                      return (
+                        <li key={a.id}>
+                          <button
+                            type="button"
+                            onClick={() => setAddr((prev) => fromSaved(prev, a))}
+                            aria-pressed={chosen}
+                            className={cn(
+                              "flex max-w-[16rem] items-start gap-2 rounded-sm border px-3 py-2 text-left text-[0.72rem] transition-colors",
+                              chosen ? "border-gold-500 bg-cream-50 text-plum-800" : "border-gold-200 text-ink-soft hover:border-gold-400",
+                            )}
+                          >
+                            <MapPin className="mt-0.5 size-3.5 shrink-0 text-gold-600" />
+                            <span className="truncate">
+                              {a.line1}, {a.city} {a.pincode}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 <Field
                   id="fullName"
@@ -291,6 +368,8 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
                   type="email"
                   autoComplete="email"
                   className="sm:col-span-2"
+                  readOnly={!!me}
+                  hint={me ? "Orders from your account use its email." : undefined}
                 />
                 <Field
                   id="line1"
@@ -340,6 +419,18 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
                   autoComplete="postal-code"
                 />
               </div>
+
+              {me && !matchesSaved && (
+                <label className="mt-5 flex cursor-pointer items-center gap-2.5 text-[0.75rem] text-ink-soft">
+                  <input
+                    type="checkbox"
+                    checked={saveAddress}
+                    onChange={(e) => setSaveAddress(e.target.checked)}
+                    className="size-3.5 accent-plum-800"
+                  />
+                  Save this address to my account
+                </label>
+              )}
 
               {options.length > 0 && (
                 <fieldset className="mt-7">
@@ -568,6 +659,8 @@ function Field({
   inputMode,
   autoComplete,
   className,
+  readOnly,
+  hint,
 }: {
   id: string;
   label: string;
@@ -579,6 +672,8 @@ function Field({
   inputMode?: "numeric" | "tel" | "text";
   autoComplete?: string;
   className?: string;
+  readOnly?: boolean;
+  hint?: string;
 }) {
   const inputId = `co-${id}`;
   return (
@@ -594,18 +689,36 @@ function Field({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
+        readOnly={readOnly}
         aria-invalid={!!error}
         aria-describedby={error ? `${inputId}-error` : undefined}
         className={cn(
           "w-full rounded-sm border bg-cream-50 px-3.5 py-2.5 text-sm text-plum-800 placeholder:text-ink-soft/50 focus:outline-none",
           error ? "border-danger focus:border-danger" : "border-gold-200 focus:border-gold-500",
+          readOnly && "cursor-not-allowed bg-cream-200/60 text-ink-soft",
         )}
       />
-      {error && (
+      {error ? (
         <p id={`${inputId}-error`} className="mt-1 text-[0.68rem] text-danger">
           {error}
         </p>
-      )}
+      ) : hint ? (
+        <p className="mt-1 text-[0.68rem] text-ink-soft">{hint}</p>
+      ) : null}
     </div>
   );
+}
+
+/** Fills the address fields from a saved address, keeping the email. */
+function fromSaved(a: Address, saved: SavedAddress): Address {
+  return {
+    ...a,
+    fullName: saved.fullName,
+    phone: saved.phone,
+    line1: saved.line1,
+    line2: saved.line2 ?? "",
+    city: saved.city,
+    state: saved.state,
+    pincode: saved.pincode,
+  };
 }

@@ -33,6 +33,19 @@ const columns: Column<CustomerListItem>[] = [
     ),
   },
   { key: "phone", header: "Phone", cell: (c) => (c.phone ? `+91 ${c.phone}` : "—") },
+  {
+    key: "account",
+    header: "Account",
+    value: (c) => c.account,
+    cell: (c) =>
+      c.account === "GUEST" ? (
+        <span className="text-muted">Guest</span>
+      ) : (
+        <Badge tone={c.account === "VERIFIED" ? "good" : "warning"} dot={false}>
+          {c.account === "VERIFIED" ? "Account" : "Unverified"}
+        </Badge>
+      ),
+  },
   { key: "orderCount", header: "Orders", align: "right" },
   {
     key: "lifetimeValuePaise",
@@ -54,6 +67,7 @@ const columns: Column<CustomerListItem>[] = [
 ];
 
 const filters = [
+  { label: "Has account", test: (c: CustomerListItem) => c.account !== "GUEST" },
   { label: "Repeat", test: (c: CustomerListItem) => c.orderCount >= 2 },
   { label: "One-time", test: (c: CustomerListItem) => c.orderCount === 1 },
   { label: "No purchase", test: (c: CustomerListItem) => c.orderCount === 0 },

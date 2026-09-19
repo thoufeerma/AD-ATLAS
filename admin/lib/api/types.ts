@@ -205,6 +205,8 @@ export type CustomerListItem = {
   email: string;
   phone: string | null;
   createdAt: string;
+  /** Guest checkout only, or a storefront account (verified email or not yet). */
+  account: "GUEST" | "VERIFIED" | "UNVERIFIED";
   orderCount: number;
   lifetimeValuePaise: number;
   lastOrderAt: string | null;
@@ -424,6 +426,8 @@ export const EMAIL_KIND_LABEL: Record<string, string> = {
   "alert.order": "New-order alert",
   "alert.message": "Message alert",
   "alert.collab": "Collab alert",
+  "account.verify": "Confirm email",
+  "account.reset": "Password reset",
   test: "Test",
 };
 

@@ -8,13 +8,15 @@ export class ApiError extends Error {
     public readonly status: number,
     public readonly code: string,
     message: string,
+    /** Field-level messages the API chose to send, keyed by field name. */
+    public readonly fields: Record<string, string> = {},
   ) {
     super(message);
   }
 }
 
 export async function api<T>(
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "PATCH" | "DELETE",
   path: string,
   body?: unknown,
   init?: { signal?: AbortSignal },
@@ -34,13 +36,23 @@ export async function api<T>(
 
   const json = await res.json().catch(() => null);
   if (!res.ok) {
+    const details: { path?: string; message?: string }[] = Array.isArray(json?.error?.details)
+      ? json.error.details
+      : [];
     throw new ApiError(
       res.status,
       json?.error?.code ?? "UNKNOWN",
       friendly(res.status, json?.error?.message),
+      Object.fromEntries(details.filter((d) => d.path && d.message).map((d) => [d.path!, d.message!])),
     );
   }
   return json.data as T;
+}
+
+/** A field-level message from the API (e.g. `password`), if it sent one. */
+export function fieldError(err: unknown, field: string) {
+  if (!(err instanceof ApiError)) return undefined;
+  return err.fields[field];
 }
 
 function friendly(status: number, message?: string) {

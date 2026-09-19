@@ -111,6 +111,14 @@ model Customer {
   phone        String?
   /// Null for customers who have only checked out as guests.
   passwordHash String?
+  /// Set once they've clicked the emailed link (or reset their password).
+  /// Order history stays hidden until then: guest orders are linked by
+  /// email, so signing up with an address mustn't be enough to read them.
+  emailVerifiedAt DateTime?
+  /// Stamped into session tokens; bumped on password change/reset.
+  sessionVersion Int @default(0)
+  lastLoginAt  DateTime?
+  tokens       CustomerToken[]
   addresses    Address[]
   orders       Order[]
   reviews      Review[]
@@ -597,4 +605,25 @@ model EmailLog {
 
   @@index([createdAt])
   @@map("email_logs")
+}
+
+enum CustomerTokenKind {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+/// One-time links emailed to customers. Only a SHA-256 of the token is
+/// stored, so a database leak can't be used to take over accounts.
+model CustomerToken {
+  id         String            @id @default(cuid())
+  kind       CustomerTokenKind
+  tokenHash  String            @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  customerId String
+  customer   Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime          @default(now())
+
+  @@index([customerId, kind])
+  @@map("customer_tokens")
 }

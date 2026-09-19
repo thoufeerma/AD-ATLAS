@@ -9,6 +9,7 @@ import { errorHandler, notFoundHandler } from "./middleware/error.js";
 import { catalogRouter } from "./routes/public/catalog.js";
 import { checkoutRouter } from "./routes/public/checkout.js";
 import { contentRouter } from "./routes/public/content.js";
+import { accountRouter } from "./routes/public/account.js";
 import { adminAuthRouter } from "./routes/admin/auth.js";
 import { adminProductsRouter } from "./routes/admin/products.js";
 import { adminOrdersRouter } from "./routes/admin/orders.js";
@@ -63,6 +64,7 @@ export function createApp() {
   v1.use(catalogRouter);
   v1.use(checkoutRouter);
   v1.use(contentRouter);
+  v1.use("/account", accountRouter);
 
   // ── Admin API (CMS) ── everything past /auth requires a session, and a
   // password of the admin's own choosing (see requireCurrentPassword).

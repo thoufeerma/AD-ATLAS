@@ -54,7 +54,7 @@ under **Users & Roles**.
 | `db:seed` | Idempotent seed — safe to rerun, never overwrites edited data |
 | `db:studio` | Prisma Studio, a GUI over the database |
 | `db:up` / `db:down` | Start / stop the Docker database |
-| `smoke` | 159 end-to-end API checks — **dev databases only**, see below |
+| `smoke` | 184 end-to-end API checks — **dev databases only**, see below |
 
 ## API
 
@@ -76,6 +76,12 @@ All routes are under `/api/v1`. Every error has the same shape:
 | POST | `/cart/quote` | Authoritative cart pricing — writes nothing. Lists every enabled shipping option priced for the cart; pass `shippingMethodId` to price with one |
 | POST | `/orders` | Place an order |
 | GET | `/orders/track?number=&email=` | Needs **both** — see Security |
+| POST | `/account/register` · `/login` · `/logout` | Customer accounts (cookie `vel_customer`) |
+| GET · PATCH | `/account/me` | Profile |
+| POST | `/account/password` · `/password/forgot` · `/password/reset` | Change, or reset by emailed link |
+| POST | `/account/verify` · `/verify/resend` | Confirm the email (emailed link) |
+| GET | `/account/orders` | Order history — only once the email is verified |
+| GET · POST · PATCH · DELETE | `/account/addresses` (`/:id`) | Saved addresses (up to 10) |
 | POST | `/contact` · `/newsletter` · `/collab-applications` | Forms |
 
 Public POSTs are rate-limited per IP (in memory): orders 20, reviews 5 and each
@@ -166,6 +172,14 @@ Each of these is exercised by `npm run smoke`.
   stored only as a bcrypt hash), and an account on a one-time or placeholder
   password can do nothing but change it — enforced by the API, not just the
   admin panel. Nobody can demote or turn off themselves, or the last super admin.
+- **Customer accounts** use their own cookie and token audience — a customer's
+  token is rejected by the admin API and vice versa. Order history (and any
+  phone number from earlier guest orders) stays hidden until the email is
+  verified, so signing up with someone else's address reveals nothing.
+  Emailed links are single-use, expire (48 h to verify, 1 h to reset) and are
+  stored only as SHA-256 hashes. Forgot-password answers the same whether or
+  not the account exists; sign-in uses the same timing-safe, throttled check
+  as the admin. Password changes and resets end every other session.
 - **CORS** is an explicit allow-list (`CORS_ORIGINS`) — never a wildcard with
   credentials.
 - **Refuses to boot in production** with a missing, short or placeholder
@@ -181,7 +195,7 @@ npm run dev      # in one terminal
 npm run smoke    # in another
 ```
 
-Runs 45 storefront and 114 admin checks, including a concurrent-purchase race,
+Runs 45 storefront and 139 admin checks, including a concurrent-purchase race,
 the admin account lifecycle and regression tests for the partial-update bug.
 Rerunnable against a used database: every fixture it creates is suffixed per
 run. It **refuses to target anything but localhost**, because it places orders
@@ -198,8 +212,6 @@ show up, turned off, on the Users & Roles screen.
 - **Razorpay.** Online-payment orders are created as `PENDING` and reserve stock.
   The gateway integration must also *release* that stock on payment failure or
   after an expiry window — see the `TODO(payments)` in `routes/public/checkout.ts`.
-- **Customer accounts.** Checkout works as a guest; customer login, saved
-  addresses and order history are not wired.
 - **SMS / WhatsApp** order updates (email only for now).
 - **Media uploads.** Image URLs are stored as storefront-relative paths. Real
   uploads need object storage (S3, Cloudinary, R2).

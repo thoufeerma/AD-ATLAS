@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Search, User, Heart, ShoppingBag, Menu, X } from "lucide-react";
 import { Instagram, Youtube, Facebook } from "@/components/ui/SocialIcons";
 import { useStore, useHydrated } from "@/lib/store";
+import { useAccount } from "@/lib/account";
 import { cn } from "@/lib/utils";
 import Logo from "./Logo";
 
@@ -29,6 +30,7 @@ const NAV = [
 export default function Header({ announcements }: { announcements: string[] }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const account = useAccount();
 
   // Counts come out of persisted localStorage, so they stay at zero until the
   // store has rehydrated — otherwise server and client markup disagree.
@@ -108,8 +110,16 @@ export default function Header({ announcements }: { announcements: string[] }) {
             <Link href="/shop" aria-label="Search" className="hover:text-gold-600">
               <Search className="size-[19px]" />
             </Link>
-            <Link href="/login" aria-label="Account" className="hover:text-gold-600">
+            <Link
+              href={account.status === "signed-in" ? "/account" : "/login"}
+              aria-label={account.status === "signed-in" ? "Your account" : "Sign in"}
+              title={account.me ? `Signed in as ${account.me.name}` : undefined}
+              className="relative hover:text-gold-600"
+            >
               <User className="size-[19px]" />
+              {account.status === "signed-in" && (
+                <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-success ring-2 ring-cream-50" />
+              )}
             </Link>
             <IconWithCount href="/wishlist" label="Wishlist" count={hydrated ? wishlist.length : 0}>
               <Heart className="size-[19px]" />

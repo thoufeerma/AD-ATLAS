@@ -31,6 +31,7 @@ export const getDummyHash = () =>
 export async function signSession(session: AdminSession) {
   return new SignJWT({ role: session.role, ver: session.ver })
     .setProtectedHeader({ alg: "HS256" })
+    .setAudience("admin")
     .setSubject(session.sub)
     .setIssuedAt()
     .setExpirationTime(`${SESSION_SECONDS}s`)
@@ -39,7 +40,9 @@ export async function signSession(session: AdminSession) {
 
 export async function readSession(token: string): Promise<AdminSession | null> {
   try {
-    const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] });
+    // Customer and admin tokens share the key, so each is tied to its audience:
+    // a customer's token can never be presented as an admin session.
+    const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"], audience: "admin" });
     if (typeof payload.sub !== "string" || typeof payload.role !== "string") return null;
     // Tokens from before session versions existed carry no `ver`; they fail
     // the version check and the admin simply signs in again.

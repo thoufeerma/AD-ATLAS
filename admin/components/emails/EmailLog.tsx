@@ -146,6 +146,16 @@ function Preview({ id }: { id: string }) {
     );
   }
 
+  // The preview frame is locked down, so its links can't be clicked there.
+  // Listing them lets you open, say, a confirm-email link while testing.
+  const links = [
+    ...new Set(
+      [...email.html.matchAll(/href="(https?:\/\/[^"]+)"/g)].map((m) =>
+        m[1]!.replace(/&amp;/g, "&"),
+      ),
+    ),
+  ];
+
   return (
     <Card bodyClassName="p-0">
       <dl className="space-y-1 border-b border-hairline p-4 text-[0.74rem]">
@@ -176,6 +186,20 @@ function Preview({ id }: { id: string }) {
         srcDoc={email.html}
         className="h-[62vh] w-full rounded-b-[var(--radius-card)] bg-white"
       />
+      {links.length > 0 && (
+        <div className="border-t border-hairline px-4 py-3">
+          <p className="text-[0.68rem] font-medium text-ink-2">Links in this email</p>
+          <ul className="mt-1 space-y-0.5">
+            {links.map((href) => (
+              <li key={href} className="truncate text-[0.7rem]">
+                <a href={href} target="_blank" rel="noreferrer" className="text-series-1 hover:underline">
+                  {href}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <p className="flex items-center gap-1.5 px-4 py-2 text-[0.66rem] text-muted">
         <Mail className="size-3" /> Images load from the storefront; on a local setup they only show while it&apos;s running.
       </p>

@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
+import AccountLoader from "@/components/providers/AccountLoader";
 import { bannerHeadlines, getSettings } from "@/lib/api/server";
 
 const cormorant = Cormorant_Garamond({
@@ -46,6 +47,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-cream-50 text-ink">
         <SettingsProvider settings={settings}>
+          <AccountLoader />
           <Header announcements={announcements} />
           <main className="flex-1">{children}</main>
           <Footer />

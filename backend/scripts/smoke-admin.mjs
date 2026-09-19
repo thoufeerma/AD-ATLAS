@@ -458,6 +458,97 @@ console.log("\n[Emails]");
   }
 }
 
+console.log("\n[Customer accounts]");
+{
+  // Storefront requests as a particular shopper (their own cookie).
+  const shop = async (cookie, method, path, body) => {
+    const res = await fetch(API + path, {
+      method,
+      headers: { "content-type": "application/json", ...(cookie ? { cookie } : {}) },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const json = await res.json().catch(() => null);
+    return { status: res.status, json, cookie: res.headers.get("set-cookie")?.split(";")[0] };
+  };
+  // The one-time link from the latest email of a kind, read from the Email Log.
+  const linkToken = async (to, kind) => {
+    for (let i = 0; i < 20; i++) {
+      const hit = (await call("GET", "/admin/emails?take=100")).json.data.find((e) => e.to === to && e.kind === kind);
+      if (hit) return (await call("GET", `/admin/emails/${hit.id}`)).json.data.html.match(/token=([A-Za-z0-9_-]+)/)?.[1];
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    return null;
+  };
+
+  const email = `shopper.${RUN}@example.com`;
+  const reg = await shop(null, "POST", "/account/register", { name: "Asha Shopper", email, password: `rose-velvet-${RUN}` });
+  let cookie = reg.cookie;
+  ok(reg.status === 201 && reg.json.data.emailVerified === false && cookie?.startsWith("vel_customer="), "sign up -> signed in, email not yet verified");
+  ok((await shop(null, "POST", "/account/register", { name: "Again", email, password: `another-${RUN}-pass` })).status === 409, "same email can't sign up twice");
+  const weak = await shop(null, "POST", "/account/register", { name: "Weak", email: `weak.${RUN}@example.com`, password: "short" });
+  ok(weak.status === 400 && weak.json.error.details?.[0]?.path === "password", "too-short password refused");
+  ok((await shop(cookie, "GET", "/account/me")).json.data.email === email, "session reads the account");
+  ok((await shop(null, "POST", "/account/login", { email, password: "wrong-password" })).status === 401, "wrong password refused");
+  const orders0 = await shop(cookie, "GET", "/account/orders");
+  ok(orders0.status === 403 && orders0.json.error.code === "EMAIL_NOT_VERIFIED", "order history hidden until the email is verified");
+
+  const vtoken = await linkToken(email, "account.verify");
+  ok(!!vtoken, "verification email sent with a one-time link");
+  ok((await shop(null, "POST", "/account/verify", { token: vtoken })).status === 200, "link verifies the email (no sign-in needed)");
+  ok((await shop(null, "POST", "/account/verify", { token: vtoken })).status === 400, "…and only works once");
+
+  // Checkout as the account; save the address.
+  const mismatch = await shop(cookie, "POST", "/orders", { email: `other.${RUN}@example.com`, name: "Asha Shopper", ...shipTo, items: [{ slug: "lip-liner", quantity: 1 }], paymentMethod: "COD" });
+  ok(mismatch.status === 400 && mismatch.json.error.details?.[0]?.path === "email", "signed in: the order must use the account's email");
+  const mine = await shop(cookie, "POST", "/orders", { email, name: "Asha Shopper", ...shipTo, items: [{ slug: "lip-liner", quantity: 1 }], paymentMethod: "COD", saveAddress: true });
+  const history = (await shop(cookie, "GET", "/account/orders")).json.data;
+  ok(mine.status === 201 && history[0]?.number === mine.json.data.number, "order appears in the account's history", mine.json.data?.number);
+  const addrs = (await shop(cookie, "GET", "/account/addresses")).json.data;
+  ok(addrs.length === 1 && addrs[0].isDefault && addrs[0].pincode === shipTo.shipping.pincode, "checkout address saved as the default");
+
+  // Addresses belong to their owner only.
+  const other = await shop(null, "POST", "/account/register", { name: "Other Person", email: `other.${RUN}@example.com`, password: `plum-silk-${RUN}` });
+  ok((await shop(other.cookie, "PATCH", `/account/addresses/${addrs[0].id}`, { city: "Hacked" })).status === 404, "can't touch someone else's address");
+  const added = await shop(cookie, "POST", "/account/addresses", { fullName: "Asha Shopper", phone: "9876543210", line1: "5 Palm Avenue", city: "Chennai", state: "Tamil Nadu", pincode: "600001", isDefault: true });
+  ok(added.status === 201 && added.json.data.filter((a) => a.isDefault).length === 1 && added.json.data[0].city === "Chennai", "new default address replaces the old default");
+
+  // A guest's past orders: signing up with their email doesn't reveal them until verified.
+  const guest = `guest.${RUN}@example.com`;
+  await pub("POST", "/orders", { email: guest, name: "Guest Buyer", ...shipTo, items: [{ slug: "lip-liner", quantity: 1 }], paymentMethod: "COD" });
+  const claim = await shop(null, "POST", "/account/register", { name: "Claimant", email: guest, password: `claim-${RUN}-pass` });
+  ok(claim.status === 201 && claim.json.data.phone === null && (await shop(claim.cookie, "GET", "/account/orders")).status === 403, "signing up on a guest's email shows none of their details before verifying");
+  const gtoken = await linkToken(guest, "account.verify");
+  await shop(null, "POST", "/account/verify", { token: gtoken });
+  const gHistory = await shop(claim.cookie, "GET", "/account/orders");
+  ok(gHistory.status === 200 && gHistory.json.data.length === 1, "after verifying, the earlier guest order is in the history");
+
+  // Change password: other sessions end, this one continues.
+  const second = (await shop(null, "POST", "/account/login", { email, password: `rose-velvet-${RUN}` })).cookie;
+  const badCurrent = await shop(cookie, "POST", "/account/password", { currentPassword: "nope", newPassword: `new-${RUN}-pass` });
+  ok(badCurrent.status === 400 && badCurrent.json.error.details?.[0]?.path === "currentPassword", "change password needs the current one");
+  const changed = await shop(cookie, "POST", "/account/password", { currentPassword: `rose-velvet-${RUN}`, newPassword: `new-${RUN}-pass` });
+  ok(changed.status === 200 && (await shop(second, "GET", "/account/me")).status === 401 && (await shop(changed.cookie, "GET", "/account/me")).status === 200, "changing password signs out other devices, keeps this one");
+  cookie = changed.cookie;
+
+  // Forgot password: same answer for any email; the link resets and signs in.
+  const unknown = await shop(null, "POST", "/account/password/forgot", { email: `nobody.${RUN}@example.com` });
+  const known = await shop(null, "POST", "/account/password/forgot", { email });
+  ok(unknown.status === 200 && known.status === 200 && JSON.stringify(unknown.json) === JSON.stringify(known.json), "forgot-password gives the same answer whether or not the account exists");
+  const rtoken = await linkToken(email, "account.reset");
+  const weakReset = await shop(null, "POST", "/account/password/reset", { token: rtoken, password: "abc" });
+  ok(weakReset.status === 400 && weakReset.json.error.details?.[0]?.path === "password", "weak new password refused without spending the link");
+  const reset = await shop(null, "POST", "/account/password/reset", { token: rtoken, password: `reset-${RUN}-pass` });
+  ok(reset.status === 200 && !!reset.cookie && (await shop(cookie, "GET", "/account/me")).status === 401, "reset link sets the password, signs in, ends older sessions");
+  ok((await shop(null, "POST", "/account/password/reset", { token: rtoken, password: `again-${RUN}-pass` })).status === 400, "reset link only works once");
+  ok((await shop(null, "POST", "/account/login", { email, password: `reset-${RUN}-pass` })).status === 200, "new password signs in");
+
+  // A customer's session is not an admin session.
+  const customerToken = reset.cookie.split("=")[1];
+  ok((await shop(`vel_admin=${customerToken}`, "GET", "/admin/auth/me")).status === 401, "a customer's token can't be used as an admin session");
+  const out = await shop(reset.cookie, "POST", "/account/logout");
+  ok(out.status === 204 && /vel_customer=;/.test(out.cookie + ";"), "sign out clears the cookie");
+}
+
 console.log("\n[Race: two shoppers, one stock pool]");
 {
   const nc = (await call("GET", "/admin/products?q=night%20cream")).json.data[0];

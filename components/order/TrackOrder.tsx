@@ -24,6 +24,7 @@ import {
 import Button from "@/components/ui/Button";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { LAST_ORDER_KEY, type LastOrder } from "@/components/checkout/lastOrder";
+import { useAccount } from "@/lib/account";
 import { api, ApiError } from "@/lib/api/client";
 import type { OrderStatus, Product, TrackedOrder } from "@/lib/api/types";
 import { inrPaise, cn, productImage, telHref, whatsappHref, looksLikeEmail } from "@/lib/utils";
@@ -92,7 +93,8 @@ export default function TrackOrder({ products }: { products: Product[] }) {
   const [number, setNumber] = useState(initialNumber);
   // null until the shopper types, so the remembered email can fill in.
   const [emailInput, setEmailInput] = useState<string | null>(null);
-  const email = emailInput ?? rememberedEmail;
+  const accountEmail = useAccount((s) => s.me?.email ?? "");
+  const email = emailInput ?? (rememberedEmail || accountEmail);
 
   const [order, setOrder] = useState<TrackedOrder | null>(null);
   const [looking, setLooking] = useState(false);

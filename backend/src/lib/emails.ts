@@ -322,3 +322,49 @@ export function testEmail(store: Store, to: string): Email {
     kind: "test",
   };
 }
+
+/* ── Account emails ───────────────────────────────────────────────────── */
+
+export function verifyEmail(c: { name: string; email: string }, token: string, store: Store): Email {
+  const link = `${env.STORE_URL}/account/verify?token=${encodeURIComponent(token)}`;
+  const html = layout(
+    store,
+    "Confirm your email to see your orders.",
+    [
+      h1(`Welcome, ${esc(firstName(c.name))}!`),
+      p(`Please confirm this is your email address. Once you do, your order history appears in your account — including any orders you placed before signing up.`),
+      button(link, "Confirm my email"),
+      p(`<span style="color:${SOFT};font-size:12px">This link works once and expires in 48 hours. If you didn't create a ${esc(store.name)} account, you can ignore this email.</span>`),
+    ].join(""),
+  );
+  const text = [
+    `Welcome, ${firstName(c.name)}!`,
+    "Confirm your email address to see your order history:",
+    link,
+    "",
+    `This link works once and expires in 48 hours. If you didn't create a ${store.name} account, ignore this email.`,
+  ].join("\n");
+  return { to: c.email, subject: `Confirm your email for ${store.name}`, html, text, kind: "account.verify", replyTo: store.supportEmail || undefined };
+}
+
+export function passwordResetEmail(c: { name: string; email: string }, token: string, store: Store): Email {
+  const link = `${env.STORE_URL}/account/reset?token=${encodeURIComponent(token)}`;
+  const html = layout(
+    store,
+    "Reset your password.",
+    [
+      h1("Reset your password"),
+      p(`Hi ${esc(firstName(c.name))}, someone (hopefully you) asked to reset the password for your ${esc(store.name)} account.`),
+      button(link, "Choose a new password"),
+      p(`<span style="color:${SOFT};font-size:12px">This link works once and expires in 1 hour. If you didn't ask for this, ignore this email — your password won't change.</span>`),
+    ].join(""),
+  );
+  const text = [
+    `Hi ${firstName(c.name)},`,
+    `Reset your ${store.name} password here:`,
+    link,
+    "",
+    "This link works once and expires in 1 hour. If you didn't ask for this, ignore this email.",
+  ].join("\n");
+  return { to: c.email, subject: `Reset your ${store.name} password`, html, text, kind: "account.reset", replyTo: store.supportEmail || undefined };
+}

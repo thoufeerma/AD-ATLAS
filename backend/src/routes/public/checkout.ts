@@ -4,8 +4,10 @@ import { z } from "zod";
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../db.js";
 import { quoteCart } from "../../lib/pricing.js";
-import { conflict, notFound, parse } from "../../lib/http.js";
+import { badRequest, conflict, notFound, parse } from "../../lib/http.js";
 import { rateLimit } from "../../middleware/rateLimit.js";
+import { AddressFields, IndianMobile } from "../../lib/validate.js";
+import { currentCustomer } from "../../lib/customerAuth.js";
 import { afterResponse, type Email } from "../../lib/mail.js";
 import { alertNewOrder, mailContext, orderConfirmation } from "../../lib/emails.js";
 
@@ -31,26 +33,17 @@ checkoutRouter.post("/cart/quote", async (req, res) => {
   res.json({ data: quote });
 });
 
-const Indian10Digit = z
-  .string()
-  .transform((s) => s.replace(/\D/g, "").replace(/^91(?=\d{10}$)/, ""))
-  .pipe(z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"));
-
 const OrderBody = z.object({
   items: z.array(CartItem).min(1).max(50),
   couponCode: z.string().trim().max(40).nullish(),
   email: z.email().transform((e) => e.toLowerCase()),
   name: z.string().trim().min(2).max(100),
-  phone: Indian10Digit,
-  shipping: z.object({
-    line1: z.string().trim().min(3).max(200),
-    line2: z.string().trim().max(200).nullish(),
-    city: z.string().trim().min(2).max(80),
-    state: z.string().trim().min(2).max(80),
-    pincode: z.string().regex(/^[1-9]\d{5}$/, "Enter a valid 6-digit pincode"),
-  }),
+  phone: IndianMobile,
+  shipping: AddressFields,
   paymentMethod: z.enum(["UPI", "CARD", "NETBANKING", "WALLET", "COD"]),
   shippingMethodId: z.string().max(40).nullish(),
+  /** Signed-in shoppers can keep this address for next time. */
+  saveAddress: z.boolean().optional(),
 });
 
 /** VL + YYMMDD + 4 digits, e.g. VL2605291234. */
@@ -77,6 +70,13 @@ const orderLimit = rateLimit({ name: "order", max: 20, windowMs: 10 * 60_000 });
 
 checkoutRouter.post("/orders", orderLimit, async (req, res) => {
   const body = parse(OrderBody, req.body);
+
+  // Signed in: the order belongs to the account, so it uses the account's email.
+  const session = await currentCustomer(req);
+  if (session && body.email !== session.customer.email) {
+    const message = `You're signed in as ${session.customer.email}. Use that email, or sign out to check out with another.`;
+    throw badRequest(message, [{ path: "email", message }]);
+  }
 
   const order = await prisma.$transaction(async (tx) => {
     // Re-price inside the transaction from current database values.
@@ -137,6 +137,31 @@ checkoutRouter.post("/orders", orderLimit, async (req, res) => {
       update: { phone: body.phone },
       create: { email: body.email, name: body.name, phone: body.phone },
     });
+
+    // "Save this address" — only for the signed-in account, never a guest
+    // record, and not if it's already saved.
+    if (session && body.saveAddress) {
+      const s = body.shipping;
+      const saved = await tx.address.findMany({ where: { customerId: customer.id } });
+      const duplicate = saved.some(
+        (a) => a.line1.toLowerCase() === s.line1.toLowerCase() && a.pincode === s.pincode,
+      );
+      if (!duplicate && saved.length < 10) {
+        await tx.address.create({
+          data: {
+            customerId: customer.id,
+            fullName: body.name,
+            phone: body.phone,
+            line1: s.line1,
+            line2: s.line2 ?? null,
+            city: s.city,
+            state: s.state,
+            pincode: s.pincode,
+            isDefault: saved.length === 0,
+          },
+        });
+      }
+    }
 
     // COD needs no payment step, so it is confirmed immediately. Online
     // methods wait in PENDING until the payment gateway confirms.
