@@ -115,6 +115,9 @@ export type OrderDetail = {
   taxPaise: number;
   totalPaise: number;
   couponCode: string | null;
+  /** The delivery option chosen at checkout (null on orders from before). */
+  shippingMethod: string | null;
+  shippingEta: string | null;
   shipName: string;
   shipPhone: string;
   shipLine1: string;
@@ -371,5 +374,18 @@ export type Subscriber = {
   status: "SUBSCRIBED" | "UNSUBSCRIBED" | "BOUNCED";
   createdAt: string;
   updatedAt: string;
+};
+
+/* ── Shipping ── */
+
+export type ShippingMethod = {
+  id: string;
+  name: string;
+  eta: string;
+  pricePaise: number;
+  /** Free once the post-discount subtotal reaches this; null = never free. */
+  freeAbovePaise: number | null;
+  isEnabled: boolean;
+  sortOrder: number;
 };
 

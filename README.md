@@ -47,7 +47,7 @@ during a build** too. `npm run build` and `npm run lint` both pass clean.
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 1 | Storefront frontend (repo root) | **Done** |
-| 2 | Admin / CMS frontend ([`admin/`](admin/)) | **Done** — 13 screens still on sample data |
+| 2 | Admin / CMS frontend ([`admin/`](admin/)) | **Done** — 12 screens still on sample data |
 | 3 | Backend API — Express + TypeScript + Prisma + PostgreSQL ([`backend/`](backend/)) | **Done** |
 | 3b | Storefront connected to the API | **Done** |
 | 4 | Razorpay — UPI, cards, netbanking, wallets | Not started |
@@ -67,6 +67,7 @@ checkout; the online methods are shown as "Coming soon".
 | FAQs, Testimonials, Collaborators | FAQs page, homepage, cart, Collabs page |
 | Pages | Shipping, Returns, Terms and Privacy policies |
 | Settings | Support contacts and company name (header, footer, contact, policies), the welcome offer, and marketing copy ("Loved by Thousands", "10K+ Happy Customers", "Why Velastia?") |
+| Shipping Methods | Delivery options at checkout (price, delivery time, free-above amount, order); the first one on is the default behind every "free shipping above…" note |
 | Orders | Track Order page |
 
 Policy text can include live values — `{{free_shipping_above}}`, `{{shipping_fee}}`,

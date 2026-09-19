@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Check, Lock, ChevronLeft, Truck, ShoppingBag, AlertCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
 import QuoteSummary from "@/components/cart/QuoteSummary";
-import { useSettings } from "@/components/providers/SettingsProvider";
 import { useStore, useHydrated } from "@/lib/store";
 import { resolveCart, quoteItems, useQuote } from "@/lib/cart";
 import { api } from "@/lib/api/client";
@@ -74,7 +73,6 @@ function validate(a: Address): Partial<Record<keyof Address, string>> {
 
 export default function CheckoutFlow({ products }: { products: Product[] }) {
   const router = useRouter();
-  const { shipping } = useSettings();
   const [step, setStep] = useState<Step>("Shipping");
   const [addr, setAddr] = useState<Address>(EMPTY);
   const [showErrors, setShowErrors] = useState(false);
@@ -82,6 +80,8 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
   const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState("");
   const [placed, setPlaced] = useState(false);
+  // The delivery option the shopper picked; null = the store's default.
+  const [shippingMethodId, setShippingMethodId] = useState<string | null>(null);
 
   const hydrated = useHydrated();
   const lines = useStore((s) => s.lines);
@@ -97,7 +97,7 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
   // With a valid email the quote also checks first-order-only codes.
   const email = looksLikeEmail(addr.email) ? addr.email.trim() : null;
   const { quote, error, stale } = useQuote(
-    hydrated && !blocked ? { items, couponCode: coupon, email } : null,
+    hydrated && !blocked ? { items, couponCode: coupon, email, shippingMethodId } : null,
   );
 
   if (!hydrated) return <div className="container-vel py-20" aria-hidden />;
@@ -143,10 +143,12 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
   const couponProblem = coupon && quote && !stale && !quote.coupon ? quote.couponError : null;
   const ready = !!quote && !stale && !error;
 
-  // How far the discounted subtotal is from free shipping.
-  const freeAbove = shipping?.freeAbovePaise;
-  const shortOfFree =
-    quote && freeAbove != null ? freeAbove - (quote.subtotalPaise - quote.discountPaise) : null;
+  // The highlighted delivery option: what was picked, if it's still on offer.
+  const options = quote?.shippingOptions ?? [];
+  const selectedShipping = options.some((o) => o.id === shippingMethodId)
+    ? shippingMethodId
+    : (quote?.shipping?.id ?? null);
+  const afterDiscount = quote ? quote.subtotalPaise - quote.discountPaise : 0;
 
   function continueToPayment() {
     if (!shippingValid) {
@@ -166,6 +168,8 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
         // Only send a code the latest quote actually applied; the API refuses
         // an order whose entered code no longer applies.
         couponCode: quote.coupon ? coupon : null,
+        // The option this total was priced with; the API refuses to swap it.
+        shippingMethodId: quote.shipping?.id ?? null,
         email: addr.email.trim(),
         name: addr.fullName.trim(),
         phone: mobileDigits(addr.phone),
@@ -337,18 +341,53 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
                 />
               </div>
 
-              {quote && (
-                <div className="mt-6 flex items-center gap-3 rounded-sm bg-blush-100 px-4 py-3">
-                  <Truck className="size-4 shrink-0 text-gold-600" />
-                  <p className="text-[0.72rem] text-ink-soft">
-                    Standard shipping, 3–5 business days.{" "}
-                    {quote.shippingPaise === 0
-                      ? "Free on this order."
-                      : shortOfFree != null && shortOfFree > 0
-                        ? `${inrPaise(quote.shippingPaise)} — add ${inrPaise(shortOfFree)} more for free shipping.`
-                        : `${inrPaise(quote.shippingPaise)}.`}
-                  </p>
-                </div>
+              {options.length > 0 && (
+                <fieldset className="mt-7">
+                  <legend className="label-caps text-[0.6rem] text-gold-700">Delivery</legend>
+                  <ul className="mt-2.5 space-y-2.5">
+                    {options.map((o) => {
+                      const chosen = o.id === selectedShipping;
+                      const shortOf =
+                        o.pricePaise > 0 && o.freeAbovePaise != null ? o.freeAbovePaise - afterDiscount : null;
+                      return (
+                        <li key={o.id}>
+                          <label
+                            className={cn(
+                              "flex cursor-pointer items-center gap-3.5 rounded-sm border px-4 py-3 transition-colors",
+                              chosen ? "border-gold-500 bg-cream-50" : "border-gold-200 hover:border-gold-400",
+                            )}
+                          >
+                            <input
+                              type="radio"
+                              name="delivery"
+                              checked={chosen}
+                              onChange={() => setShippingMethodId(o.id)}
+                              className="size-4 accent-plum-800"
+                            />
+                            <Truck className="size-4 shrink-0 text-gold-600" />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-sm text-plum-800">{o.name}</span>
+                              <span className="block text-[0.68rem] text-ink-soft">
+                                {o.eta}
+                                {shortOf != null && shortOf > 0 && (
+                                  <> · add {inrPaise(shortOf)} more for free delivery</>
+                                )}
+                              </span>
+                            </span>
+                            <span
+                              className={cn(
+                                "text-sm",
+                                o.pricePaise === 0 ? "font-medium text-success" : "text-plum-800",
+                              )}
+                            >
+                              {o.pricePaise === 0 ? "FREE" : inrPaise(o.pricePaise)}
+                            </span>
+                          </label>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </fieldset>
               )}
 
               <Button className="mt-7 w-full sm:w-auto" size="lg" onClick={continueToPayment}>
@@ -437,6 +476,12 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
                     <br />
                     {addr.phone}
                   </p>
+                  {quote?.shipping && (
+                    <p className="mt-2 flex items-center gap-1.5 text-[0.72rem] text-plum-800">
+                      <Truck className="size-3.5 text-gold-600" />
+                      {quote.shipping.name} · {quote.shipping.eta}
+                    </p>
+                  )}
                 </div>
                 <div className="rounded-sm border border-gold-200 p-4">
                   <h3 className="label-caps text-[0.6rem] text-gold-700">Paying With</h3>

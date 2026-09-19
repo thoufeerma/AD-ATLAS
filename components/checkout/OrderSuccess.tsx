@@ -202,9 +202,13 @@ export default function OrderSuccess({ products }: { products: Product[] }) {
                       <Truck className="size-4 text-gold-600" /> Shipping Method
                     </h3>
                     <p className="mt-2 text-[0.72rem] leading-relaxed text-ink-soft">
-                      Standard Shipping
-                      <br />
-                      3 – 5 Business Days
+                      {saved.order.shippingMethod ?? "Standard Shipping"}
+                      {saved.order.shippingEta && (
+                        <>
+                          <br />
+                          {saved.order.shippingEta}
+                        </>
+                      )}
                       <br />
                       {saved.order.shippingPaise === 0
                         ? "(Free Shipping)"

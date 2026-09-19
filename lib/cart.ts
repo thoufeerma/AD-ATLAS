@@ -43,7 +43,12 @@ export function quoteItems(rows: CartRow[]): CartItemInput[] {
     .map((r) => ({ slug: r.slug, quantity: r.qty, shade: r.shade ?? null }));
 }
 
-type QuoteRequest = { items: CartItemInput[]; couponCode?: string | null; email?: string | null };
+type QuoteRequest = {
+  items: CartItemInput[];
+  couponCode?: string | null;
+  email?: string | null;
+  shippingMethodId?: string | null;
+};
 
 /**
  * Server-priced totals for the cart. The browser never does the maths that

@@ -127,6 +127,24 @@ let placed;
   ok(inactive.status === 409, "order with an inactive coupon is refused, not silently undiscounted", inactive.json.error.message);
 }
 
+console.log("\n[Shipping options]");
+{
+  const q = (await call("POST", "/cart/quote", { items: [lip()] })).json.data;
+  const opts = q.shippingOptions ?? [];
+  ok(opts.length >= 1 && q.shipping?.id === opts[0].id && q.shippingPaise === opts[0].pricePaise, "quote lists enabled methods; the first is the default", opts.map((o) => `${o.name} ${rs(o.pricePaise)}`).join(", "));
+  const alt = opts[1];
+  if (alt) {
+    const qa = (await call("POST", "/cart/quote", { items: [lip()], shippingMethodId: alt.id })).json.data;
+    ok(qa.shipping.id === alt.id && qa.shippingPaise === alt.pricePaise && qa.totalPaise === qa.subtotalPaise - qa.discountPaise + alt.pricePaise, "choosing another method re-prices the total", `${alt.name}: ${rs(qa.totalPaise)}`);
+    const o = await call("POST", "/orders", { ...shopper, email: `ship.${Date.now().toString(36)}@example.com`, items: [lip()], paymentMethod: "COD", shippingMethodId: alt.id });
+    ok(o.status === 201 && o.json.data.shippingMethod === alt.name && o.json.data.shippingPaise === alt.pricePaise, "order records the chosen method and its price", o.json.data?.shippingMethod);
+  }
+  const bogus = await call("POST", "/cart/quote", { items: [lip()], shippingMethodId: "nope" });
+  ok(bogus.json.data.shipping.id === opts[0].id, "unknown method in a quote falls back to the default");
+  const refused = await call("POST", "/orders", { ...shopper, items: [lip()], paymentMethod: "COD", shippingMethodId: "nope" });
+  ok(refused.status === 409, "an order is never silently switched to another delivery option", refused.json.error?.message);
+}
+
 console.log("\n[First-order codes]");
 {
   // COD orders stay unpaid until delivery, so "first order" must count them.

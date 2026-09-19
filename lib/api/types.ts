@@ -82,8 +82,8 @@ export type Settings = {
     happyCustomers: string;
     whyVelastia: string[];
   };
-  /** Null when no shipping method is enabled. */
-  shipping: { pricePaise: number; freeAbovePaise: number | null } | null;
+  /** The default shipping method; null when none is enabled. */
+  shipping: { name: string; eta: string; pricePaise: number; freeAbovePaise: number | null } | null;
 };
 
 /** A CMS page such as the shipping or privacy policy. */
@@ -149,6 +149,16 @@ export type Quote = {
   coupon: { code: string; type: "PERCENTAGE" | "FIXED" | "FREE_SHIPPING" } | null;
   /** Why an entered code didn't apply. The rest of the quote is still valid. */
   couponError: string | null;
+  /** The delivery option this quote is priced with (the default unless one was picked). */
+  shipping: { id: string; name: string; eta: string } | null;
+  /** Every option on offer, priced for this cart (0 = free for it). */
+  shippingOptions: {
+    id: string;
+    name: string;
+    eta: string;
+    pricePaise: number;
+    freeAbovePaise: number | null;
+  }[];
 };
 
 export type PaymentMethod = "UPI" | "CARD" | "NETBANKING" | "WALLET" | "COD";
@@ -174,6 +184,8 @@ export type PlacedOrder = {
   taxPaise: number;
   totalPaise: number;
   couponCode: string | null;
+  shippingMethod: string | null;
+  shippingEta: string | null;
   placedAt: string;
   items: {
     slug: string | null;

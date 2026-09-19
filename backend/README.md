@@ -54,7 +54,7 @@ under **Users & Roles**.
 | `db:seed` | Idempotent seed — safe to rerun, never overwrites edited data |
 | `db:studio` | Prisma Studio, a GUI over the database |
 | `db:up` / `db:down` | Start / stop the Docker database |
-| `smoke` | 133 end-to-end API checks — **dev databases only**, see below |
+| `smoke` | 148 end-to-end API checks — **dev databases only**, see below |
 
 ## API
 
@@ -73,7 +73,7 @@ All routes are under `/api/v1`. Every error has the same shape:
 | GET | `/content/home` | Testimonials, collaborators, banners |
 | GET | `/banners` · `/offers` | Active banners (by placement); offers in their date window |
 | GET | `/faqs` · `/pages/:slug` · `/settings/public` | CMS content. `welcomeOffer` is read from the live coupon and is `null` when it's off |
-| POST | `/cart/quote` | Authoritative cart pricing — writes nothing |
+| POST | `/cart/quote` | Authoritative cart pricing — writes nothing. Lists every enabled shipping option priced for the cart; pass `shippingMethodId` to price with one |
 | POST | `/orders` | Place an order |
 | GET | `/orders/track?number=&email=` | Needs **both** — see Security |
 | POST | `/contact` · `/newsletter` · `/collab-applications` | Forms |
@@ -88,6 +88,7 @@ form 10 per 10 minutes. Behind a proxy, make sure it sets `X-Forwarded-For`.
 | `/admin/auth/login` · `/logout` · `/me` | POST · POST · GET | — |
 | `/admin/auth/password` | POST (change your own) | any signed-in admin |
 | `/admin/users` · `/:id` · `/:id/reset-password` | GET · POST · PATCH · POST | super admin only |
+| `/admin/shipping-methods` · `/:id` · `/order` | GET · POST · PATCH · DELETE · PUT | super admin only |
 | `/admin/dashboard` | GET | all |
 | `/admin/products` · `/:id` | GET · POST · PATCH · DELETE (archives) | read: Order Manager, Support |
 | `/admin/products/:id/stock` | PATCH `{ set }` or `{ adjust }` | Order Manager |
@@ -111,7 +112,7 @@ Roles follow the permissions drawn on the admin's Users & Roles screen.
 
 - **Money is integer paise.** ₹799 is `79900`. Never floats. Razorpay uses paise too.
   Percent coupons are basis points: `1000` = 10%.
-- **Orders snapshot** product name, SKU, price and the shipping address, so
+- **Orders snapshot** product name, SKU, price, the shipping address and the delivery method, so
   editing the catalog never rewrites a customer's order history.
 - **Partial updates use `parsePatch()`, never `parse(schema.partial())`.** Zod's
   `.partial()` still applies `.default()` values, which silently reset untouched
@@ -158,7 +159,7 @@ npm run dev      # in one terminal
 npm run smoke    # in another
 ```
 
-Runs 40 storefront and 93 admin checks, including a concurrent-purchase race,
+Runs 45 storefront and 103 admin checks, including a concurrent-purchase race,
 the admin account lifecycle and regression tests for the partial-update bug.
 Rerunnable against a used database: every fixture it creates is suffixed per
 run. It **refuses to target anything but localhost**, because it places orders
@@ -180,9 +181,9 @@ show up, turned off, on the Users & Roles screen.
 - **Media uploads.** Image URLs are stored as storefront-relative paths. Real
   uploads need object storage (S3, Cloudinary, R2).
 - **Email / SMS** for order confirmations and shipping updates.
-- **Remaining CMS resources**: blog posts, media library, campaigns,
-  shipping/tax editing. The tables exist; the routes don't. (Pages, store
-  settings, the inbox, subscribers and Users & Roles are done.)
+- **Remaining CMS resources**: blog posts, media library, campaigns, tax
+  editing. The tables exist; the routes don't. (Pages, store settings, the
+  inbox, subscribers, Users & Roles and shipping methods are done.)
 - **Login throttling and rate limits are in-memory** — correct for one instance,
   need Redis once the API runs on several.
 - The smoke suite is end-to-end only; there are no unit tests yet.

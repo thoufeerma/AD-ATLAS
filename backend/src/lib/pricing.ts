@@ -36,6 +36,19 @@ export type Quote = {
   totalPaise: number;
   coupon: { code: string; type: Coupon["type"] } | null;
   couponError: string | null;
+  /** The shipping method this quote is priced with; null if none is enabled. */
+  shipping: { id: string; name: string; eta: string } | null;
+  /** Every enabled method, priced for this cart, for the checkout to offer. */
+  shippingOptions: ShippingOption[];
+};
+
+export type ShippingOption = {
+  id: string;
+  name: string;
+  eta: string;
+  /** What this cart would pay for it — 0 when it qualifies as free. */
+  pricePaise: number;
+  freeAbovePaise: number | null;
 };
 
 const GST_BPS = 1800;
@@ -43,7 +56,13 @@ const GST_BPS = 1800;
 type Db = Prisma.TransactionClient | typeof prisma;
 
 export async function quoteCart(
-  input: { items: CartLineInput[]; couponCode?: string | null; email?: string | null },
+  input: {
+    items: CartLineInput[];
+    couponCode?: string | null;
+    email?: string | null;
+    /** The method picked at checkout. Unknown or disabled → the default. */
+    shippingMethodId?: string | null;
+  },
   db: Db = prisma,
 ): Promise<Quote> {
   if (input.items.length === 0) throw badRequest("Cart is empty");
@@ -129,19 +148,25 @@ export async function quoteCart(
     }
   }
 
-  // ── Shipping ── standard method; free above its threshold, post-discount.
-  const standard = await db.shippingMethod.findFirst({
+  // ── Shipping ── every enabled method, in admin order; the first is the
+  // default. A method is free once the post-discount subtotal reaches its own
+  // threshold, and a free-shipping coupon waives whichever one is chosen.
+  const methods = await db.shippingMethod.findMany({
     where: { isEnabled: true },
-    orderBy: { sortOrder: "asc" },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
   });
   const afterDiscount = subtotalPaise - discountPaise;
-  let shippingPaise = standard?.pricePaise ?? 0;
-  if (
-    freeShipping ||
-    (standard?.freeAbovePaise != null && afterDiscount >= standard.freeAbovePaise)
-  ) {
-    shippingPaise = 0;
-  }
+  const shippingOptions: ShippingOption[] = methods.map((m) => ({
+    id: m.id,
+    name: m.name,
+    eta: m.eta,
+    pricePaise:
+      freeShipping || (m.freeAbovePaise != null && afterDiscount >= m.freeAbovePaise) ? 0 : m.pricePaise,
+    freeAbovePaise: m.freeAbovePaise,
+  }));
+  const chosen =
+    shippingOptions.find((o) => o.id === input.shippingMethodId) ?? shippingOptions[0] ?? null;
+  const shippingPaise = chosen?.pricePaise ?? 0;
 
   const totalPaise = afterDiscount + shippingPaise;
 
@@ -155,6 +180,8 @@ export async function quoteCart(
     totalPaise,
     coupon,
     couponError,
+    shipping: chosen && { id: chosen.id, name: chosen.name, eta: chosen.eta },
+    shippingOptions,
   };
 }
 

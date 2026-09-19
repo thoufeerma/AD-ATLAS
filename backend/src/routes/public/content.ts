@@ -90,10 +90,11 @@ const PUBLIC_SETTING_KEYS = ["store", "welcomeOffer", "copy"] as const;
 contentRouter.get("/settings/public", async (_req, res) => {
   const [settings, shipping] = await Promise.all([
     prisma.setting.findMany({ where: { key: { in: [...PUBLIC_SETTING_KEYS] } } }),
+    // The default method — the first enabled one, as at checkout.
     prisma.shippingMethod.findFirst({
       where: { isEnabled: true },
-      orderBy: { sortOrder: "asc" },
-      select: { pricePaise: true, freeAbovePaise: true },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: { name: true, eta: true, pricePaise: true, freeAbovePaise: true },
     }),
   ]);
   const values = Object.fromEntries(settings.map((s) => [s.key, s.value]));

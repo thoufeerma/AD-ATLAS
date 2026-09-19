@@ -103,7 +103,7 @@ export const NAV: NavGroup[] = [
       { href: "/users", label: "Users & Roles", Icon: ShieldCheck },
       { href: "/settings", label: "Settings", Icon: Settings },
       { href: "/settings/payments", label: "Payment Methods", Icon: CreditCard, sample: true },
-      { href: "/settings/shipping", label: "Shipping Methods", Icon: Truck, sample: true },
+      { href: "/settings/shipping", label: "Shipping Methods", Icon: Truck },
       { href: "/settings/tax", label: "Tax Settings", Icon: Receipt, sample: true },
       { href: "/settings/notifications", label: "Notifications", Icon: Bell, sample: true },
       { href: "/activity", label: "Activity Logs", Icon: ScrollText },

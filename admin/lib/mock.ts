@@ -356,12 +356,6 @@ export const PAYMENT_METHODS = [
   { id: "pm-5", name: "Cash on Delivery", note: "Pay when the order arrives", enabled: true, fee: "₹40 handling" },
 ];
 
-export const SHIPPING_METHODS = [
-  { id: "sm-1", name: "Standard Shipping", eta: "3 – 5 business days", price: "₹99", freeAbove: "₹999", enabled: true },
-  { id: "sm-2", name: "Express Shipping", eta: "1 – 2 business days", price: "₹199", freeAbove: "—", enabled: true },
-  { id: "sm-3", name: "Same-Day (Mumbai)", eta: "Same day, order before 12PM", price: "₹249", freeAbove: "—", enabled: false },
-];
-
 export const TAX_RATES = [
   { id: "tx-1", name: "GST — Cosmetics", rate: "18%", region: "India (all states)", inclusive: true },
   { id: "tx-2", name: "GST — Accessories", rate: "12%", region: "India (all states)", inclusive: true },

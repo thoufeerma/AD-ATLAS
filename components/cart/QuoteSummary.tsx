@@ -34,7 +34,7 @@ export default function QuoteSummary({
           />
         )}
         <Row
-          label="Shipping"
+          label={quote?.shipping ? `Shipping (${quote.shipping.name})` : "Shipping"}
           value={quote == null ? "…" : quote.shippingPaise === 0 ? "FREE" : inrPaise(quote.shippingPaise)}
           tone={quote?.shippingPaise === 0 ? "success" : undefined}
         />

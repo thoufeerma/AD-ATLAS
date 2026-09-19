@@ -19,6 +19,7 @@ const QuoteBody = z.object({
   items: z.array(CartItem).min(1).max(50),
   couponCode: z.string().trim().max(40).nullish(),
   email: z.email().nullish(),
+  shippingMethodId: z.string().max(40).nullish(),
 });
 
 /** Live cart pricing for the cart and checkout pages. Writes nothing. */
@@ -47,6 +48,7 @@ const OrderBody = z.object({
     pincode: z.string().regex(/^[1-9]\d{5}$/, "Enter a valid 6-digit pincode"),
   }),
   paymentMethod: z.enum(["UPI", "CARD", "NETBANKING", "WALLET", "COD"]),
+  shippingMethodId: z.string().max(40).nullish(),
 });
 
 /** VL + YYMMDD + 4 digits, e.g. VL2605291234. */
@@ -77,9 +79,21 @@ checkoutRouter.post("/orders", orderLimit, async (req, res) => {
   const order = await prisma.$transaction(async (tx) => {
     // Re-price inside the transaction from current database values.
     const quote = await quoteCart(
-      { items: body.items, couponCode: body.couponCode, email: body.email },
+      {
+        items: body.items,
+        couponCode: body.couponCode,
+        email: body.email,
+        shippingMethodId: body.shippingMethodId,
+      },
       tx,
     );
+
+    // Same principle as coupons: never quietly swap the delivery option (and
+    // its price) the shopper picked.
+    if (!quote.shipping) throw conflict("Delivery isn't available right now — please try again later");
+    if (body.shippingMethodId && quote.shipping.id !== body.shippingMethodId) {
+      throw conflict("That delivery option is no longer available — please choose another");
+    }
 
     // A code that was entered but no longer applies must not silently vanish
     // from an order the customer believes is discounted.
@@ -140,6 +154,8 @@ checkoutRouter.post("/orders", orderLimit, async (req, res) => {
         taxPaise: quote.taxPaise,
         totalPaise: quote.totalPaise,
         couponCode: quote.coupon?.code,
+        shippingMethod: quote.shipping.name,
+        shippingEta: quote.shipping.eta,
         shipName: body.name,
         shipPhone: body.phone,
         shipLine1: body.shipping.line1,
@@ -182,6 +198,8 @@ checkoutRouter.post("/orders", orderLimit, async (req, res) => {
       taxPaise: order.taxPaise,
       totalPaise: order.totalPaise,
       couponCode: order.couponCode,
+      shippingMethod: order.shippingMethod,
+      shippingEta: order.shippingEta,
       placedAt: order.placedAt,
       items: order.items.map((i) => ({
         slug: i.product?.slug ?? null,
@@ -230,6 +248,8 @@ checkoutRouter.get("/orders/track", async (req, res) => {
       shippingPaise: order.shippingPaise,
       totalPaise: order.totalPaise,
       couponCode: order.couponCode,
+      shippingMethod: order.shippingMethod,
+      shippingEta: order.shippingEta,
       shipping: {
         name: order.shipName,
         city: order.shipCity,

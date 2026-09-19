@@ -193,6 +193,9 @@ model Order {
   taxPaise      Int @default(0)
   totalPaise    Int
   couponCode    String?
+  /// Shipping method as chosen at checkout (snapshots, like the address).
+  shippingMethod String?
+  shippingEta    String?
 
   // Shipping address snapshot — deliberately not a relation to Address.
   shipName    String

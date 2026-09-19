@@ -360,6 +360,44 @@ console.log("\n[Admin accounts]");
   await call("PATCH", `/admin/users/${staffId}`, { isActive: false }); // tidy up
 }
 
+console.log("\n[Shipping methods]");
+{
+  const before = (await call("GET", "/admin/shipping-methods")).json.data;
+  ok(Array.isArray(before) && before.length >= 1, "list shipping methods", before.map((m) => m.name).join(", "));
+
+  const created = await call("POST", "/admin/shipping-methods", { name: `Courier ${RUN}`, eta: "2 – 3 business days", pricePaise: 14900, freeAbovePaise: 149900, isEnabled: true });
+  const m = created.json.data;
+  ok(created.status === 201 && m.sortOrder > Math.max(...before.map((b) => b.sortOrder)), "add a method (goes last)");
+  ok((await call("POST", "/admin/shipping-methods", { name: "X", eta: "", pricePaise: -1, freeAbovePaise: null, isEnabled: true })).status === 400, "invalid method rejected");
+
+  const q = (await pub("POST", "/cart/quote", { items: [{ slug: "day-cream", quantity: 1 }], shippingMethodId: m.id })).json.data;
+  ok(q.shipping.id === m.id && q.shippingPaise === 0, "new method is offered at checkout, free above its own threshold", "Rs 1,987 cart >= Rs 1,499");
+
+  const edited = await call("PATCH", `/admin/shipping-methods/${m.id}`, { pricePaise: 12900 });
+  ok(edited.status === 200 && edited.json.data.pricePaise === 12900 && edited.json.data.eta === "2 – 3 business days", "edit keeps untouched fields");
+
+  const ids = [m.id, ...before.map((b) => b.id)];
+  const reordered = await call("PUT", "/admin/shipping-methods/order", { ids });
+  const q2 = (await pub("POST", "/cart/quote", { items: [{ slug: "lip-liner", quantity: 1 }] })).json.data;
+  ok(reordered.status === 200 && q2.shipping.id === m.id, "moving a method to the top makes it the default");
+  ok((await call("PUT", "/admin/shipping-methods/order", { ids: ids.slice(1) })).status === 409, "reorder must list every method");
+
+  // Checkout needs one enabled method: switch the others off, then try the last.
+  const wasOn = before.filter((b) => b.isEnabled);
+  try {
+    for (const b of wasOn) await call("PATCH", `/admin/shipping-methods/${b.id}`, { isEnabled: false });
+    const lastOff = await call("PATCH", `/admin/shipping-methods/${m.id}`, { isEnabled: false });
+    ok(lastOff.status === 409, "can't turn off the only enabled method", lastOff.json.error?.message);
+    ok((await call("DELETE", `/admin/shipping-methods/${m.id}`)).status === 409, "can't delete it either");
+  } finally {
+    for (const b of wasOn) await call("PATCH", `/admin/shipping-methods/${b.id}`, { isEnabled: true });
+    await call("PUT", "/admin/shipping-methods/order", { ids: [...before.map((b) => b.id), m.id] });
+  }
+  const del = await call("DELETE", `/admin/shipping-methods/${m.id}`);
+  const after = (await call("GET", "/admin/shipping-methods")).json.data;
+  ok(del.status === 204 && after.map((a) => `${a.id}:${a.isEnabled}`).join() === before.map((b) => `${b.id}:${b.isEnabled}`).join(), "method deleted; original methods and order restored");
+}
+
 console.log("\n[Race: two shoppers, one stock pool]");
 {
   const nc = (await call("GET", "/admin/products?q=night%20cream")).json.data[0];

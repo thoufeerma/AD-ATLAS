@@ -334,6 +334,12 @@ function OrderResult({ order, bySlug }: { order: TrackedOrder; bySlug: Map<strin
           <dl className="mt-5 space-y-3 text-[0.75rem]">
             <Row label="Order Number" value={order.number} />
             <Row label="Order Date" value={dateTime(order.placedAt)} />
+            {order.shippingMethod && (
+              <Row
+                label="Delivery"
+                value={order.shippingEta ? `${order.shippingMethod} · ${order.shippingEta}` : order.shippingMethod}
+              />
+            )}
             <Row label="Payment Method" value={METHOD_LABEL[order.paymentMethod] ?? order.paymentMethod} />
             <div className="flex items-center justify-between">
               <dt className="text-ink-soft">Payment Status</dt>

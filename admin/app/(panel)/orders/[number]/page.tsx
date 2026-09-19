@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MapPin, CreditCard, User, Mail, Phone, Tag } from "lucide-react";
+import { ArrowLeft, MapPin, CreditCard, User, Mail, Phone, Tag, Truck } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import Card from "@/components/ui/Card";
 import Badge, { toneFor } from "@/components/ui/Badge";
@@ -146,6 +146,15 @@ export default async function OrderDetailPage({ params }: PageProps<"/orders/[nu
           </Card>
 
           <Card title="Shipping Address">
+            {order.shippingMethod && (
+              <p className="mb-3 flex gap-2.5 text-[0.78rem] text-ink-2">
+                <Truck className="mt-0.5 size-4 shrink-0 text-series-1" />
+                <span>
+                  <span className="font-medium text-ink">{order.shippingMethod}</span>
+                  {order.shippingEta && <span className="block text-[0.72rem] text-muted">{order.shippingEta}</span>}
+                </span>
+              </p>
+            )}
             <p className="flex gap-2.5 text-[0.78rem] leading-relaxed text-ink-2">
               <MapPin className="mt-0.5 size-4 shrink-0 text-series-1" />
               <span>

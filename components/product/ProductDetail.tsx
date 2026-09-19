@@ -119,7 +119,7 @@ export default function ProductDetail({
     shipping?.freeAbovePaise != null
       ? `Free shipping on all orders above ${inrPaise(shipping.freeAbovePaise)}.`
       : null,
-    "Standard delivery in 3–5 business days, metro cities usually sooner.",
+    shipping ? `${shipping.name}: ${shipping.eta}. Faster options may be offered at checkout.` : null,
     "Easy returns within 7 days of delivery on unopened products.",
     "Refunds reach the original payment method in 5–7 business days.",
   ].filter((n): n is string => !!n);
