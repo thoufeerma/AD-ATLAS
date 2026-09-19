@@ -1,6 +1,7 @@
 "use client"; // Error boundaries must be Client Components
 
 import { useEffect } from "react";
+import Image from "next/image";
 import "./globals.css";
 
 /**
@@ -24,7 +25,13 @@ export default function GlobalError({
       <body className="grid min-h-screen place-items-center bg-cream-50 px-4 text-center text-ink">
         <title>Velastia — we&apos;ll be right back</title>
         <div>
-          <p className="text-2xl tracking-[0.2em] text-plum-800">VELASTIA</p>
+          <Image
+            src="/brand/logo.png"
+            alt="Velastia"
+            width={154}
+            height={52}
+            className="mx-auto h-[52px] w-auto"
+          />
           <h1 className="mt-6 text-xl text-plum-800">We&apos;ll be right back</h1>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ink-soft">
             The store is having a moment. Please try again shortly — your cart is saved.

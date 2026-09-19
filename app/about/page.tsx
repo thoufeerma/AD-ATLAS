@@ -278,8 +278,14 @@ export default async function AboutPage() {
         </div>
 
         <div className="flex flex-col items-center justify-center bg-plum-900 px-8 py-12 text-center">
-          <span className="font-display text-3xl tracking-[0.14em] text-gold-300">VELASTIA</span>
-          <span className="mt-1 text-[0.6rem] tracking-[0.18em] text-gold-500">
+          <Image
+            src="/brand/logo-light.png"
+            alt="Velastia"
+            width={190}
+            height={64}
+            className="h-16 w-auto"
+          />
+          <span className="mt-2 text-[0.6rem] tracking-[0.18em] text-gold-500">
             Luxury. Science. You.
           </span>
           <p className="label-caps mt-8 text-[0.62rem] text-cream-200/70">

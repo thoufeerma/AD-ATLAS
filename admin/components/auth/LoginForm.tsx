@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
@@ -39,9 +40,7 @@ export default function LoginForm({ next, expired }: { next: string; expired: bo
     <main className="grid min-h-screen place-items-center bg-plane px-4 py-10">
       <div className="w-full max-w-[400px]">
         <div className="mb-8 flex flex-col items-center text-center">
-          <span className="grid size-14 place-items-center rounded-2xl bg-sidebar">
-            <Mark className="size-9" />
-          </span>
+          <Image src="/brand/logo.png" alt="Velastia" width={178} height={60} priority className="h-[60px] w-auto" />
           <h1 className="mt-4 text-[1.35rem] font-semibold tracking-tight text-ink">
             Velastia Admin
           </h1>
@@ -120,28 +119,5 @@ export default function LoginForm({ next, expired }: { next: string; expired: bo
         </p>
       </div>
     </main>
-  );
-}
-
-function Mark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
-      <circle cx="24" cy="24" r="22.5" fill="none" stroke="#fdd19b" strokeWidth="1.6" />
-      <path
-        d="M24 11c7.2 3.1 10.8 8.2 10.8 14.2 0 5.6-4.6 10.3-10.8 10.3s-10.8-4.7-10.8-10.3C13.2 19.2 16.8 14.1 24 11Z"
-        fill="none"
-        stroke="#fdd19b"
-        strokeWidth="1.4"
-      />
-      <path
-        d="M18.6 20.2 24 31.6l5.4-11.4"
-        fill="none"
-        stroke="#fdd19b"
-        strokeWidth="2.1"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M24 31.6V37" stroke="#fdd19b" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
   );
 }

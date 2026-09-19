@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LifeBuoy, X } from "lucide-react";
@@ -36,16 +37,9 @@ export default function Sidebar({
       >
         {/* Brand */}
         <div className="flex items-center justify-between gap-2 px-5 py-5">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Mark className="size-8 shrink-0" />
-            <span className="flex flex-col leading-none">
-              <span className="text-[1.05rem] font-semibold tracking-[0.14em] text-white">
-                VELASTIA
-              </span>
-              <span className="mt-0.5 text-[0.5rem] tracking-[0.18em] text-pill/80">
-                Luxury. Science. You.
-              </span>
-            </span>
+          <Link href="/" className="block">
+            {/* The official logo, cream-wordmark version for the dark sidebar. */}
+            <Image src="/brand/logo-light.png" alt="Velastia Admin" width={119} height={40} priority className="h-10 w-auto" />
           </Link>
           <button onClick={onClose} aria-label="Close menu" className="lg:hidden">
             <X className="size-5 text-white/70" />
@@ -120,28 +114,5 @@ export default function Sidebar({
         </div>
       </aside>
     </>
-  );
-}
-
-function Mark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
-      <circle cx="24" cy="24" r="22.5" fill="none" stroke="#fdd19b" strokeWidth="1.6" />
-      <path
-        d="M24 11c7.2 3.1 10.8 8.2 10.8 14.2 0 5.6-4.6 10.3-10.8 10.3s-10.8-4.7-10.8-10.3C13.2 19.2 16.8 14.1 24 11Z"
-        fill="none"
-        stroke="#fdd19b"
-        strokeWidth="1.4"
-      />
-      <path
-        d="M18.6 20.2 24 31.6l5.4-11.4"
-        fill="none"
-        stroke="#fdd19b"
-        strokeWidth="2.1"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M24 31.6V37" stroke="#fdd19b" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
   );
 }

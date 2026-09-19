@@ -80,7 +80,7 @@ export default function Header({ announcements }: { announcements: string[] }) {
             <Menu className="size-6 text-plum-800" />
           </button>
 
-          <Logo />
+          <Logo priority />
 
           <nav className="hidden flex-1 items-center justify-center gap-4 lg:flex xl:gap-7">
             {NAV.map((item) => {
@@ -130,9 +130,7 @@ export default function Header({ announcements }: { announcements: string[] }) {
           />
           <div className="absolute inset-y-0 left-0 w-[82%] max-w-xs bg-plum-800 p-6 text-cream-100">
             <div className="mb-8 flex items-center justify-between">
-              <span className="font-display text-2xl tracking-wide text-gold-300">
-                VELASTIA
-              </span>
+              <Logo tone="light" className="[&_img]:h-9" />
               <button onClick={() => setOpen(false)} aria-label="Close menu">
                 <X className="size-5" />
               </button>

@@ -47,7 +47,7 @@ during a build** too. `npm run build` and `npm run lint` both pass clean.
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 1 | Storefront frontend (repo root) | **Done** |
-| 2 | Admin / CMS frontend ([`admin/`](admin/)) | **Done** — 14 screens still on sample data |
+| 2 | Admin / CMS frontend ([`admin/`](admin/)) | **Done** — 13 screens still on sample data |
 | 3 | Backend API — Express + TypeScript + Prisma + PostgreSQL ([`backend/`](backend/)) | **Done** |
 | 3b | Storefront connected to the API | **Done** |
 | 4 | Razorpay — UPI, cards, netbanking, wallets | Not started |
@@ -132,6 +132,13 @@ other. These were resolved as follows:
    ingredients and how-to steps only show on lip products.
 
 ## Imagery
+
+**Logo.** The official logo master is [`brand/velastia-logo.png`](brand/velastia-logo.png)
+(3200×3200, transparent). The web versions were generated from it: `public/brand/logo.png`
+(purple wordmark, for light backgrounds), `logo-light.png` (cream wordmark, for the
+footer, phone menu and the admin sidebar), `logo-mark.png` (monogram only), and the
+favicons / home-screen icons in `app/` — the admin has its own copies. If the logo
+changes, regenerate all of them from the new master.
 
 All photography in `public/` was cropped programmatically out of the reference
 PNGs, so it is low resolution and carries JPEG artefacts. **Replace it with the
