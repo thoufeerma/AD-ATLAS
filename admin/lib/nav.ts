@@ -75,7 +75,7 @@ export const NAV: NavGroup[] = [
     items: [
       { href: "/pages", label: "Pages", Icon: FileText },
       { href: "/blog", label: "Blog Posts", Icon: Newspaper, sample: true },
-      { href: "/media", label: "Media Library", Icon: Images, sample: true },
+      { href: "/media", label: "Media Library", Icon: Images },
       { href: "/banners", label: "Banners", Icon: GalleryHorizontal },
       { href: "/testimonials", label: "Testimonials", Icon: MessageSquareQuote },
       { href: "/faqs", label: "FAQs", Icon: HelpCircle },

@@ -5,6 +5,7 @@
 // dedicated test account that `npm run smoke` switches on for the run
 // (scripts/smoke-admin-user.ts) — never a real person's login.
 import "dotenv/config";
+import sharp from "sharp";
 
 const API = `${process.env.SMOKE_API_URL ?? "http://localhost:4000"}/api/v1`;
 if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(API)) {
@@ -547,6 +548,56 @@ console.log("\n[Customer accounts]");
   ok((await shop(`vel_admin=${customerToken}`, "GET", "/admin/auth/me")).status === 401, "a customer's token can't be used as an admin session");
   const out = await shop(reset.cookie, "POST", "/account/logout");
   ok(out.status === 204 && /vel_customer=;/.test(out.cookie + ";"), "sign out clears the cookie");
+}
+
+console.log("\n[Media uploads]");
+{
+  const upload = (buf, type, name) =>
+    fetch(API + "/admin/media", {
+      method: "POST",
+      headers: { cookie, "content-type": type, "x-file-name": encodeURIComponent(name) },
+      body: buf,
+    }).then(async (r) => ({ status: r.status, json: await r.json().catch(() => null) }));
+  const ORIGIN = API.replace(/\/api\/v1$/, "");
+
+  // A big PNG is scaled down and stored as WebP.
+  const png = await sharp({ create: { width: 3000, height: 1500, channels: 3, background: "#c1883e" } }).png().toBuffer();
+  const up = await upload(png, "image/png", `Hero Shot ${RUN}.png`);
+  const a = up.json?.data;
+  ok(up.status === 201 && a.mimeType === "image/webp" && a.width === 2400 && a.height === 1200 && a.url.startsWith("/uploads/"), "upload: re-encoded to WebP, capped at 2400px", `${a?.width}x${a?.height} ${a?.url}`);
+  ok(a.alt === `Hero Shot ${RUN}`, "alt text starts from the file name");
+  const served = await fetch(ORIGIN + a.url);
+  ok(served.status === 200 && served.headers.get("content-type") === "image/webp" && /immutable/.test(served.headers.get("cache-control") ?? ""), "served from /uploads with long-lived caching");
+
+  // Camera metadata (e.g. GPS) is removed.
+  const jpeg = await sharp({ create: { width: 400, height: 300, channels: 3, background: "#250b30" } })
+    .withExif({ IFD0: { Copyright: `secret-location-${RUN}` } }).jpeg().toBuffer();
+  ok(!!(await sharp(jpeg).metadata()).exif, "(test image really carries EXIF)");
+  const j = (await upload(jpeg, "image/jpeg", "phone-photo.jpg")).json.data;
+  const stored = Buffer.from(await (await fetch(ORIGIN + j.url)).arrayBuffer());
+  ok(!(await sharp(stored).metadata()).exif, "EXIF metadata stripped from the stored image");
+
+  // Only real images, no SVG, size-capped.
+  const fake = await upload(Buffer.from("definitely not an image"), "image/png", "fake.png");
+  ok(fake.status === 400, "a non-image named .png is refused", fake.json?.error?.message);
+  const svg = await upload(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><script>alert(1)</script></svg>'), "image/svg+xml", "x.svg");
+  ok(svg.status === 400 && /SVG/.test(svg.json?.error?.message ?? ""), "SVG refused");
+  const huge = await upload(Buffer.alloc(11 * 1024 * 1024, 1), "image/png", "huge.png");
+  ok(huge.status === 413, "files over the size limit refused", huge.json?.error?.message);
+  const traversal = await fetch(ORIGIN + "/uploads/..%2f.env");
+  ok(traversal.status === 404 && !(await traversal.text()).includes("DATABASE_URL"), "can't read files outside the upload folder");
+
+  // In-use images can't be deleted.
+  const banner = (await call("POST", "/admin/banners", { name: `Media check ${RUN}`, placement: "test.none", imageUrl: a.url, isActive: false })).json.data;
+  const listed = (await call("GET", "/admin/media")).json.data.find((m) => m.id === a.id);
+  ok(listed?.usedIn.some((u) => u.includes(`Media check ${RUN}`)), "library shows where an image is used", listed?.usedIn.join(", "));
+  const blocked = await call("DELETE", `/admin/media/${a.id}`);
+  ok(blocked.status === 409, "an image in use can't be deleted", blocked.json?.error?.message);
+  await call("DELETE", `/admin/banners/${banner.id}`);
+  ok((await call("PATCH", `/admin/media/${a.id}`, { alt: "Gold hero" })).json.data.alt === "Gold hero", "alt text editable");
+  const del = await call("DELETE", `/admin/media/${a.id}`);
+  ok(del.status === 204 && (await fetch(ORIGIN + a.url)).status === 404, "unused image deleted, file removed");
+  await call("DELETE", `/admin/media/${j.id}`);
 }
 
 console.log("\n[Race: two shoppers, one stock pool]");

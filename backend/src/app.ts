@@ -30,6 +30,8 @@ import { adminInboxRouter, adminSubscribersRouter } from "./routes/admin/inbox.j
 import { adminUsersRouter } from "./routes/admin/users.js";
 import { adminShippingRouter } from "./routes/admin/shipping.js";
 import { adminEmailsRouter } from "./routes/admin/emails.js";
+import { adminMediaRouter } from "./routes/admin/media.js";
+import { UPLOAD_ROOT } from "./lib/media.js";
 
 export function createApp() {
   const app = express();
@@ -53,6 +55,13 @@ export function createApp() {
   );
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
+
+  // Uploaded images. Names are random and never reused, so they can be
+  // cached for good; only files inside the upload folder are ever served.
+  app.use(
+    "/uploads",
+    express.static(UPLOAD_ROOT, { index: false, dotfiles: "deny", immutable: true, maxAge: "365d" }),
+  );
 
   app.get("/health", async (_req, res) => {
     await prisma.$queryRaw`SELECT 1`;
@@ -91,6 +100,7 @@ export function createApp() {
   admin.use("/users", adminUsersRouter);
   admin.use("/shipping-methods", adminShippingRouter);
   admin.use("/emails", adminEmailsRouter);
+  admin.use("/media", adminMediaRouter);
 
   v1.use("/admin", admin);
   app.use("/api/v1", v1);

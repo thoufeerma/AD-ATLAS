@@ -315,17 +315,6 @@ export const FAQS = [
   { id: "f-7", question: "Do you ship internationally?", category: "Shipping", order: 7, published: false },
 ];
 
-export const MEDIA = [
-  { id: "m-1", name: "hero-products.png", type: "PNG", size: "412 KB", dims: "552×300", used: 1 },
-  { id: "m-2", name: "matte-lipstick.png", type: "PNG", size: "54 KB", dims: "206×196", used: 6 },
-  { id: "m-3", name: "face-serum.png", type: "PNG", size: "49 KB", dims: "206×196", used: 5 },
-  { id: "m-4", name: "day-cream.png", type: "PNG", size: "55 KB", dims: "206×196", used: 4 },
-  { id: "m-5", name: "foundation.png", type: "PNG", size: "56 KB", dims: "206×196", used: 4 },
-  { id: "m-6", name: "our-story.png", type: "PNG", size: "188 KB", dims: "352×225", used: 1 },
-  { id: "m-7", name: "about-hero.png", type: "PNG", size: "296 KB", dims: "609×345", used: 1 },
-  { id: "m-8", name: "cart-banner.png", type: "PNG", size: "145 KB", dims: "497×196", used: 1 },
-];
-
 /* ── Marketing ────────────────────────────────────────────────────────── */
 
 export const CAMPAIGNS = [

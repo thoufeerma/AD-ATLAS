@@ -27,6 +27,10 @@ const schema = z
     // instead of being sent.
     RESEND_API_KEY: z.string().trim().min(1).optional(),
     EMAIL_FROM: z.string().trim().min(3).default("Velastia <onboarding@resend.dev>"),
+    // ── Uploads ── where uploaded images are kept (local disk in development)
+    // and the largest file accepted, in megabytes.
+    UPLOAD_DIR: z.string().trim().min(1).default("uploads"),
+    MAX_UPLOAD_MB: z.coerce.number().positive().max(50).default(10),
     // Public addresses of the two sites, for links and the logo in emails.
     STORE_URL: z.url().default("http://localhost:3000"),
     ADMIN_URL: z.url().default("http://localhost:3001"),

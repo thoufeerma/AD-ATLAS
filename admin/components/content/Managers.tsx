@@ -45,7 +45,7 @@ const TESTIMONIAL_FIELDS: FieldSpec[] = [
   { name: "role", label: "Role", kind: "text", required: true, defaultValue: "Verified Buyer" },
   { name: "rating", label: "Rating", kind: "rating", defaultValue: "5" },
   { name: "quote", label: "Quote", kind: "textarea", required: true },
-  { name: "avatarUrl", label: "Photo", kind: "text", placeholder: "/people/malvika.png", hint: "Image path or URL" },
+  { name: "avatarUrl", label: "Photo", kind: "image" },
   { name: "sortOrder", label: "Order", kind: "int", defaultValue: "0" },
   { name: "isFeatured", label: "Feature on homepage", kind: "checkbox", defaultValue: false },
 ];
@@ -90,7 +90,7 @@ const BANNER_FIELDS: FieldSpec[] = [
     hint: "The store shows the headline of: global.topbar (announcement bar), shop.sidebar (shop offer card), cart.inline (cart promo). The homepage hero isn't banner-driven yet.",
   },
   { name: "headline", label: "Headline", kind: "text" },
-  { name: "imageUrl", label: "Image", kind: "text", placeholder: "/brand/hero-products.png" },
+  { name: "imageUrl", label: "Image", kind: "image" },
   { name: "href", label: "Links To", kind: "text", placeholder: "/shop" },
   { name: "sortOrder", label: "Order", kind: "int", defaultValue: "0" },
   { name: "isActive", label: "Live", kind: "checkbox", defaultValue: true },

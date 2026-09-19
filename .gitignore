@@ -46,3 +46,6 @@ next-env.d.ts
 
 # local Claude Code settings
 .claude/settings.local.json
+
+# uploaded images (local storage in development)
+/backend/uploads/

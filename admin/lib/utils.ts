@@ -50,3 +50,16 @@ export function same(a: unknown, b: unknown): boolean {
         : v;
   return JSON.stringify(norm(a)) === JSON.stringify(norm(b));
 }
+
+const STORE_URL = process.env.NEXT_PUBLIC_STORE_URL ?? "http://localhost:3000";
+
+/**
+ * A src the admin can display for an image path. Uploads are served through
+ * the admin's own /uploads; anything else under / lives in the storefront's
+ * public folder (the original catalog photos).
+ */
+export function imageSrc(url: string) {
+  if (!url || url.startsWith("/uploads/") || !url.startsWith("/")) return url;
+  return STORE_URL + url;
+}
+

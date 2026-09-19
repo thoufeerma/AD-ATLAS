@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Plus, X, Loader2, AlertCircle, Archive, ImageIcon, Boxes } from "lucide-react";
+import { ArrowLeft, Save, Plus, X, Loader2, AlertCircle, Archive, Boxes } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import { ImageField } from "@/components/media/MediaPicker";
 import { api, ApiError } from "@/lib/api/client";
 import type { Category, ProductDetail, ProductStatus, Shade, ProductImage } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -319,20 +320,20 @@ export default function ProductForm({ mode, categories, product }: Props) {
 
           <Card title="Images">
             <p className="mb-3 text-[0.72rem] leading-relaxed text-muted">
-              Paste an image path or URL. File upload arrives with media storage.
+              Choose from the Media Library or upload new photos. The first image is the main one.
             </p>
             <ul className="space-y-3">
               {images.map((img, i) => (
                 <li key={i} className="flex items-center gap-2.5">
-                  <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg bg-plane">
-                    {img.url ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- storefront-hosted preview
-                      <img src={img.url.startsWith("/") ? STORE_URL + img.url : img.url} alt="" className="size-full object-contain" />
-                    ) : (
-                      <ImageIcon className="size-4 text-muted" />
-                    )}
-                  </span>
-                  <input value={img.url} aria-label={`Image ${i + 1} URL`} onChange={(e) => setImages((v) => v.map((x, n) => (n === i ? { ...x, url: e.target.value } : x)))} placeholder="/products/matte-lipstick.png" className={cn(inputCls(fe(`images.${i}.url`)), "min-w-0 flex-1")} />
+                  <div className="min-w-0 flex-1">
+                    <ImageField
+                      label={`Image ${i + 1}`}
+                      value={img.url}
+                      invalid={!!fe(`images.${i}.url`)}
+                      onChange={(url) => setImages((v) => v.map((x, n) => (n === i ? { ...x, url } : x)))}
+                      onPickAlt={(alt) => setImages((v) => v.map((x, n) => (n === i ? { ...x, alt } : x)))}
+                    />
+                  </div>
                   <button type="button" onClick={() => setImages((v) => v.filter((_, n) => n !== i))} aria-label={`Remove image ${i + 1}`} className="grid size-9 shrink-0 place-items-center rounded-lg border border-hairline text-muted hover:border-critical hover:text-critical">
                     <X className="size-3.5" />
                   </button>

@@ -36,7 +36,27 @@ export async function api<T = unknown>(
     body: body === undefined ? undefined : JSON.stringify(body),
     credentials: "same-origin",
   });
+  return handle<T>(res, path);
+}
 
+/**
+ * Uploads one image to the Media Library. Sent as the raw file (not a form),
+ * with its name in a header; the API decodes, checks and re-encodes it.
+ */
+export async function uploadImage<T = unknown>(file: File): Promise<T> {
+  const res = await fetch("/api/v1/admin/media", {
+    method: "POST",
+    headers: {
+      "content-type": file.type || "application/octet-stream",
+      "x-file-name": encodeURIComponent(file.name),
+    },
+    body: file,
+    credentials: "same-origin",
+  });
+  return handle<T>(res, "/admin/media");
+}
+
+async function handle<T>(res: Response, path: string): Promise<T> {
   // Session expired mid-use: send them to sign in again, then back here.
   if (res.status === 401 && !path.startsWith("/admin/auth/login")) {
     const next = encodeURIComponent(window.location.pathname + window.location.search);

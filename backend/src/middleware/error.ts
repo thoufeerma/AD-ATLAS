@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { Prisma } from "../generated/prisma/client.js";
 import { HttpError } from "../lib/http.js";
-import { isProd } from "../env.js";
+import { env, isProd } from "../env.js";
 
 /**
  * One place that turns thrown errors into responses. Express 5 forwards
@@ -14,6 +14,14 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
   if (err instanceof HttpError) {
     res.status(err.status).json({
       error: { code: err.code, message: err.message, details: err.details },
+    });
+    return;
+  }
+
+  // Body over the size limit (uploads, JSON)
+  if ((err as { type?: string } | null)?.type === "entity.too.large") {
+    res.status(413).json({
+      error: { code: "TOO_LARGE", message: `That file is too big — images can be up to ${env.MAX_UPLOAD_MB} MB` },
     });
     return;
   }

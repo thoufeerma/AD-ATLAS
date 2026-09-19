@@ -445,15 +445,20 @@ model Faq {
   @@map("faqs")
 }
 
+/// An uploaded image. Stored re-encoded (WebP, metadata stripped); `url` is
+/// what pages use, `storageKey` where the file lives in storage.
 model MediaAsset {
-  id        String   @id @default(cuid())
-  filename  String
-  url       String
-  mimeType  String
-  sizeBytes Int
-  width     Int?
-  height    Int?
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  /// The name it was uploaded with, for people to recognise it.
+  filename   String
+  url        String   @unique
+  storageKey String   @unique
+  alt        String?
+  mimeType   String
+  sizeBytes  Int
+  width      Int?
+  height     Int?
+  createdAt  DateTime @default(now())
 
   @@map("media_assets")
 }

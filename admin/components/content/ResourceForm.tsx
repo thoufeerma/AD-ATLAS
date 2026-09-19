@@ -6,11 +6,13 @@ import { Loader2, AlertCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { api, ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
+import { ImageField } from "@/components/media/MediaPicker";
 
 export type FieldSpec = {
   name: string;
   label: string;
-  kind: "text" | "textarea" | "int" | "checkbox" | "rating" | "dateStart" | "dateEnd";
+  /** "image" is a path, with a preview and a Media Library picker. */
+  kind: "text" | "textarea" | "int" | "checkbox" | "rating" | "dateStart" | "dateEnd" | "image";
   required?: boolean;
   placeholder?: string;
   hint?: string;
@@ -140,12 +142,21 @@ export default function ResourceForm({
             />
           </label>
         ) : (
-          <label key={f.name} className="block">
+          // An image field holds several controls (and opens a dialog), so it
+          // can't sit inside a <label>; its input carries its own aria-label.
+          <FieldWrap key={f.name} image={f.kind === "image"}>
             <span className="mb-1.5 block text-[0.7rem] font-medium text-ink-2">
               {f.label}
               {f.required && " *"}
             </span>
-            {f.kind === "textarea" ? (
+            {f.kind === "image" ? (
+              <ImageField
+                label={f.label}
+                value={String(values[f.name])}
+                invalid={!!fieldErrors[f.name]}
+                onChange={(url) => set(f.name, url)}
+              />
+            ) : f.kind === "textarea" ? (
               <textarea rows={4} value={String(values[f.name])} onChange={(e) => set(f.name, e.target.value)} placeholder={f.placeholder} className={cls(f.name)} />
             ) : f.kind === "rating" ? (
               <select value={String(values[f.name] || "5")} onChange={(e) => set(f.name, e.target.value)} className={cls(f.name)}>
@@ -168,7 +179,7 @@ export default function ResourceForm({
             ) : f.hint ? (
               <span className="mt-1 block text-[0.68rem] text-muted">{f.hint}</span>
             ) : null}
-          </label>
+          </FieldWrap>
         ),
       )}
 
@@ -185,4 +196,8 @@ export default function ResourceForm({
       </div>
     </form>
   );
+}
+
+function FieldWrap({ image, children }: { image: boolean; children: React.ReactNode }) {
+  return image ? <div className="block">{children}</div> : <label className="block">{children}</label>;
 }

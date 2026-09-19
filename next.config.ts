@@ -7,7 +7,11 @@ const nextConfig: NextConfig = {
   // this site's own /api/v1, which is forwarded to the Velastia API. Same
   // origin for the shopper, so the API needs no CORS entry for the store.
   async rewrites() {
-    return [{ source: "/api/v1/:path*", destination: `${API_URL}/api/v1/:path*` }];
+    return [
+      { source: "/api/v1/:path*", destination: `${API_URL}/api/v1/:path*` },
+      // Images uploaded in the admin's Media Library, stored by the API.
+      { source: "/uploads/:path*", destination: `${API_URL}/uploads/:path*` },
+    ];
   },
 };
 

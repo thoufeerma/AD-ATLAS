@@ -15,7 +15,11 @@ const nextConfig: NextConfig = {
   // sets is first-party to the admin — no CORS, no third-party cookies, and
   // server components can read it to make authenticated calls.
   async rewrites() {
-    return [{ source: "/api/v1/:path*", destination: `${API_URL}/api/v1/:path*` }];
+    return [
+      { source: "/api/v1/:path*", destination: `${API_URL}/api/v1/:path*` },
+      // Uploaded images, so previews load from the admin's own origin.
+      { source: "/uploads/:path*", destination: `${API_URL}/uploads/:path*` },
+    ];
   },
 };
 

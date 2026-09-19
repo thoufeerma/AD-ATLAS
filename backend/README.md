@@ -54,7 +54,7 @@ under **Users & Roles**.
 | `db:seed` | Idempotent seed — safe to rerun, never overwrites edited data |
 | `db:studio` | Prisma Studio, a GUI over the database |
 | `db:up` / `db:down` | Start / stop the Docker database |
-| `smoke` | 184 end-to-end API checks — **dev databases only**, see below |
+| `smoke` | 197 end-to-end API checks — **dev databases only**, see below |
 
 ## API
 
@@ -98,6 +98,10 @@ form 10 per 10 minutes. Behind a proxy, make sure it sets `X-Forwarded-For`.
 | `/admin/settings/notifications` | PUT | super admin only |
 | `/admin/emails` · `/:id` | GET (the Email Log; filter by `status`, `q`, `orderId`) | Order Manager, Support |
 | `/admin/emails/test` | POST (send a test email) | super admin only |
+| `/admin/media` · `/:id` | GET · POST (raw image body, `X-File-Name`) · PATCH (alt) · DELETE | Content Manager |
+
+Uploaded images are served at **`/uploads/…`** (outside `/api/v1`); both
+frontends pass `/uploads/*` through to the API.
 | `/admin/dashboard` | GET | all |
 | `/admin/products` · `/:id` | GET · POST · PATCH · DELETE (archives) | read: Order Manager, Support |
 | `/admin/products/:id/stock` | PATCH `{ set }` or `{ adjust }` | Order Manager |
@@ -180,6 +184,12 @@ Each of these is exercised by `npm run smoke`.
   stored only as SHA-256 hashes. Forgot-password answers the same whether or
   not the account exists; sign-in uses the same timing-safe, throttled check
   as the admin. Password changes and resets end every other session.
+- **Uploads** are decoded and re-encoded (WebP, max 2400px) rather than stored
+  as sent: that proves each file is really an image whatever its name or type
+  claims, strips metadata such as a phone's GPS location, and defuses files
+  crafted to be two things at once. SVG is refused; files over `MAX_UPLOAD_MB`
+  and images over 50 megapixels are rejected. Stored names are random, served
+  only from inside the upload folder, and an image still in use can't be deleted.
 - **CORS** is an explicit allow-list (`CORS_ORIGINS`) — never a wildcard with
   credentials.
 - **Refuses to boot in production** with a missing, short or placeholder
@@ -195,7 +205,7 @@ npm run dev      # in one terminal
 npm run smoke    # in another
 ```
 
-Runs 45 storefront and 139 admin checks, including a concurrent-purchase race,
+Runs 45 storefront and 152 admin checks, including a concurrent-purchase race,
 the admin account lifecycle and regression tests for the partial-update bug.
 Rerunnable against a used database: every fixture it creates is suffixed per
 run. It **refuses to target anything but localhost**, because it places orders
@@ -218,6 +228,9 @@ show up, turned off, on the Users & Roles screen.
 - **Remaining CMS resources**: blog posts, media library, campaigns, tax
   editing. The tables exist; the routes don't. (Pages, store settings, the
   inbox, subscribers, Users & Roles and shipping methods are done.)
+- **Object storage for uploads.** Images are kept on the API's local disk
+  (`UPLOAD_DIR`), which most hosts wipe on every deploy. Before going live,
+  switch `src/lib/media.ts`'s storage block to Cloudflare R2 or S3.
 - **Login throttling and rate limits are in-memory** — correct for one instance,
   need Redis once the API runs on several.
 - The smoke suite is end-to-end only; there are no unit tests yet.

@@ -437,3 +437,20 @@ export const EMAIL_STATUS_LABEL: Record<EmailStatus, string> = {
   CAPTURED: "Not sent",
 };
 
+/* ── Media ── */
+
+export type MediaAsset = {
+  id: string;
+  filename: string;
+  /** Site path, e.g. /uploads/2026/09/ab12….webp */
+  url: string;
+  alt: string | null;
+  mimeType: string;
+  sizeBytes: number;
+  width: number | null;
+  height: number | null;
+  createdAt: string;
+  /** Where it's used, e.g. "Product: Velastia Face Serum". */
+  usedIn: string[];
+};
+
