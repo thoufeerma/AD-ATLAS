@@ -531,6 +531,12 @@ model AdminUser {
   passwordHash String
   role         AdminRole
   isActive     Boolean       @default(true)
+  /// Set for new accounts and admin-issued resets; the panel is blocked
+  /// until the admin picks their own password.
+  mustChangePassword Boolean @default(false)
+  /// Stamped into every session token. Bumping it (password change, reset,
+  /// deactivation) signs that admin out everywhere.
+  sessionVersion Int         @default(0)
   lastLoginAt  DateTime?
   activity     ActivityLog[]
   createdAt    DateTime      @default(now())

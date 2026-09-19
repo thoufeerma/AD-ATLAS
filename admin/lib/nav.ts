@@ -100,7 +100,7 @@ export const NAV: NavGroup[] = [
   {
     title: "System Settings",
     items: [
-      { href: "/users", label: "Users & Roles", Icon: ShieldCheck, sample: true },
+      { href: "/users", label: "Users & Roles", Icon: ShieldCheck },
       { href: "/settings", label: "Settings", Icon: Settings },
       { href: "/settings/payments", label: "Payment Methods", Icon: CreditCard, sample: true },
       { href: "/settings/shipping", label: "Shipping Methods", Icon: Truck, sample: true },

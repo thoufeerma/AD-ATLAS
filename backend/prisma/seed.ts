@@ -372,6 +372,8 @@ async function main() {
           name: "Administrator",
           passwordHash: await hashPassword(password),
           role: "SUPER_ADMIN",
+          // Seeded from .env, so the admin panel makes them choose their own.
+          mustChangePassword: true,
         },
       });
       log(`super administrator ${email} — change this password after first sign-in`);

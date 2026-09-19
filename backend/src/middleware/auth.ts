@@ -2,9 +2,9 @@ import type { NextFunction, Request, Response } from "express";
 import type { AdminRole, AdminUser } from "../generated/prisma/client.js";
 import { prisma } from "../db.js";
 import { ADMIN_COOKIE, readSession } from "../lib/auth.js";
-import { forbidden, unauthorized } from "../lib/http.js";
+import { forbidden, HttpError, unauthorized } from "../lib/http.js";
 
-export type AuthedAdmin = Pick<AdminUser, "id" | "email" | "name" | "role">;
+export type AuthedAdmin = Pick<AdminUser, "id" | "email" | "name" | "role" | "mustChangePassword">;
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -29,11 +29,41 @@ export async function requireAdmin(req: Request, _res: Response, next: NextFunct
 
   const admin = await prisma.adminUser.findUnique({
     where: { id: session.sub },
-    select: { id: true, email: true, name: true, role: true, isActive: true },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      isActive: true,
+      mustChangePassword: true,
+      sessionVersion: true,
+    },
   });
   if (!admin || !admin.isActive) throw unauthorized("Account is not active");
+  // A password change, reset or deactivation bumps the version, which ends
+  // every session issued before it.
+  if (session.ver !== admin.sessionVersion) throw unauthorized("Session expired — please sign in again");
 
-  req.admin = { id: admin.id, email: admin.email, name: admin.name, role: admin.role };
+  req.admin = {
+    id: admin.id,
+    email: admin.email,
+    name: admin.name,
+    role: admin.role,
+    mustChangePassword: admin.mustChangePassword,
+  };
+  next();
+}
+
+/**
+ * Until an admin replaces a temporary or placeholder password, the only
+ * things they can do are read who they are, change the password and sign out
+ * (all under /auth). Everything else is refused here, server-side — the
+ * admin panel's lock screen is a convenience, not the control.
+ */
+export function requireCurrentPassword(req: Request, _res: Response, next: NextFunction) {
+  if (req.admin?.mustChangePassword) {
+    throw new HttpError(403, "PASSWORD_CHANGE_REQUIRED", "Set a new password to continue");
+  }
   next();
 }
 

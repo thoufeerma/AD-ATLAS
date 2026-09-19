@@ -4,7 +4,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { env } from "./env.js";
 import { prisma } from "./db.js";
-import { requireAdmin } from "./middleware/auth.js";
+import { requireAdmin, requireCurrentPassword } from "./middleware/auth.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 import { catalogRouter } from "./routes/public/catalog.js";
 import { checkoutRouter } from "./routes/public/checkout.js";
@@ -26,6 +26,7 @@ import {
 } from "./routes/admin/resources.js";
 import { adminSettingsRouter, adminPagesRouter } from "./routes/admin/settings.js";
 import { adminInboxRouter, adminSubscribersRouter } from "./routes/admin/inbox.js";
+import { adminUsersRouter } from "./routes/admin/users.js";
 
 export function createApp() {
   const app = express();
@@ -61,10 +62,11 @@ export function createApp() {
   v1.use(checkoutRouter);
   v1.use(contentRouter);
 
-  // ── Admin API (CMS) ── everything past /auth requires a session.
+  // ── Admin API (CMS) ── everything past /auth requires a session, and a
+  // password of the admin's own choosing (see requireCurrentPassword).
   const admin = express.Router();
   admin.use("/auth", adminAuthRouter);
-  admin.use(requireAdmin);
+  admin.use(requireAdmin, requireCurrentPassword);
   admin.use("/dashboard", adminDashboardRouter);
   admin.use("/products", adminProductsRouter);
   admin.use("/categories", adminCategoriesRouter);
@@ -82,6 +84,7 @@ export function createApp() {
   admin.use("/pages", adminPagesRouter);
   admin.use("/inbox", adminInboxRouter);
   admin.use("/subscribers", adminSubscribersRouter);
+  admin.use("/users", adminUsersRouter);
 
   v1.use("/admin", admin);
   app.use("/api/v1", v1);

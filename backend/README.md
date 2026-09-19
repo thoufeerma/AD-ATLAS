@@ -37,8 +37,10 @@ npm run dev                 # http://localhost:4000
 ```
 
 Sign in to the admin with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` from `.env`.
-**Change that password before this goes anywhere near production** — the seed
-script refuses to create a production admin with the placeholder.
+The admin panel then makes you choose your own password before anything else
+(the seeded one is only ever a starting point), and the seed script refuses to
+create a production admin with the placeholder at all. Add the rest of the team
+under **Users & Roles**.
 
 ## Scripts
 
@@ -52,7 +54,7 @@ script refuses to create a production admin with the placeholder.
 | `db:seed` | Idempotent seed — safe to rerun, never overwrites edited data |
 | `db:studio` | Prisma Studio, a GUI over the database |
 | `db:up` / `db:down` | Start / stop the Docker database |
-| `smoke` | 78 end-to-end API checks — **dev databases only**, see below |
+| `smoke` | 133 end-to-end API checks — **dev databases only**, see below |
 
 ## API
 
@@ -84,6 +86,8 @@ form 10 per 10 minutes. Behind a proxy, make sure it sets `X-Forwarded-For`.
 | Path | Methods | Roles beyond Super Admin |
 | --- | --- | --- |
 | `/admin/auth/login` · `/logout` · `/me` | POST · POST · GET | — |
+| `/admin/auth/password` | POST (change your own) | any signed-in admin |
+| `/admin/users` · `/:id` · `/:id/reset-password` | GET · POST · PATCH · POST | super admin only |
 | `/admin/dashboard` | GET | all |
 | `/admin/products` · `/:id` | GET · POST · PATCH · DELETE (archives) | read: Order Manager, Support |
 | `/admin/products/:id/stock` | PATCH `{ set }` or `{ adjust }` | Order Manager |
@@ -130,7 +134,15 @@ Each of these is exercised by `npm run smoke`.
   even for unknown emails (no timing leak), and locks after 5 failures per
   IP + email for 15 minutes.
 - **Sessions** are HS256 JWTs in an `HttpOnly`, `SameSite=Lax` cookie. The user
-  is re-read on every request, so deactivating an admin takes effect immediately.
+  is re-read on every request, so a role change or deactivation takes effect
+  immediately. Each token carries the account's `sessionVersion`; changing or
+  resetting a password, or turning an account off, bumps it and ends every
+  older session.
+- **Passwords**: at least 12 characters, not the placeholder, not containing the
+  email. New accounts and admin resets get a one-time password (shown once,
+  stored only as a bcrypt hash), and an account on a one-time or placeholder
+  password can do nothing but change it — enforced by the API, not just the
+  admin panel. Nobody can demote or turn off themselves, or the last super admin.
 - **CORS** is an explicit allow-list (`CORS_ORIGINS`) — never a wildcard with
   credentials.
 - **Refuses to boot in production** with a missing, short or placeholder
@@ -146,10 +158,17 @@ npm run dev      # in one terminal
 npm run smoke    # in another
 ```
 
-Runs 30 storefront and 48 admin checks, including a concurrent-purchase race and
-regression tests for the partial-update bug. Rerunnable against a used database:
-every fixture it creates is suffixed per run. It **refuses to target anything
-but localhost**, because it places orders and edits stock.
+Runs 40 storefront and 93 admin checks, including a concurrent-purchase race,
+the admin account lifecycle and regression tests for the partial-update bug.
+Rerunnable against a used database: every fixture it creates is suffixed per
+run. It **refuses to target anything but localhost**, because it places orders
+and edits stock.
+
+The admin checks sign in as their own account, `smoke-runner@velastia.test`,
+which the run switches on with a fresh random password and switches off again
+afterwards (`scripts/smoke-admin-user.ts`). They never use or need your login,
+so they keep working after you change your password. Accounts the tests create
+show up, turned off, on the Users & Roles screen.
 
 ## Not built yet
 
@@ -162,8 +181,8 @@ but localhost**, because it places orders and edits stock.
   uploads need object storage (S3, Cloudinary, R2).
 - **Email / SMS** for order confirmations and shipping updates.
 - **Remaining CMS resources**: blog posts, media library, campaigns,
-  shipping/tax editing, admin user management. The tables exist; the routes don't.
-  (Pages, store settings, the inbox and subscribers are done.)
+  shipping/tax editing. The tables exist; the routes don't. (Pages, store
+  settings, the inbox, subscribers and Users & Roles are done.)
 - **Login throttling and rate limits are in-memory** — correct for one instance,
   need Redis once the API runs on several.
 - The smoke suite is end-to-end only; there are no unit tests yet.

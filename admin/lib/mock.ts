@@ -336,31 +336,7 @@ export const CAMPAIGNS = [
   { id: "cp-5", name: "Diwali Preview", sent: 0, opened: 0, clicked: 0, date: "—", status: "Draft" as const },
 ];
 
-export const SUBSCRIBERS = [
-  { id: "s-1", email: "riya.sharma@example.com", source: "Footer form", date: "2025-05-28", status: "Subscribed" as const },
-  { id: "s-2", email: "ananya.v@example.com", source: "Checkout opt-in", date: "2025-05-27", status: "Subscribed" as const },
-  { id: "s-3", email: "neha.kapoor@example.com", source: "Popup — VEL10", date: "2025-05-26", status: "Subscribed" as const },
-  { id: "s-4", email: "old.address@example.com", source: "Footer form", date: "2024-03-11", status: "Unsubscribed" as const },
-  { id: "s-5", email: "pooja.nair@example.com", source: "Footer form", date: "2025-05-24", status: "Subscribed" as const },
-  { id: "s-6", email: "bounced@example.com", source: "Checkout opt-in", date: "2025-02-02", status: "Bounced" as const },
-];
-
 /* ── System ───────────────────────────────────────────────────────────── */
-
-export const USERS = [
-  { id: "u-1", name: "Anshil Dev", email: "anshil@velastia.com", role: "Super Administrator", lastActive: "Just now", active: true },
-  { id: "u-2", name: "Rhea Nathan", email: "rhea@velastia.com", role: "Content Manager", lastActive: "2 hours ago", active: true },
-  { id: "u-3", name: "Vikram Shah", email: "vikram@velastia.com", role: "Order Manager", lastActive: "Yesterday", active: true },
-  { id: "u-4", name: "Priya Deshpande", email: "priya@velastia.com", role: "Support Agent", lastActive: "3 days ago", active: true },
-  { id: "u-5", name: "Former Staff", email: "former@velastia.com", role: "Support Agent", lastActive: "4 months ago", active: false },
-];
-
-export const ROLES = [
-  { name: "Super Administrator", members: 1, permissions: "Full access to every module and setting" },
-  { name: "Content Manager", members: 1, permissions: "Pages, blog, media, banners, testimonials, FAQs, SEO" },
-  { name: "Order Manager", members: 1, permissions: "Orders, customers, inventory, refunds" },
-  { name: "Support Agent", members: 2, permissions: "Read-only orders and customers, reply to reviews" },
-];
 
 export const ACTIVITY = [
   { id: "a-1", who: "Anshil Dev", what: "Updated price of Velastia Foundation to ₹1,499", when: "12 minutes ago", type: "Product" },

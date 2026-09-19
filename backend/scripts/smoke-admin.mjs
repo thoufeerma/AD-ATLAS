@@ -1,8 +1,9 @@
 // Admin (CMS) API smoke test. Rerunnable: every fixture it creates carries a
 // per-run suffix, and state-dependent checks set up their own baseline.
 //
-// DEVELOPMENT ONLY — creates products, coupons and orders. Signs in with the
-// SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD from .env.
+// DEVELOPMENT ONLY — creates products, coupons and orders. Signs in as the
+// dedicated test account that `npm run smoke` switches on for the run
+// (scripts/smoke-admin-user.ts) — never a real person's login.
 import "dotenv/config";
 
 const API = `${process.env.SMOKE_API_URL ?? "http://localhost:4000"}/api/v1`;
@@ -10,10 +11,10 @@ if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(API)) {
   console.error(`Refusing to run smoke tests against ${API} — they create data. Localhost only.`);
   process.exit(2);
 }
-const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL;
-const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
+const ADMIN_EMAIL = process.env.SMOKE_ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.SMOKE_ADMIN_PASSWORD;
 if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-  console.error("Set SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD in .env to run the admin suite.");
+  console.error("Run this through `npm run smoke`, which sets up the test admin account.");
   process.exit(2);
 }
 const ORDER = process.argv[2];
@@ -288,6 +289,75 @@ console.log("\n[Inbox & subscribers]");
   const bad = await call("PATCH", `/admin/subscribers/${sub.id}`, { status: "DELETED" });
   ok(bad.status === 400, "unknown subscriber status rejected");
   ok((await call("GET", "/admin/inbox/messages?status=bogus")).status === 400, "unknown inbox filter rejected");
+}
+
+console.log("\n[Admin accounts]");
+{
+  // Requests as someone else, with their own cookie.
+  const as = async (who, method, path, body) => {
+    const res = await fetch(API + path, {
+      method,
+      headers: { "content-type": "application/json", ...(who ? { cookie: who } : {}) },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const json = await res.json().catch(() => null);
+    return { status: res.status, json, cookie: res.headers.get("set-cookie")?.split(";")[0] };
+  };
+
+  const email = `staff.${RUN}@example.com`;
+  const created = await call("POST", "/admin/users", { name: `Staff ${RUN}`, email, role: "CONTENT_MANAGER" });
+  const temp = created.json.data?.temporaryPassword;
+  const staffId = created.json.data?.user.id;
+  ok(created.status === 201 && /^[a-z2-9]{4}(-[a-z2-9]{4}){3}$/.test(temp ?? "") && created.json.data.user.mustChangePassword, "super admin adds a user with a one-time password");
+  ok((await call("POST", "/admin/users", { name: "Dup", email, role: "SUPPORT_AGENT" })).status === 409, "same email twice -> 409");
+  const list = (await call("GET", "/admin/users")).json.data;
+  ok(list.some((u) => u.id === staffId) && list.every((u) => !("passwordHash" in u)), "users list never exposes password hashes");
+
+  // First sign-in: locked to changing the password.
+  const first = await as(null, "POST", "/admin/auth/login", { email, password: temp });
+  ok(first.status === 200 && first.json.data.mustChangePassword === true, "temporary password signs in, flagged must-change");
+  const blocked = await as(first.cookie, "GET", "/admin/pages");
+  ok(blocked.status === 403 && blocked.json.error.code === "PASSWORD_CHANGE_REQUIRED", "everything else refused until the password is changed");
+  ok((await as(first.cookie, "GET", "/admin/auth/me")).status === 200, "…but they can still see who they are");
+
+  const wrong = await as(first.cookie, "POST", "/admin/auth/password", { currentPassword: "nope", newPassword: "a-much-better-password" });
+  ok(wrong.status === 400 && wrong.json.error.details?.[0]?.path === "currentPassword", "wrong current password refused");
+  const weak = await as(first.cookie, "POST", "/admin/auth/password", { currentPassword: temp, newPassword: "short" });
+  ok(weak.status === 400 && weak.json.error.details?.[0]?.path === "newPassword", "too-short new password refused", weak.json.error.message);
+  const placeholder = await as(first.cookie, "POST", "/admin/auth/password", { currentPassword: temp, newPassword: "change-me-please-now" });
+  ok(placeholder.status === 400, "placeholder-style password refused");
+
+  const newPassword = `Velvet-${RUN}-matte-rose`;
+  const changed = await as(first.cookie, "POST", "/admin/auth/password", { currentPassword: temp, newPassword });
+  ok(changed.status === 200 && changed.json.data.mustChangePassword === false && !!changed.cookie, "password changed, fresh session issued");
+  ok((await as(first.cookie, "GET", "/admin/auth/me")).status === 401, "the session from before the change no longer works");
+  const staff = changed.cookie;
+  ok((await as(staff, "GET", "/admin/pages")).status === 200, "content manager can now use content screens");
+  ok((await as(staff, "GET", "/admin/users")).status === 403, "…but not Users & Roles");
+
+  // Role changes and switching off apply on the very next request.
+  await call("PATCH", `/admin/users/${staffId}`, { role: "ORDER_MANAGER" });
+  ok((await as(staff, "GET", "/admin/pages")).status === 403, "role change takes effect immediately");
+  const off = await call("PATCH", `/admin/users/${staffId}`, { isActive: false });
+  ok(off.status === 200 && (await as(staff, "GET", "/admin/auth/me")).status === 401, "turning an account off ends its session at once");
+  ok((await as(null, "POST", "/admin/auth/login", { email, password: newPassword })).status === 401, "a turned-off account can't sign in");
+
+  // Reset issues a new one-time password and ends sessions.
+  await call("PATCH", `/admin/users/${staffId}`, { isActive: true });
+  const reset = await call("POST", `/admin/users/${staffId}/reset-password`);
+  const temp2 = reset.json.data?.temporaryPassword;
+  ok(reset.status === 200 && temp2 && temp2 !== temp, "password reset issues a new one-time password");
+  ok((await as(null, "POST", "/admin/auth/login", { email, password: newPassword })).status === 401, "old password stops working after a reset");
+  const again = await as(null, "POST", "/admin/auth/login", { email, password: temp2 });
+  ok(again.status === 200 && again.json.data.mustChangePassword === true, "…and the new one must be changed on sign-in");
+
+  // Nobody can lock themselves out.
+  const me = (await call("GET", "/admin/auth/me")).json.data;
+  ok((await call("PATCH", `/admin/users/${me.id}`, { role: "SUPPORT_AGENT" })).status === 409, "can't change your own role");
+  ok((await call("PATCH", `/admin/users/${me.id}`, { isActive: false })).status === 409, "can't turn off your own account");
+  ok((await call("POST", `/admin/users/${me.id}/reset-password`)).status === 409, "own password is changed, not reset");
+
+  await call("PATCH", `/admin/users/${staffId}`, { isActive: false }); // tidy up
 }
 
 console.log("\n[Race: two shoppers, one stock pool]");

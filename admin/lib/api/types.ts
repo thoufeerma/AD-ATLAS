@@ -5,13 +5,42 @@
 
 export type AdminRole = "SUPER_ADMIN" | "CONTENT_MANAGER" | "ORDER_MANAGER" | "SUPPORT_AGENT";
 
-export type Admin = { id: string; email: string; name: string; role: AdminRole };
+export type Admin = {
+  id: string;
+  email: string;
+  name: string;
+  role: AdminRole;
+  /** Signed in with a temporary or placeholder password; must set their own. */
+  mustChangePassword: boolean;
+};
 
 export const ROLE_LABEL: Record<AdminRole, string> = {
   SUPER_ADMIN: "Super Administrator",
   CONTENT_MANAGER: "Content Manager",
   ORDER_MANAGER: "Order Manager",
   SUPPORT_AGENT: "Support Agent",
+};
+
+/** What each role can do — mirrors the gates in backend/src/routes/admin. */
+export const ROLE_SUMMARY: Record<AdminRole, string> = {
+  SUPER_ADMIN:
+    "Everything: products, prices, coupons, offers, store settings, activity logs and Users & Roles.",
+  CONTENT_MANAGER:
+    "Pages, banners, FAQs, testimonials, collaborators, site copy and newsletter subscribers. Reads the inbox.",
+  ORDER_MANAGER: "Orders (including status updates), customers and stock levels. Reads the inbox.",
+  SUPPORT_AGENT: "Views orders and customers and moderates reviews. Reads the inbox.",
+};
+
+/** An account on the Users & Roles screen. */
+export type AdminUserRow = {
+  id: string;
+  name: string;
+  email: string;
+  role: AdminRole;
+  isActive: boolean;
+  mustChangePassword: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
 };
 
 export type OrderStatus =

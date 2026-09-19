@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, Search, Bell, ExternalLink, ChevronDown, LogOut } from "lucide-react";
+import { Menu, Search, Bell, ExternalLink, ChevronDown, LogOut, UserCog } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { ROLE_LABEL, type Admin } from "@/lib/api/types";
 
@@ -103,6 +104,15 @@ export default function Topbar({ admin, onMenu }: { admin: Admin; onMenu: () => 
                   <p className="truncate text-[0.8rem] font-medium text-ink">{admin.name}</p>
                   <p className="truncate text-[0.7rem] text-muted">{admin.email}</p>
                 </div>
+                <Link
+                  role="menuitem"
+                  href="/account"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[0.8rem] text-ink hover:bg-plane"
+                >
+                  <UserCog className="size-4 text-muted" />
+                  Account &amp; password
+                </Link>
                 <button
                   role="menuitem"
                   onClick={signOut}
