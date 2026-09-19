@@ -9,9 +9,11 @@ import { cn } from "@/lib/utils";
 export default function Sidebar({
   open,
   onClose,
+  badges,
 }: {
   open: boolean;
   onClose: () => void;
+  badges?: Record<string, number>;
 }) {
   const pathname = usePathname();
   const current = findNavItem(pathname)?.href;
@@ -59,6 +61,7 @@ export default function Sidebar({
               <ul className="space-y-0.5">
                 {group.items.map((item) => {
                   const activeItem = item.href === current;
+                  const badge = badges?.[item.href] ?? item.badge;
 
                   return (
                     <li key={item.href}>
@@ -85,7 +88,7 @@ export default function Sidebar({
                             Sample
                           </span>
                         )}
-                        {item.badge && (
+                        {!!badge && (
                           <span
                             className={cn(
                               "tnum rounded-full px-1.5 py-0.5 text-[0.6rem] font-semibold",
@@ -94,7 +97,7 @@ export default function Sidebar({
                                 : "bg-white/12 text-white/80",
                             )}
                           >
-                            {item.badge}
+                            {badge}
                           </span>
                         )}
                       </Link>

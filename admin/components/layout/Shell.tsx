@@ -8,14 +8,23 @@ import { findNavItem } from "@/lib/nav";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
-export default function Shell({ admin, children }: { admin: Admin; children: React.ReactNode }) {
+export default function Shell({
+  admin,
+  badges,
+  children,
+}: {
+  admin: Admin;
+  /** Live counts shown beside sidebar items, keyed by href. */
+  badges?: Record<string, number>;
+  children: React.ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const sample = findNavItem(pathname)?.sample;
 
   return (
     <div className="min-h-screen lg:pl-[248px]">
-      <Sidebar open={open} onClose={() => setOpen(false)} />
+      <Sidebar open={open} onClose={() => setOpen(false)} badges={badges} />
       <Topbar admin={admin} onMenu={() => setOpen(true)} />
       <main className="px-4 py-6 lg:px-7">
         {sample && (

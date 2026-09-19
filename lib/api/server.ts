@@ -21,7 +21,8 @@ import type {
  * Responses are cached for REVALIDATE seconds, so an edit in the admin shows
  * on the site within about a minute while visitors are served from cache.
  * If the API is down when a cached page goes stale, the last good page keeps
- * being served. (`next dev` always fetches fresh.)
+ * being served. This applies under `next dev` too, so allow a minute (or
+ * restart the dev server) after changing data directly in the database.
  */
 const API_URL = process.env.API_URL ?? "http://localhost:4000";
 const REVALIDATE = 60;

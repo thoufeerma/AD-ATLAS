@@ -309,3 +309,38 @@ export const can = {
   editStore: (role: AdminRole) => role === "SUPER_ADMIN",
 };
 
+/* ── Inbox & subscribers ── */
+
+export type ContactMessage = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string;
+  message: string;
+  isHandled: boolean;
+  createdAt: string;
+};
+
+export type CollabApplication = {
+  id: string;
+  name: string;
+  email: string;
+  handle: string;
+  audienceSize: string | null;
+  about: string;
+  isReviewed: boolean;
+  createdAt: string;
+};
+
+export type InboxCounts = { messages: number; applications: number; total: number };
+
+export type Subscriber = {
+  id: string;
+  email: string;
+  source: string | null;
+  status: "SUBSCRIBED" | "UNSUBSCRIBED" | "BOUNCED";
+  createdAt: string;
+  updatedAt: string;
+};
+

@@ -47,7 +47,7 @@ during a build** too. `npm run build` and `npm run lint` both pass clean.
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 1 | Storefront frontend (repo root) | **Done** |
-| 2 | Admin / CMS frontend ([`admin/`](admin/)) | **Done** — 15 screens still on sample data |
+| 2 | Admin / CMS frontend ([`admin/`](admin/)) | **Done** — 14 screens still on sample data |
 | 3 | Backend API — Express + TypeScript + Prisma + PostgreSQL ([`backend/`](backend/)) | **Done** |
 | 3b | Storefront connected to the API | **Done** |
 | 4 | Razorpay — UPI, cards, netbanking, wallets | Not started |
@@ -74,7 +74,10 @@ Policy text can include live values — `{{free_shipping_above}}`, `{{shipping_f
 stays correct when settings change.
 
 Shoppers' reviews, contact messages, newsletter sign-ups and collab applications
-are saved through the API. New reviews wait for approval in the admin.
+are saved through the API. New reviews wait for approval on the admin Reviews
+screen; contact messages and collab applications land in the admin **Inbox**
+(with an open-items count in the sidebar); newsletter sign-ups are listed under
+**Subscribers**, with a CSV export of everyone still subscribed.
 
 ## Where things live
 

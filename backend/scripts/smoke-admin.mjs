@@ -252,6 +252,44 @@ console.log("\n[Settings & pages]");
   ok(JSON.stringify(restored.json.data.body.sections) === JSON.stringify(page.body.sections), "page restored");
 }
 
+console.log("\n[Inbox & subscribers]");
+{
+  // A shopper writes in through the storefront…
+  const subject = `Where is my order ${RUN}`;
+  await pub("POST", "/contact", { name: "Inbox Tester", email: `inbox.${RUN}@example.com`, subject, message: "Smoke test message, safe to delete." });
+  await pub("POST", "/collab-applications", { name: "Collab Tester", email: `collab.${RUN}@example.com`, handle: `@tester${RUN}`, about: "Smoke test application, safe to delete." });
+  await pub("POST", "/newsletter", { email: `news.${RUN}@example.com`, source: "footer" });
+
+  const counts0 = (await call("GET", "/admin/inbox/counts")).json.data;
+  const open = (await call("GET", "/admin/inbox/messages")).json.data;
+  const msg = open.find((m) => m.subject === subject);
+  ok(!!msg && counts0.messages >= 1 && counts0.total === counts0.messages + counts0.applications, "new message is in the open inbox, counted in the badge", `${counts0.total} open`);
+
+  const done = await call("PATCH", `/admin/inbox/messages/${msg.id}`, { isHandled: true });
+  const counts1 = (await call("GET", "/admin/inbox/counts")).json.data;
+  const doneList = (await call("GET", "/admin/inbox/messages?status=done")).json.data;
+  ok(done.status === 200 && counts1.messages === counts0.messages - 1 && doneList.some((m) => m.id === msg.id), "mark done moves it out of the open count");
+
+  const del = await call("DELETE", `/admin/inbox/messages/${msg.id}`);
+  const all = (await call("GET", "/admin/inbox/messages?status=all")).json.data;
+  ok(del.status === 204 && !all.some((m) => m.id === msg.id), "delete removes the message");
+  ok((await call("DELETE", `/admin/inbox/messages/${msg.id}`)).status === 404, "deleting it again -> 404");
+
+  const app = (await call("GET", "/admin/inbox/applications")).json.data.find((a) => a.handle === `@tester${RUN}`);
+  const rev = await call("PATCH", `/admin/inbox/applications/${app?.id}`, { isReviewed: true });
+  ok(rev.status === 200 && rev.json.data.isReviewed === true, "collab application marked reviewed");
+  await call("DELETE", `/admin/inbox/applications/${app.id}`);
+
+  const subs = (await call("GET", "/admin/subscribers")).json.data;
+  const sub = subs.find((x) => x.email === `news.${RUN}@example.com`);
+  ok(sub?.status === "SUBSCRIBED" && sub.source === "footer", "newsletter sign-up listed with its source");
+  const uns = await call("PATCH", `/admin/subscribers/${sub.id}`, { status: "UNSUBSCRIBED" });
+  ok(uns.status === 200 && uns.json.data.status === "UNSUBSCRIBED", "subscriber can be unsubscribed");
+  const bad = await call("PATCH", `/admin/subscribers/${sub.id}`, { status: "DELETED" });
+  ok(bad.status === 400, "unknown subscriber status rejected");
+  ok((await call("GET", "/admin/inbox/messages?status=bogus")).status === 400, "unknown inbox filter rejected");
+}
+
 console.log("\n[Race: two shoppers, one stock pool]");
 {
   const nc = (await call("GET", "/admin/products?q=night%20cream")).json.data[0];

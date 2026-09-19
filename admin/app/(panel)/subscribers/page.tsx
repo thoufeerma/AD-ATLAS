@@ -1,68 +1,34 @@
-"use client";
-
-import { Download, UserMinus } from "lucide-react";
+import type { Metadata } from "next";
 import PageHeader from "@/components/ui/PageHeader";
-import Button from "@/components/ui/Button";
-import Badge, { toneFor } from "@/components/ui/Badge";
-import DataTable, { type Column } from "@/components/ui/DataTable";
-import { SUBSCRIBERS } from "@/lib/mock";
+import SubscribersTable from "@/components/subscribers/SubscribersTable";
+import { apiGet, requireAdmin } from "@/lib/api/server";
+import { can, type Subscriber } from "@/lib/api/types";
 
-type Subscriber = (typeof SUBSCRIBERS)[number];
+export const metadata: Metadata = { title: "Subscribers" };
 
-const columns: Column<Subscriber>[] = [
-  {
-    key: "email",
-    header: "Email",
-    cell: (s) => <span className="font-medium text-ink">{s.email}</span>,
-  },
-  { key: "source", header: "Source" },
-  { key: "date", header: "Subscribed" },
-  {
-    key: "status",
-    header: "Status",
-    cell: (s) => <Badge tone={toneFor(s.status)}>{s.status}</Badge>,
-  },
-  {
-    key: "actions",
-    header: "",
-    sortable: false,
-    align: "right",
-    cell: (s) =>
-      s.status === "Subscribed" ? (
-        <button className="inline-flex items-center gap-1 text-[0.72rem] text-muted hover:text-critical">
-          <UserMinus className="size-3" /> Unsubscribe
-        </button>
-      ) : null,
-  },
-];
+export default async function SubscribersPage() {
+  const admin = await requireAdmin();
+  if (!can.editContent(admin.role)) {
+    return (
+      <>
+        <PageHeader title="Subscribers" />
+        <p className="rounded-[var(--radius-card)] border border-hairline bg-card p-8 text-center text-[0.82rem] text-ink-2">
+          Your role doesn&apos;t include the newsletter list.
+        </p>
+      </>
+    );
+  }
 
-const filters = [
-  { label: "Subscribed", test: (s: Subscriber) => s.status === "Subscribed" },
-  { label: "Unsubscribed", test: (s: Subscriber) => s.status === "Unsubscribed" },
-  { label: "Bounced", test: (s: Subscriber) => s.status === "Bounced" },
-];
-
-export default function SubscribersPage() {
-  const active = SUBSCRIBERS.filter((s) => s.status === "Subscribed").length;
+  const subscribers = await apiGet<Subscriber[]>("/admin/subscribers");
+  const active = subscribers.filter((s) => s.status === "SUBSCRIBED").length;
 
   return (
     <>
       <PageHeader
         title="Subscribers"
-        subtitle={`${active} active subscribers on the mailing list`}
-        actions={
-          <Button size="sm">
-            <Download className="size-3.5" /> Export List
-          </Button>
-        }
+        subtitle={`${active.toLocaleString("en-IN")} subscribed · sign-ups from the storefront newsletter form`}
       />
-      <DataTable
-        rows={SUBSCRIBERS}
-        columns={columns}
-        rowKey={(s) => s.id}
-        filters={filters}
-        searchPlaceholder="Search by email…"
-      />
+      <SubscribersTable subscribers={subscribers} />
     </>
   );
 }

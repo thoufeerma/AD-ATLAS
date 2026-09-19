@@ -98,6 +98,8 @@ form 10 per 10 minutes. Behind a proxy, make sure it sets `X-Forwarded-For`.
 | `/admin/settings/store` · `/welcome-offer` | PUT | super admin only |
 | `/admin/settings/copy` | PUT | Content Manager |
 | `/admin/pages` · `/:slug` | GET · PATCH | Content Manager |
+| `/admin/inbox/counts` · `/messages` · `/applications` (+ `/:id`) | GET · PATCH · DELETE | all staff |
+| `/admin/subscribers` · `/:id` | GET · PATCH | Content Manager |
 
 Roles follow the permissions drawn on the admin's Users & Roles screen.
 
@@ -159,9 +161,9 @@ but localhost**, because it places orders and edits stock.
 - **Media uploads.** Image URLs are stored as storefront-relative paths. Real
   uploads need object storage (S3, Cloudinary, R2).
 - **Email / SMS** for order confirmations and shipping updates.
-- **Remaining CMS resources**: blog posts, media library, campaigns, subscribers,
+- **Remaining CMS resources**: blog posts, media library, campaigns,
   shipping/tax editing, admin user management. The tables exist; the routes don't.
-  (Pages and store settings are done.)
+  (Pages, store settings, the inbox and subscribers are done.)
 - **Login throttling and rate limits are in-memory** — correct for one instance,
   need Redis once the API runs on several.
 - The smoke suite is end-to-end only; there are no unit tests yet.
