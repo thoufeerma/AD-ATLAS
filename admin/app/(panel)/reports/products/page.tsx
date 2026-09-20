@@ -1,91 +1,151 @@
-import { Download } from "lucide-react";
+import type { Metadata } from "next";
 import PageHeader from "@/components/ui/PageHeader";
-import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import StatCard from "@/components/ui/StatCard";
 import ChartFrame from "@/components/charts/ChartFrame";
 import BarList from "@/components/charts/BarList";
-import { TOP_PRODUCTS, PRODUCTS } from "@/lib/mock";
+import ExportCsv from "@/components/reports/ExportCsv";
+import NoData from "@/components/reports/NoData";
+import { apiGet } from "@/lib/api/server";
+import type { ProductReport, ProductStatus } from "@/lib/api/types";
 import { inr, num } from "@/lib/utils";
 
-export const metadata = { title: "Product Reports" };
+export const metadata: Metadata = { title: "Product Reports" };
 
-export default function ProductReportPage() {
-  const maxRevenue = Math.max(...TOP_PRODUCTS.map((p) => p.revenue));
+const STATUS: Record<ProductStatus, string> = {
+  ACTIVE: "On sale",
+  COMING_SOON: "Coming soon",
+  DRAFT: "Draft",
+  ARCHIVED: "Archived",
+};
 
-  // Category revenue — one series, one colour (never a ramp across nominal
-  // categories, which would double-encode bar length as hue).
-  const byCategory = [...new Set(PRODUCTS.map((p) => p.category))]
-    .map((cat) => ({
-      label: cat,
-      pct: PRODUCTS.filter((p) => p.category === cat).reduce(
-        (n, p) => n + p.price * p.sold,
-        0,
-      ),
-    }))
-    .sort((a, b) => b.pct - a.pct);
+export default async function ProductReportPage() {
+  const { top, byCategory, neverSold, totals } = await apiGet<ProductReport>("/admin/reports/products");
+  const sellingCategories = byCategory.filter((c) => c.revenuePaise > 0);
+  const anySales = totals.unitsSold > 0;
 
   return (
     <>
       <PageHeader
         title="Product Reports"
-        subtitle="What is selling, and what is sitting"
+        subtitle="What is selling, and what is sitting — last 12 months"
         actions={
-          <Button size="sm">
-            <Download className="size-3.5" /> Export Report
-          </Button>
+          <ExportCsv
+            filename="velastia-products"
+            disabled={totals.products === 0}
+            sections={[
+              {
+                title: "Top sellers",
+                columns: ["Product", "SKU", "Category", "Revenue (₹)", "Units"],
+                rows: top.map((p) => [p.name, p.sku, p.category.name, (p.revenuePaise / 100).toFixed(2), p.unitsSold]),
+              },
+              {
+                title: "Revenue by category",
+                columns: ["Category", "Revenue (₹)", "Units"],
+                rows: byCategory.map((c) => [c.name, (c.revenuePaise / 100).toFixed(2), c.unitsSold]),
+              },
+              {
+                title: "Not sold in this period",
+                columns: ["Product", "SKU", "Price (₹)", "Status", "Stock"],
+                rows: neverSold.map((p) => [
+                  p.name,
+                  p.sku,
+                  (p.pricePaise / 100).toFixed(2),
+                  STATUS[p.status],
+                  p.stock,
+                ]),
+              },
+            ]}
+          />
         }
       />
 
+      <div className="mb-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Items Sold" value={num(totals.unitsSold)} slot={1} note="last 12 months" />
+        <StatCard label="Product Revenue" value={inr(totals.revenuePaise / 100)} slot={2} note="item lines only" />
+        <StatCard label="Products Selling" value={`${num(totals.sellingProducts)} of ${num(totals.products)}`} slot={3} note="have sold at least one" />
+        <StatCard label="Not Selling" value={num(neverSold.length)} note="no sales in this period" />
+      </div>
+
       <div className="grid gap-5 lg:grid-cols-2">
-        <ChartFrame
-          title="Top Sellers by Revenue"
-          table={{
-            columns: ["Product", "Revenue", "Units"],
-            rows: TOP_PRODUCTS.map((p) => [p.name, inr(p.revenue), num(p.sold)]),
-          }}
-        >
-          <BarList
-            rows={TOP_PRODUCTS.map((p) => ({
-              label: p.name.replace("Velastia ", ""),
-              pct: Math.round((p.revenue / maxRevenue) * 100),
-            }))}
-            format={(n) => `${n}%`}
-          />
-          <p className="mt-4 text-[0.68rem] text-muted">
-            Bars are relative to the top seller ({inr(maxRevenue)}). Exact figures
-            are in the table view.
-          </p>
-        </ChartFrame>
+        {anySales ? (
+          <>
+            <ChartFrame
+              title="Top Sellers by Revenue"
+              subtitle="Item lines only — shipping, discounts and tax are not counted here"
+              table={{
+                columns: ["Product", "Revenue", "Units"],
+                rows: top.map((p) => [p.name, inr(p.revenuePaise / 100), num(p.unitsSold)]),
+              }}
+            >
+              <BarList
+                rows={top.map((p) => ({
+                  label: p.name.replace("Velastia ", ""),
+                  pct: Math.round((p.revenuePaise / top[0].revenuePaise) * 100),
+                }))}
+                format={(n) => `${n}%`}
+              />
+              <p className="mt-4 text-[0.68rem] text-muted">
+                Bars are relative to the top seller ({inr(top[0].revenuePaise / 100)}). Exact figures are in the
+                table view.
+              </p>
+            </ChartFrame>
 
-        <ChartFrame
-          title="Revenue by Category"
-          table={{
-            columns: ["Category", "Revenue"],
-            rows: byCategory.map((c) => [c.label, inr(c.pct)]),
-          }}
-        >
-          <BarList
-            rows={byCategory.map((c) => ({
-              label: c.label,
-              pct: Math.round((c.pct / byCategory[0].pct) * 100),
-            }))}
-            color="var(--color-series-2)"
+            <ChartFrame
+              title="Revenue by Category"
+              table={{
+                columns: ["Category", "Revenue", "Units"],
+                rows: byCategory.map((c) => [c.name, inr(c.revenuePaise / 100), num(c.unitsSold)]),
+              }}
+            >
+              <BarList
+                rows={sellingCategories.map((c) => ({
+                  label: c.name,
+                  pct: Math.round((c.revenuePaise / sellingCategories[0].revenuePaise) * 100),
+                }))}
+                color="var(--color-series-2)"
+              />
+              {sellingCategories.length < byCategory.length && (
+                <p className="mt-4 text-[0.68rem] text-muted">
+                  {byCategory.length - sellingCategories.length} categor
+                  {byCategory.length - sellingCategories.length === 1 ? "y has" : "ies have"} no sales yet.
+                </p>
+              )}
+            </ChartFrame>
+          </>
+        ) : (
+          <NoData
+            title="Top Sellers by Revenue"
+            note="Nothing sold yet. Once orders come in, the best sellers and the categories they belong to appear here."
           />
-        </ChartFrame>
+        )}
 
-        <Card title="Never Sold" className="lg:col-span-2">
-          <ul className="divide-y divide-hairline">
-            {PRODUCTS.filter((p) => p.sold === 0).map((p) => (
-              <li key={p.id} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[0.82rem] text-ink">{p.name}</span>
-                  <span className="block text-[0.68rem] text-muted">{p.sku}</span>
-                </span>
-                <span className="tnum text-[0.78rem] text-ink-2">{inr(p.price)}</span>
-                <span className="text-[0.72rem] text-muted">{p.status}</span>
-              </li>
-            ))}
-          </ul>
+        <Card
+          title={anySales ? "Not Sold in This Period" : "Products on Sale"}
+          className="lg:col-span-2"
+        >
+          {neverSold.length === 0 ? (
+            <p className="py-6 text-center text-[0.8rem] text-ink-2">
+              Every product has sold at least once. Rare, and worth celebrating.
+            </p>
+          ) : (
+            <ul className="divide-y divide-hairline">
+              {neverSold.map((p) => (
+                <li key={p.id} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[0.82rem] text-ink">{p.name}</span>
+                    <span className="block text-[0.68rem] text-muted">
+                      {p.sku} · {p.category.name}
+                    </span>
+                  </span>
+                  <span className="tnum text-[0.78rem] text-ink-2">{inr(p.pricePaise / 100)}</span>
+                  <span className="w-24 text-right text-[0.72rem] text-muted">
+                    {STATUS[p.status]}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </Card>
       </div>
     </>

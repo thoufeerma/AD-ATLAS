@@ -58,7 +58,7 @@ under **Users & Roles**.
 | `db:studio` | Prisma Studio, a GUI over the database |
 | `admin:reset` | Forgotten admin password: lists the admin emails and gives one a new one-time password (`-- email` to pick one when there are several). Uses `DATABASE_URL` — see [DEPLOY.md](../DEPLOY.md) for the online database |
 | `db:up` / `db:down` | Start / stop the Docker database |
-| `smoke` | 204 end-to-end API checks — **dev databases only**, see below |
+| `smoke` | 220 end-to-end API checks — **dev databases only**, see below |
 
 ## API
 
@@ -103,10 +103,9 @@ form 10 per 10 minutes. Behind a proxy, make sure it sets `X-Forwarded-For`.
 | `/admin/emails` · `/:id` | GET (the Email Log; filter by `status`, `q`, `orderId`) | Order Manager, Support |
 | `/admin/emails/test` | POST (send a test email) | super admin only |
 | `/admin/media` · `/:id` | GET · POST (raw image body, `X-File-Name`) · PATCH (alt) · DELETE | Content Manager |
-
-Uploaded images are served at **`/uploads/…`** (outside `/api/v1`); both
-frontends pass `/uploads/*` through to the API.
 | `/admin/dashboard` | GET | all |
+| `/admin/reports/sales` · `/products` | GET | all (revenue, no customer details) |
+| `/admin/reports/customers` | GET | Order Manager, Support |
 | `/admin/products` · `/:id` | GET · POST · PATCH · DELETE (archives) | read: Order Manager, Support |
 | `/admin/products/:id/stock` | PATCH `{ set }` or `{ adjust }` | Order Manager |
 | `/admin/orders` · `/:number` | GET | Order Manager, Support |
@@ -124,6 +123,8 @@ frontends pass `/uploads/*` through to the API.
 | `/admin/subscribers` · `/:id` | GET · PATCH | Content Manager |
 
 Roles follow the permissions drawn on the admin's Users & Roles screen.
+Uploaded images are served at **`/uploads/…`** (outside `/api/v1`); both
+frontends pass `/uploads/*` through to the API.
 
 ## Email
 
@@ -220,7 +221,7 @@ npm run dev      # in one terminal
 npm run smoke    # in another
 ```
 
-Runs 49 storefront and 155 admin checks, including a concurrent-purchase race,
+Runs 51 storefront and 169 admin checks, including a concurrent-purchase race,
 the admin account lifecycle and regression tests for the partial-update bug.
 Rerunnable against a used database: every fixture it creates is suffixed per
 run. It **refuses to target anything but localhost**, because it places orders

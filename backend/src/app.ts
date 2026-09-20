@@ -31,6 +31,7 @@ import { adminUsersRouter } from "./routes/admin/users.js";
 import { adminShippingRouter } from "./routes/admin/shipping.js";
 import { adminEmailsRouter } from "./routes/admin/emails.js";
 import { adminMediaRouter } from "./routes/admin/media.js";
+import { adminReportsRouter } from "./routes/admin/reports.js";
 import { UPLOAD_ROOT } from "./lib/media.js";
 
 export function createApp() {
@@ -101,6 +102,7 @@ export function createApp() {
   admin.use("/shipping-methods", adminShippingRouter);
   admin.use("/emails", adminEmailsRouter);
   admin.use("/media", adminMediaRouter);
+  admin.use("/reports", adminReportsRouter);
 
   v1.use("/admin", admin);
   app.use("/api/v1", v1);

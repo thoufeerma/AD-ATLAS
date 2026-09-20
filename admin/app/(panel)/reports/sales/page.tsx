@@ -1,76 +1,119 @@
-import { Download } from "lucide-react";
+import type { Metadata } from "next";
 import PageHeader from "@/components/ui/PageHeader";
-import Button from "@/components/ui/Button";
 import StatCard from "@/components/ui/StatCard";
 import ChartFrame from "@/components/charts/ChartFrame";
 import LinePlot from "@/components/charts/LinePlot";
-import { MONTHS, SALES_BY_MONTH, ORDERS_BY_MONTH } from "@/lib/mock";
-import { inr, num } from "@/lib/utils";
+import ExportCsv from "@/components/reports/ExportCsv";
+import NoData from "@/components/reports/NoData";
+import { apiGet } from "@/lib/api/server";
+import type { SalesReport } from "@/lib/api/types";
+import { inr, monthLong, monthShort, num } from "@/lib/utils";
 
-export const metadata = { title: "Sales Reports" };
+export const metadata: Metadata = { title: "Sales Reports" };
 
-export default function SalesReportPage() {
-  const total = SALES_BY_MONTH.reduce((n, v) => n + v, 0);
-  const orders = ORDERS_BY_MONTH.reduce((n, v) => n + v, 0);
-  const aov = Math.round(total / orders);
-  const best = MONTHS[SALES_BY_MONTH.indexOf(Math.max(...SALES_BY_MONTH))];
+export default async function SalesReportPage() {
+  const report = await apiGet<SalesReport>("/admin/reports/sales");
+  const { totals, change, months, best } = report;
+  const labels = months.map((m) => monthShort(m.month));
+  const anySales = totals.orders > 0;
 
   return (
     <>
       <PageHeader
         title="Sales Reports"
-        subtitle="Revenue and order volume for the current year"
+        subtitle="Revenue and orders over the last 12 months. Unpaid, cancelled and refunded orders are left out."
         actions={
-          <Button size="sm">
-            <Download className="size-3.5" /> Export Report
-          </Button>
+          <ExportCsv
+            filename="velastia-sales"
+            disabled={!anySales}
+            sections={[
+              {
+                title: "Revenue and orders by month",
+                columns: ["Month", "Revenue (₹)", "Orders"],
+                rows: months.map((m) => [monthLong(m.month), (m.revenuePaise / 100).toFixed(2), m.orders]),
+              },
+            ]}
+          />
         }
       />
 
       <div className="mb-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Total Revenue" value={inr(total)} delta={18.6} slot={1} note="this year" />
-        <StatCard label="Orders" value={num(orders)} delta={12.4} slot={2} note="this year" />
-        <StatCard label="Average Order Value" value={inr(aov)} delta={10.3} slot={3} note="this year" />
-        <StatCard label="Best Month" value={best} note="by revenue" />
+        <StatCard
+          label="Revenue"
+          value={inr(totals.revenuePaise / 100)}
+          delta={change.revenue ?? undefined}
+          slot={1}
+          note="last 12 months"
+        />
+        <StatCard
+          label="Orders"
+          value={num(totals.orders)}
+          delta={change.orders ?? undefined}
+          slot={2}
+          note="last 12 months"
+        />
+        <StatCard
+          label="Average Order Value"
+          value={inr(totals.aovPaise / 100)}
+          delta={change.aov ?? undefined}
+          slot={3}
+          note="last 12 months"
+        />
+        <StatCard
+          label="Best Month"
+          value={best ? monthLong(best.month) : "—"}
+          note={best ? `${inr(best.revenuePaise / 100)} revenue` : "no orders yet"}
+        />
       </div>
 
-      <div className="space-y-5">
-        <ChartFrame
+      {anySales ? (
+        <div className="space-y-5">
+          <ChartFrame
+            title="Revenue by Month"
+            subtitle="Order totals, including shipping and tax, after discounts"
+            table={{
+              columns: ["Month", "Revenue"],
+              rows: months.map((m) => [monthLong(m.month), inr(m.revenuePaise / 100)]),
+            }}
+          >
+            <LinePlot
+              labels={labels}
+              data={months.map((m) => m.revenuePaise / 100)}
+              color="var(--color-series-1)"
+              name="Revenue in rupees"
+              formatAs="rupees"
+              height={240}
+            />
+          </ChartFrame>
+
+          <ChartFrame
+            title="Orders by Month"
+            subtitle="Order count — a separate plot, since it shares no scale with revenue"
+            table={{
+              columns: ["Month", "Orders"],
+              rows: months.map((m) => [monthLong(m.month), num(m.orders)]),
+            }}
+          >
+            <LinePlot
+              labels={labels}
+              data={months.map((m) => m.orders)}
+              color="var(--color-series-2)"
+              name="Order count"
+              formatAs="count"
+              height={200}
+            />
+          </ChartFrame>
+
+          <p className="text-[0.7rem] text-muted">
+            {num(totals.unitsSold)} items sold · {inr(totals.discountPaise / 100)} given away in discounts
+          </p>
+        </div>
+      ) : (
+        <NoData
           title="Revenue by Month"
-          subtitle="Gross sales before discounts and refunds"
-          table={{
-            columns: ["Month", "Revenue"],
-            rows: MONTHS.map((m, i) => [m, inr(SALES_BY_MONTH[i])]),
-          }}
-        >
-          <LinePlot
-            labels={MONTHS}
-            data={SALES_BY_MONTH}
-            color="var(--color-series-1)"
-            name="Revenue in rupees"
-            formatAs="rupees"
-            height={240}
-          />
-        </ChartFrame>
-
-        <ChartFrame
-          title="Orders by Month"
-          subtitle="Order count — a separate plot, since it shares no scale with revenue"
-          table={{
-            columns: ["Month", "Orders"],
-            rows: MONTHS.map((m, i) => [m, num(ORDERS_BY_MONTH[i])]),
-          }}
-        >
-          <LinePlot
-            labels={MONTHS}
-            data={ORDERS_BY_MONTH}
-            color="var(--color-series-2)"
-            name="Order count"
-            formatAs="count"
-            height={200}
-          />
-        </ChartFrame>
-      </div>
+          note="No orders yet. Revenue and order counts appear here as soon as the first order is placed."
+        />
+      )}
     </>
   );
 }

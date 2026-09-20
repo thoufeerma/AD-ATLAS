@@ -1,22 +1,13 @@
 import { Router } from "express";
 import { z } from "zod";
-import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../db.js";
 import { parse } from "../../lib/http.js";
 import { allow, ROLES } from "../../middleware/auth.js";
+import { delta, REVENUE } from "../../lib/revenue.js";
 
 export const adminDashboardRouter = Router();
 
 const DAY = 24 * 60 * 60 * 1000;
-
-/** Orders that represent real, kept revenue. */
-const REVENUE: Prisma.OrderWhereInput = {
-  status: { notIn: ["PENDING", "CANCELLED", "REFUNDED"] },
-};
-
-/** Percentage change, or null when there is no prior period to compare to. */
-const delta = (current: number, previous: number) =>
-  previous === 0 ? null : Math.round(((current - previous) / previous) * 1000) / 10;
 
 adminDashboardRouter.get("/", allow(...ROLES.dashboard), async (_req, res) => {
   const now = new Date();
@@ -52,7 +43,10 @@ adminDashboardRouter.get("/", allow(...ROLES.dashboard), async (_req, res) => {
       SELECT date_trunc('month', m) AS month,
              COALESCE(SUM(o."totalPaise"), 0) AS sales,
              COUNT(o.id) AS orders
-      FROM generate_series(${yearAgo}::timestamp, date_trunc('month', now()), interval '1 month') AS m
+      FROM generate_series(
+             date_trunc('month', now()) - interval '11 months',
+             date_trunc('month', now()),
+             interval '1 month') AS m
       LEFT JOIN orders o
         ON date_trunc('month', o."placedAt") = date_trunc('month', m)
        AND o.status NOT IN ('PENDING', 'CANCELLED', 'REFUNDED')

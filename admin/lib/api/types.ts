@@ -465,3 +465,57 @@ export type MediaAsset = {
   usedIn: string[];
 };
 
+
+/* ── Reports ──
+ * All three cover the last 12 calendar months and count the same orders as the
+ * dashboard: unpaid, cancelled and refunded orders are left out. `change` is a
+ * percentage against the 12 months before, and null until there is one.
+ */
+
+export type SalesReport = {
+  months: { month: string; revenuePaise: number; orders: number }[];
+  best: { month: string; revenuePaise: number; orders: number } | null;
+  totals: {
+    revenuePaise: number;
+    orders: number;
+    unitsSold: number;
+    discountPaise: number;
+    aovPaise: number;
+  };
+  change: { revenue: number | null; orders: number | null; aov: number | null };
+};
+
+export type ProductReportRow = {
+  id: string;
+  name: string;
+  sku: string;
+  pricePaise: number;
+  status: ProductStatus;
+  stock: number;
+  category: { slug: string; name: string };
+  /** Sum of the item lines, so shipping, discounts and tax are not included. */
+  revenuePaise: number;
+  unitsSold: number;
+};
+
+export type ProductReport = {
+  top: ProductReportRow[];
+  byCategory: { slug: string; name: string; revenuePaise: number; unitsSold: number }[];
+  neverSold: ProductReportRow[];
+  totals: { products: number; sellingProducts: number; unitsSold: number; revenuePaise: number };
+};
+
+export type CustomerReport = {
+  totals: {
+    customers: number;
+    accounts: number;
+    buyers: number;
+    newThisMonth: number;
+    repeatRatePct: number;
+    avgLifetimePaise: number;
+  };
+  change: { newThisMonth: number | null };
+  segments: { label: string; count: number }[];
+  newByMonth: { month: string; count: number }[];
+  top: { name: string; email: string; hasAccount: boolean; orders: number; spentPaise: number }[];
+};

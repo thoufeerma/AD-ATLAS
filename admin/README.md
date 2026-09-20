@@ -76,10 +76,22 @@ Hand-rolled SVG, no charting dependency. They follow a specific set of rules:
 
 ## What is not real yet
 
-Everything reads from `lib/mock.ts`. There is no backend, no database and no
-auth. Forms validate and hold state but do not persist; toggles do not save;
-"Add New Product" does not create anything. Figures on the dashboard are the
-ones drawn in the reference.
+Most of the panel reads the live database through the API: the dashboard,
+orders, customers, inbox, products, categories, inventory, reviews, coupons,
+offers, pages, media, banners, testimonials, FAQs, subscribers, users, settings,
+shipping, email log, activity — and all three reports (Sales, Products,
+Customers), which count the same orders as the dashboard.
 
-Next phase is the data layer — at which point `lib/mock.ts` is replaced by API
-calls, and the same API backs the storefront.
+These screens still show sample figures from [`lib/mock.ts`](lib/mock.ts) and
+are marked **Sample** in the sidebar, so nothing is mistaken for the store's own
+numbers:
+
+| Screen | Why it isn't real yet |
+| --- | --- |
+| Traffic Analytics | Needs an analytics provider; the store collects no visitor data |
+| Blog Posts, Email Campaigns, SEO Settings | Tables and routes not built |
+| Payment Methods | Waiting on Razorpay |
+| Tax Settings | Rates exist in the database, but there's no editor yet |
+| Backup & Restore | Backups belong to the database host |
+
+Each entry is removed from `lib/mock.ts` as its screen is connected.

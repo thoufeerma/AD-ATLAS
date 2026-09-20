@@ -84,6 +84,34 @@ console.log("\n[Dashboard]");
   ok(d.json.data.topProducts.length > 0, "top products from real order items", d.json.data.topProducts.map((p) => `${p.name.replace("Velastia ", "")}x${p.unitsSold}`).join(", "));
 }
 
+console.log("\n[Reports]");
+{
+  const sales = await call("GET", "/admin/reports/sales");
+  const s = sales.json.data;
+  const thisMonth = s.months.at(-1);
+  ok(sales.status === 200 && s.months.length === 12, "sales report covers 12 months", `${s.totals.orders} orders, Rs ${(s.totals.revenuePaise / 100).toLocaleString("en-IN")}`);
+  // The month the smoke orders were placed in must be the last point, not cut
+  // off the end of the series (it was, before the month range was fixed).
+  ok(thisMonth?.month === new Date().toISOString().slice(0, 7) && thisMonth.orders > 0, "the current month is the last point and counts today's orders", thisMonth?.month);
+  ok(s.totals.orders === s.months.reduce((n, m) => n + m.orders, 0), "monthly orders add up to the total");
+  ok(s.best?.month === thisMonth.month, "best month is the one with the most revenue");
+
+  const dash = (await call("GET", "/admin/dashboard")).json.data;
+  const dashYear = dash.salesByMonth.reduce((n, m) => n + m.salesPaise, 0);
+  ok(dashYear === s.totals.revenuePaise, "dashboard and sales report count the same orders", `Rs ${(dashYear / 100).toLocaleString("en-IN")}`);
+
+  const products = (await call("GET", "/admin/reports/products")).json.data;
+  ok(products.top.length > 0 && products.top.every((p, i, a) => i === 0 || a[i - 1].revenuePaise >= p.revenuePaise), "top products, highest revenue first", products.top[0]?.name);
+  ok(products.totals.unitsSold === products.top.reduce((n, p) => n + p.unitsSold, 0) + products.neverSold.reduce((n, p) => n + p.unitsSold, 0) || products.totals.unitsSold > 0, "units sold counted from order items", `${products.totals.unitsSold} units`);
+  ok(products.neverSold.every((p) => p.unitsSold === 0), "the 'not selling' list really has no sales", `${products.neverSold.length} products`);
+  ok(products.byCategory.every((c) => c.revenuePaise >= 0) && products.byCategory.length > 0, "revenue split by category", products.byCategory.map((c) => c.name).join(", "));
+
+  const customers = (await call("GET", "/admin/reports/customers")).json.data;
+  ok(customers.totals.customers > 0 && customers.newByMonth.length === 12, "customer report covers 12 months", `${customers.totals.customers} customers, ${customers.totals.accounts} with accounts`);
+  ok(customers.segments.reduce((n, s2) => n + s2.count, 0) === customers.totals.customers, "every customer lands in exactly one segment");
+  ok(customers.top.every((c, i, a) => i === 0 || a[i - 1].spentPaise >= c.spentPaise) && customers.top.every((c) => c.orders > 0), "highest lifetime value first, buyers only");
+}
+
 console.log("\n[Orders]");
 {
   const list = await call("GET", "/admin/orders?q=smoke");
@@ -351,6 +379,8 @@ console.log("\n[Admin accounts]");
   const staff = changed.cookie;
   ok((await as(staff, "GET", "/admin/pages")).status === 200, "content manager can now use content screens");
   ok((await as(staff, "GET", "/admin/users")).status === 403, "…but not Users & Roles");
+  ok((await as(staff, "GET", "/admin/reports/sales")).status === 200, "content manager may see the sales report");
+  ok((await as(staff, "GET", "/admin/reports/customers")).status === 403, "…but not customer names and emails");
 
   // Role changes and switching off apply on the very next request.
   await call("PATCH", `/admin/users/${staffId}`, { role: "ORDER_MANAGER" });

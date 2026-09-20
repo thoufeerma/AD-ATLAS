@@ -63,3 +63,13 @@ export function imageSrc(url: string) {
   return STORE_URL + url;
 }
 
+
+/** "2026-09" → "Sep" for a chart axis. */
+export function monthShort(iso: string) {
+  return new Date(`${iso}-01T00:00:00`).toLocaleDateString("en-IN", { month: "short" });
+}
+
+/** "2026-09" → "Sep 2026" for tables and exports. */
+export function monthLong(iso: string) {
+  return new Date(`${iso}-01T00:00:00`).toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+}

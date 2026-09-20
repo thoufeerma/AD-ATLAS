@@ -8,8 +8,8 @@ import { useSettings } from "@/components/providers/SettingsProvider";
 import { cn } from "@/lib/utils";
 
 /**
- * Each slide brings its own photograph, and `dark` flips the whole section to
- * plum so the copy stays readable over the darker shots.
+ * Full-bleed photography with the copy over it. `dark` picks the lettering for
+ * the darker shots — the photograph is never boxed in by a panel of colour.
  */
 const SLIDES = [
   {
@@ -45,41 +45,91 @@ const BADGES = [
   { Icon: Leaf, label: "Made in\nIndia" },
 ];
 
-/** How long each slide is shown before the next one slides in. */
+/** How long each slide is shown, and how long the slide across takes. */
 const SLIDE_MS = 4500;
+const GLIDE_MS = 700;
 
 export default function Hero() {
   const { welcomeOffer } = useSettings();
+
+  /**
+   * The track carries the three photographs plus a copy of the first at the
+   * end, so it only ever travels one way: … → 3 → 1(copy) → and then silently
+   * back to the real 1 while that copy is on screen. Nothing rewinds.
+   */
+  const LAST = SLIDES.length;
   const [i, setI] = useState(0);
-  const slide = SLIDES[i];
+  const [silent, setSilent] = useState(false); // the reset move, with no animation
+  const shown = i % SLIDES.length;
+  const slide = SLIDES[shown];
   const dark = slide.dark;
 
-  // Keyed on `i`, so using the arrows or dots restarts the wait rather than
-  // letting a slide flick past a moment after it arrives.
+  // Advance on a timer, restarted whenever the slide changes — so arrows and
+  // dots buy a full interval rather than a leftover moment.
   useEffect(() => {
-    const t = setTimeout(() => setI((n) => (n + 1) % SLIDES.length), SLIDE_MS);
+    if (i === LAST) return; // the copy of the first slide hands over below
+    const t = setTimeout(() => {
+      setSilent(false);
+      setI((n) => n + 1);
+    }, SLIDE_MS);
     return () => clearTimeout(t);
-  }, [i]);
+  }, [i, LAST]);
 
-  const go = (d: number) => setI((n) => (n + d + SLIDES.length) % SLIDES.length);
+  // Once the copy of slide one is in place, jump to the real one without
+  // animating. A timer rather than transitionend, which never fires for
+  // visitors who have asked for reduced motion.
+  useEffect(() => {
+    if (i !== LAST) return;
+    const t = setTimeout(() => {
+      setSilent(true);
+      setI(0);
+    }, GLIDE_MS + 50);
+    return () => clearTimeout(t);
+  }, [i, LAST]);
 
-  /** The photographs, side by side, slid along by one width per slide. */
-  const track = (sizes: string) => (
+  function go(direction: 1 | -1) {
+    if (direction === 1) {
+      setSilent(false);
+      setI((n) => (n >= LAST ? 1 : n + 1));
+      return;
+    }
+    if (i === 0) {
+      // Step to the copy at the far end first, then glide back one, so "back"
+      // from the first slide still travels the same way as everything else.
+      setSilent(true);
+      setI(LAST);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          setSilent(false);
+          setI(LAST - 1);
+        }),
+      );
+      return;
+    }
+    setSilent(false);
+    setI((n) => n - 1);
+  }
+
+  /** The photographs side by side, slid along one place at a time. */
+  const track = (
     <div
-      className="flex h-full transition-transform duration-700 ease-out motion-reduce:transition-none"
+      className={cn(
+        "flex h-full",
+        silent ? "transition-none" : "transition-transform duration-700 ease-out motion-reduce:transition-none",
+      )}
       style={{ transform: `translateX(-${i * 100}%)` }}
     >
-      {SLIDES.map((s, n) => (
-        <div key={s.image} className="relative h-full w-full shrink-0">
+      {[...SLIDES, SLIDES[0]].map((s, n) => (
+        <div key={n} className="relative h-full w-full shrink-0">
           <Image
             src={s.image}
-            alt={s.alt}
+            alt={n === LAST ? "" : s.alt}
             fill
             priority={n === 0}
-            sizes={sizes}
-            // The products sit on the right of every shot; the column is
-            // narrower than the photo, so crop from that side inwards.
-            className="object-cover object-right"
+            sizes="100vw"
+            // The products sit right of centre in every shot, so the narrower
+            // crop on a phone keeps that side.
+            className="object-cover object-right lg:object-center"
           />
         </div>
       ))}
@@ -89,31 +139,34 @@ export default function Hero() {
   return (
     <section
       className={cn(
-        "relative overflow-hidden transition-colors duration-700",
-        dark ? "bg-plum-900" : "bg-cream-100",
+        // Behind the photograph, so the band matches while it loads rather
+        // than leaving dark lettering on a dark ground for a moment.
+        "relative overflow-hidden bg-cream-50 transition-colors duration-700",
+        dark && "lg:bg-plum-950",
       )}
     >
-      {/* Product photography sits on the right; the copy gets its own column so
-          nothing overlaps the bottles the way a full-bleed background would. */}
-      <div className="absolute inset-y-0 right-0 hidden w-[58%] overflow-hidden lg:block">
-        {track("58vw")}
-        <div
-          className={cn(
-            "absolute inset-y-0 left-0 w-40 bg-gradient-to-r to-transparent transition-colors duration-700",
-            dark ? "from-plum-900" : "from-cream-100",
-          )}
-        />
-      </div>
+      {/* Desktop: the photograph fills the whole band, copy over it */}
+      <div className="absolute inset-0 hidden lg:block">{track}</div>
 
-      <div className="container-vel relative grid min-h-[440px] items-center py-14 lg:min-h-[540px] lg:grid-cols-2">
-        {/* pl clears the carousel arrow, which sits at the section edge */}
-        <div className="max-w-lg lg:pl-12">
+      {/* Just enough shade under the words to keep them readable on any photo */}
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-0 hidden bg-gradient-to-r to-transparent transition-colors duration-700 lg:block",
+          dark ? "from-plum-950/70 via-plum-950/15" : "from-cream-50/80 via-cream-50/20",
+        )}
+      />
+
+      {/* Phones: the photograph above the copy, so neither is cramped */}
+      <div className="relative aspect-4/3 w-full overflow-hidden sm:aspect-16/9 lg:hidden">{track}</div>
+
+      <div className="container-vel relative flex items-center py-12 lg:min-h-[580px] lg:py-16">
+        <div className="max-w-lg">
           {/* Keyed so the words fade up again on every slide */}
-          <div key={i} className="hero-copy">
+          <div key={shown} className="hero-copy">
             <h1
               className={cn(
-                "font-display text-[2.9rem] leading-[1.05] sm:text-[3.6rem]",
-                dark ? "text-cream-50" : "text-plum-800",
+                "font-display text-[2.9rem] leading-[1.05] text-plum-800 sm:text-[3.6rem]",
+                dark && "lg:text-cream-50",
               )}
             >
               {slide.headline.map((line, n) => (
@@ -121,7 +174,7 @@ export default function Hero() {
                   key={line}
                   className={cn(
                     "block",
-                    n === slide.headline.length - 1 && (dark ? "text-gold-300" : "text-gold-600"),
+                    n === slide.headline.length - 1 && (dark ? "text-gold-600 lg:text-gold-300" : "text-gold-600"),
                   )}
                 >
                   {line}
@@ -131,14 +184,18 @@ export default function Hero() {
 
             <p
               className={cn(
-                "mt-5 max-w-sm text-[0.95rem] leading-relaxed",
-                dark ? "text-cream-200/75" : "text-ink-soft",
+                "mt-5 max-w-sm text-[0.95rem] leading-relaxed text-ink-soft",
+                dark && "lg:text-cream-200/85",
               )}
             >
               {slide.copy}
             </p>
 
-            <Button href={slide.cta.href} size="lg" variant={dark ? "gold" : "primary"} className="mt-7">
+            <Button
+              href={slide.cta.href}
+              size="lg"
+              className={cn("mt-7", dark && "lg:bg-gold-600 lg:text-white lg:hover:bg-gold-500")}
+            >
               {slide.cta.label}
             </Button>
           </div>
@@ -146,11 +203,11 @@ export default function Hero() {
           <ul className="mt-10 flex flex-wrap gap-x-7 gap-y-4">
             {BADGES.map(({ Icon, label }) => (
               <li key={label} className="flex items-center gap-2">
-                <Icon className={cn("size-5 shrink-0", dark ? "text-gold-400" : "text-gold-600")} />
+                <Icon className={cn("size-5 shrink-0 text-gold-600", dark && "lg:text-gold-400")} />
                 <span
                   className={cn(
-                    "label-caps whitespace-pre-line text-[0.55rem] leading-tight",
-                    dark ? "text-cream-200/70" : "text-ink-soft",
+                    "label-caps whitespace-pre-line text-[0.55rem] leading-tight text-ink-soft",
+                    dark && "lg:text-cream-200/80",
                   )}
                 >
                   {label}
@@ -158,11 +215,6 @@ export default function Hero() {
               </li>
             ))}
           </ul>
-        </div>
-
-        {/* Same photography, stacked under the copy on small screens */}
-        <div className="relative mt-10 aspect-16/9 overflow-hidden rounded-[var(--radius-card)] lg:hidden">
-          {track("92vw")}
         </div>
 
         {/* Introductory offer medallion — only while the welcome code is live */}
@@ -184,8 +236,8 @@ export default function Hero() {
 
       {/* Controls */}
       {[
-        { d: -1, label: "Previous slide", Icon: ChevronLeft, side: "left-3 lg:left-6" },
-        { d: 1, label: "Next slide", Icon: ChevronRight, side: "right-3 lg:right-6" },
+        { d: -1 as const, label: "Previous slide", Icon: ChevronLeft, side: "left-3 lg:left-6" },
+        { d: 1 as const, label: "Next slide", Icon: ChevronRight, side: "right-3 lg:right-6" },
       ].map(({ d, label, Icon, side }) => (
         <button
           key={label}
@@ -195,8 +247,8 @@ export default function Hero() {
             "absolute top-1/2 hidden size-9 -translate-y-1/2 place-items-center rounded-full border backdrop-blur transition-colors lg:grid",
             side,
             dark
-              ? "border-gold-400/40 bg-plum-800/70 text-gold-200 hover:bg-plum-800"
-              : "border-gold-400/50 bg-cream-50/80 text-plum-800 hover:bg-cream-50",
+              ? "border-gold-400/40 bg-plum-900/60 text-gold-200 hover:bg-plum-900/85"
+              : "border-gold-500/40 bg-cream-50/70 text-plum-800 hover:bg-cream-50",
           )}
         >
           <Icon className="size-4" />
@@ -207,11 +259,15 @@ export default function Hero() {
         {SLIDES.map((s, n) => (
           <button
             key={s.image}
-            onClick={() => setI(n)}
+            onClick={() => {
+              setSilent(false);
+              setI(n);
+            }}
             aria-label={`Go to slide ${n + 1}`}
+            aria-current={n === shown}
             className={cn(
               "h-1.5 rounded-full transition-all",
-              n === i ? "w-6 bg-gold-600" : "w-1.5 bg-gold-500/40",
+              n === shown ? "w-6 bg-gold-600" : "w-1.5 bg-gold-500/50",
             )}
           />
         ))}

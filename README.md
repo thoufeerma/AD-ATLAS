@@ -49,7 +49,7 @@ during a build** too. `npm run build` and `npm run lint` both pass clean.
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 1 | Storefront frontend (repo root) | **Done** |
-| 2 | Admin / CMS frontend ([`admin/`](admin/)) | **Done** — 10 screens still on sample data |
+| 2 | Admin / CMS frontend ([`admin/`](admin/)) | **Done** — 7 screens still on sample data |
 | 3 | Backend API — Express + TypeScript + Prisma + PostgreSQL ([`backend/`](backend/)) | **Done** |
 | 3b | Storefront connected to the API | **Done** |
 | 3c | Online test site — Supabase, Render, Vercel ([`DEPLOY.md`](DEPLOY.md)) | **Ready to deploy** |

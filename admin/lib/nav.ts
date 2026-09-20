@@ -92,9 +92,9 @@ export const NAV: NavGroup[] = [
   {
     title: "Reports & Analytics",
     items: [
-      { href: "/reports/sales", label: "Sales Reports", Icon: BarChart3, sample: true },
-      { href: "/reports/products", label: "Product Reports", Icon: PackageSearch, sample: true },
-      { href: "/reports/customers", label: "Customer Reports", Icon: UserSearch, sample: true },
+      { href: "/reports/sales", label: "Sales Reports", Icon: BarChart3 },
+      { href: "/reports/products", label: "Product Reports", Icon: PackageSearch },
+      { href: "/reports/customers", label: "Customer Reports", Icon: UserSearch },
       { href: "/reports/traffic", label: "Traffic Analytics", Icon: Activity, sample: true },
     ],
   },
