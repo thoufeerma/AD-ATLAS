@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "velastia-api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "backend", "run", "dev"],
+      "port": 4000
+    },
+    {
       "name": "velastia-store",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],

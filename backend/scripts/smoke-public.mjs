@@ -189,6 +189,16 @@ console.log("\n[Forms]");
   ok(bad.status === 400 && bad.json.error.details.length >= 3, "contact form validation", `${bad.json.error.details.length} field errors`);
   const junk = await fetch(API + "/contact", { method: "POST", headers: { "content-type": "application/json" }, body: "{not json" });
   ok(junk.status === 400, "malformed JSON -> 400, not a crash");
+
+  // Collab applications are reviewed on the creator's profile, so the handle
+  // has to be a real one — applications can't be sent without it.
+  const collab = (handle) =>
+    call("POST", "/collab-applications", { name: "Handle Test", email: `handle.${Date.now()}@example.com`, handle, about: "Checking the handle rule." });
+  const noHandle = await collab("");
+  const junkHandle = await collab("n/a");
+  ok(noHandle.status === 400 && junkHandle.status === 400, "collab application needs a real Instagram/YouTube handle", junkHandle.json.error.details?.[0]?.message);
+  const link = await collab("https://instagram.com/velastia.beauty");
+  ok(link.status === 201, "a link to the profile is accepted too");
 }
 
 console.log("\n[Unknown route]");

@@ -76,3 +76,19 @@
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 }
+
+/* Home hero: the words fade up as each slide arrives. */
+@keyframes hero-copy-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* `forwards`, never `both`: the words must be readable even if the animation
+   never runs (a throttled background tab, for instance). */
+.hero-copy {
+  animation: hero-copy-in 600ms ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-copy { animation: none; }
+}

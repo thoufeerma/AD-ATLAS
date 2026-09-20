@@ -8,11 +8,26 @@ import { cn, looksLikeEmail } from "@/lib/utils";
 
 type Fields = { name: string; email: string; handle: string; audienceSize: string; about: string };
 
+/** "@velastia.beauty", "velastia.beauty" or a link to the profile. */
+const HANDLE = /^@?[A-Za-z0-9._-]{2,30}$/;
+const PROFILE_URL = /^(https?:\/\/)?(www\.)?(instagram\.com|youtube\.com|youtu\.be)\/[A-Za-z0-9@._\-/]+$/i;
+
+export function handleProblem(raw: string) {
+  const handle = raw.trim();
+  // Applications are reviewed on the creator's profile, so this one can't be skipped.
+  if (!handle) return "Enter your Instagram or YouTube handle.";
+  if (!HANDLE.test(handle) && !PROFILE_URL.test(handle)) {
+    return "Use your handle (e.g. @velastia.beauty) or a link to your profile.";
+  }
+  return null;
+}
+
 function validate(f: Fields) {
   const errors: Partial<Record<keyof Fields, string>> = {};
   if (f.name.trim().length < 2) errors.name = "Enter your name.";
   if (!looksLikeEmail(f.email)) errors.email = "Enter a valid email address.";
-  if (f.handle.trim().length < 2) errors.handle = "Enter your Instagram or YouTube handle.";
+  const handle = handleProblem(f.handle);
+  if (handle) errors.handle = handle;
   if (f.audienceSize.trim().length > 40) errors.audienceSize = "Keep this short, e.g. 25,000.";
   if (f.about.trim().length < 10) errors.about = "Tell us a little more — at least 10 characters.";
   return errors;
@@ -68,11 +83,18 @@ export default function CollabForm() {
     );
   }
 
-  const fields: { k: keyof Fields; label: string; placeholder: string; type?: string; autoComplete?: string }[] = [
+  const fields: {
+    k: keyof Fields;
+    label: string;
+    placeholder: string;
+    type?: string;
+    autoComplete?: string;
+    optional?: boolean;
+  }[] = [
     { k: "name", label: "Full Name", placeholder: "Your name", autoComplete: "name" },
     { k: "email", label: "Email Address", placeholder: "you@example.com", type: "email", autoComplete: "email" },
     { k: "handle", label: "Instagram / YouTube Handle", placeholder: "@yourhandle" },
-    { k: "audienceSize", label: "Audience Size", placeholder: "e.g. 25,000" },
+    { k: "audienceSize", label: "Audience Size", placeholder: "e.g. 25,000", optional: true },
   ];
   const input = (k: keyof Fields) =>
     cn(
@@ -82,10 +104,15 @@ export default function CollabForm() {
 
   return (
     <form onSubmit={submit} noValidate className="space-y-4">
-      {fields.map(({ k, label, placeholder, type, autoComplete }) => (
+      {fields.map(({ k, label, placeholder, type, autoComplete, optional }) => (
         <div key={k}>
           <label htmlFor={`col-${k}`} className="label-caps mb-1.5 block text-[0.6rem] text-gold-400">
             {label}
+            {optional ? (
+              <span className="ml-1 normal-case tracking-normal text-cream-200/45">(optional)</span>
+            ) : (
+              <span aria-hidden className="ml-0.5 text-blush-200">*</span>
+            )}
           </label>
           <input
             id={`col-${k}`}
@@ -94,6 +121,7 @@ export default function CollabForm() {
             onChange={set(k)}
             autoComplete={autoComplete}
             placeholder={placeholder}
+            required={!optional}
             aria-invalid={!!err(k)}
             className={input(k)}
           />
@@ -103,12 +131,14 @@ export default function CollabForm() {
       <div>
         <label htmlFor="col-about" className="label-caps mb-1.5 block text-[0.6rem] text-gold-400">
           Tell us about yourself
+          <span aria-hidden className="ml-0.5 text-blush-200">*</span>
         </label>
         <textarea
           id="col-about"
           rows={4}
           value={f.about}
           onChange={set("about")}
+          required
           maxLength={5000}
           placeholder="What do you create, and why Velastia?"
           aria-invalid={!!err("about")}

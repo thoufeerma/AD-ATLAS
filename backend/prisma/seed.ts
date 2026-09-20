@@ -169,12 +169,15 @@ const TESTIMONIALS = [
   ["Mehak S.", "Verified Buyer", "My everyday go-to brand now. Highly recommended!", "/people/sejal.png", true],
 ] as const;
 
+// No photos: the placeholders cropped out of the designs were far too small to
+// show at 84px. Add real ones per collaborator in the admin; until then the
+// storefront shows their initials.
 const COLLABORATORS = [
-  ["Malvika Sitlani", "Beauty Creator", "/people/malvika.png"],
-  ["Sakshi Gupta", "Makeup Artist", "/people/sakshi.png"],
-  ["Komal Pandey", "Fashion Influencer", "/people/komal.png"],
-  ["Sejal Kumar", "Skincare Expert", "/people/sejal.png"],
-  ["Rishabh Arora", "Makeup Artist", "/people/rishabh.png"],
+  ["Malvika Sitlani", "Beauty Creator"],
+  ["Sakshi Gupta", "Makeup Artist"],
+  ["Komal Pandey", "Fashion Influencer"],
+  ["Sejal Kumar", "Skincare Expert"],
+  ["Rishabh Arora", "Makeup Artist"],
 ] as const;
 
 /* ── Seed ─────────────────────────────────────────────────────────────── */
@@ -297,9 +300,15 @@ async function main() {
   }
   if ((await prisma.collaborator.count()) === 0) {
     await prisma.collaborator.createMany({
-      data: COLLABORATORS.map(([name, role, avatarUrl], i) => ({ name, role, avatarUrl, sortOrder: i })),
+      data: COLLABORATORS.map(([name, role], i) => ({ name, role, sortOrder: i })),
     });
   }
+  // Earlier seeds gave collaborators the tiny placeholder photos; clear those
+  // wherever they're still in place. A photo added in the admin is untouched.
+  await prisma.collaborator.updateMany({
+    where: { avatarUrl: { startsWith: "/people/" } },
+    data: { avatarUrl: null },
+  });
   if ((await prisma.banner.count()) === 0) {
     await prisma.banner.createMany({
       data: [

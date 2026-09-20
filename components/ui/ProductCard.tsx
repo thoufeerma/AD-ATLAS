@@ -63,7 +63,9 @@ export default function ProductCard({
       <div className="flex flex-1 flex-col items-center px-3 pb-3.5 pt-3 text-center">
         <Link
           href={`/product/${product.slug}`}
-          className="line-clamp-2 text-[0.82rem] leading-snug text-ink transition-colors hover:text-gold-600"
+          // Names run to three lines in the narrow home-page cards; the button
+          // below is pushed down by mt-auto, so the cards still line up.
+          className="text-balance text-[0.82rem] leading-snug text-ink transition-colors hover:text-gold-600"
         >
           {product.name}
         </Link>

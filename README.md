@@ -169,11 +169,24 @@ footer, phone menu and the admin sidebar), `logo-mark.png` (monogram only), and 
 favicons / home-screen icons in `app/` — the admin has its own copies. If the logo
 changes, regenerate all of them from the new master.
 
-All photography in `public/` was cropped programmatically out of the reference
-PNGs, so it is low resolution and carries JPEG artefacts. **Replace it with the
-real brand assets before launch** — upload them in the admin's Media Library and
-choose them on each product (and banner/testimonial) instead of the old paths. Product shots came from the Wishlist screen
-(the largest clean source at 1536px wide) and the hero from `Webpage-Design=Passed.png`.
+**Brand photography.** The full-size artwork lives in [`brand/`](brand/) next to
+the logo master; the versions the site loads were generated from it and are in
+`public/`:
+
+| Master | Used as | Where |
+| --- | --- | --- |
+| `hero-1-master.png` | `public/brand/hero-1.webp`, `hero-3.webp` (tighter crop) | Home hero, slides 1 and 3 |
+| `hero-2-master.png` | `public/brand/hero-2.webp` | Home hero, slide 2 (the dark one) |
+| `coming-soon-master.png` | `public/brand/coming-soon.webp` | "New Arrivals Coming Soon" card on the home page |
+| `founder-master.png` | `public/people/founder.webp` | Founder's note at the foot of the About page |
+
+The rest of the photography in `public/` was cropped programmatically out of the
+reference PNGs, so it is low resolution and carries JPEG artefacts. **Replace it
+with real brand assets before launch** — upload them in the admin's Media Library
+and choose them on each product (and banner/testimonial) instead of the old paths.
+Product shots came from the Wishlist screen (the largest clean source at 1536px
+wide). Collaborator photos were dropped for the same reason: the storefront shows
+each collaborator's initials until a real photo is added in the admin.
 
 ## Known gaps
 

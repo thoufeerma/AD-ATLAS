@@ -252,11 +252,11 @@ export default async function AboutPage() {
       <section className="grid lg:grid-cols-[minmax(0,22%)_minmax(0,50%)_minmax(0,28%)]">
         <div className="relative min-h-[260px]">
           <Image
-            src="/people/founder.png"
+            src="/people/founder.webp"
             alt="Anshil Dev, founder of Velastia"
             fill
             sizes="(min-width: 1024px) 22vw, 100vw"
-            className="object-cover"
+            className="object-cover object-top"
           />
         </div>
 

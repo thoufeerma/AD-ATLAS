@@ -156,6 +156,25 @@ online database. Never run `npm run db:reset` or `npm run smoke` there.
 | Product photos from the admin don't show on the store | `SUPABASE_URL` missing on the store project. Add it and redeploy |
 | Everyone gets "Too many requests" | `PROXY_SECRET` differs between Render and the two Vercel projects |
 | Admin sign-in loops back to the login page | `API_URL` on the admin project is wrong or has a trailing slash |
+| Vercel shows its own "404: NOT_FOUND" page | In the project's Build and Deployment settings, the Output Directory override must be off. Then redeploy without the build cache |
+| Forgot the admin email or password | See below |
+
+## Forgot the admin email or password
+
+In a **new** PowerShell window, on your PC:
+
+```powershell
+cd "C:\Users\thouf\Downloads\PIXIE\AD ATLAS\backend"
+$env:DATABASE_URL = Read-Host "Supabase Session pooler address"
+npm run admin:reset
+```
+
+It prints the admin email(s) and a new one-time password. Sign in with it and
+the admin asks you to choose your own password; any other signed-in sessions
+of that account are signed out. With more than one admin, add the email:
+`npm run admin:reset -- you@example.com`. Close the window afterwards.
+
+After several wrong passwords, sign-in is paused for 15 minutes for that email.
 
 ## At launch (later)
 

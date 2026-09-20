@@ -56,6 +56,7 @@ under **Users & Roles**.
 | `db:deploy` | Apply existing migrations (production) |
 | `db:seed` | Idempotent seed — safe to rerun, never overwrites edited data |
 | `db:studio` | Prisma Studio, a GUI over the database |
+| `admin:reset` | Forgotten admin password: lists the admin emails and gives one a new one-time password (`-- email` to pick one when there are several). Uses `DATABASE_URL` — see [DEPLOY.md](../DEPLOY.md) for the online database |
 | `db:up` / `db:down` | Start / stop the Docker database |
 | `smoke` | 204 end-to-end API checks — **dev databases only**, see below |
 

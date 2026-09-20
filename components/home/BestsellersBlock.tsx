@@ -37,7 +37,7 @@ export default function BestsellersBlock({
               <p className="mt-0.5 text-xs text-ink-soft">Our most loved products.</p>
             </div>
             <Link
-              href="/shop"
+              href="/shop?filter=bestsellers"
               className="label-caps inline-flex items-center gap-1.5 text-[0.6rem] text-gold-600 hover:text-gold-500"
             >
               View All <ArrowRight className="size-3" />
@@ -53,14 +53,16 @@ export default function BestsellersBlock({
 
         {/* New arrivals promo */}
         <div className="relative flex flex-col justify-between overflow-hidden rounded-[var(--radius-card)] bg-plum-800 p-7">
-          <div className="pointer-events-none absolute -right-8 top-0 h-full w-2/3 opacity-45">
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-3/5">
             <Image
-              src="/social/ig-3.png"
+              src="/brand/coming-soon.webp"
               alt=""
               fill
-              sizes="300px"
-              className="object-cover"
+              sizes="(min-width: 1024px) 260px, 60vw"
+              className="object-cover object-left"
             />
+            {/* Keeps the headline readable where it crosses the photo */}
+            <div className="absolute inset-0 bg-gradient-to-r from-plum-800 via-plum-800/70 to-plum-800/25" />
           </div>
           <div className="relative">
             <h3 className="font-display text-[1.75rem] leading-tight text-cream-50">
@@ -71,7 +73,7 @@ export default function BestsellersBlock({
               Skincare, Perfumes, Makeup Accessories &amp; more.
             </p>
           </div>
-          <Button href="/shop" variant="gold" className="relative mt-8 self-start">
+          <Button href="/shop?filter=coming-soon" variant="gold" className="relative mt-8 self-start">
             Explore Now
           </Button>
         </div>
