@@ -7,7 +7,10 @@ import Button from "@/components/ui/Button";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { cn } from "@/lib/utils";
 
-/** Each slide brings its own photograph; the copy column stays on the page's own cream. */
+/**
+ * Each slide brings its own photograph, and `dark` flips the whole section to
+ * plum so the copy stays readable over the darker shots.
+ */
 const SLIDES = [
   {
     headline: ["Luxury.", "Science.", "You."],
@@ -15,6 +18,7 @@ const SLIDES = [
     cta: { label: "Shop Now", href: "/shop" },
     image: "/brand/hero-1.webp",
     alt: "Velastia velvet matte lipstick, liquid lipstick and packaging on cream silk",
+    dark: false,
   },
   {
     headline: ["Velvet.", "Matte.", "Forever."],
@@ -22,6 +26,7 @@ const SLIDES = [
     cta: { label: "Shop Lipstick", href: "/shop?category=lipstick" },
     image: "/brand/hero-2.webp",
     alt: "The Velastia range — lipstick, serum, compact and brushes — on plum velvet",
+    dark: true,
   },
   {
     headline: ["Clean.", "Proven.", "Kind."],
@@ -29,6 +34,7 @@ const SLIDES = [
     cta: { label: "Our Ingredients", href: "/ingredients" },
     image: "/brand/hero-3.webp",
     alt: "Velastia lipstick, liquid lipstick and box on a marble slab",
+    dark: false,
   },
 ];
 
@@ -46,6 +52,7 @@ export default function Hero() {
   const { welcomeOffer } = useSettings();
   const [i, setI] = useState(0);
   const slide = SLIDES[i];
+  const dark = slide.dark;
 
   // Keyed on `i`, so using the arrows or dots restarts the wait rather than
   // letting a slide flick past a moment after it arrives.
@@ -80,13 +87,22 @@ export default function Hero() {
   );
 
   return (
-    <section className="relative overflow-hidden">
+    <section
+      className={cn(
+        "relative overflow-hidden transition-colors duration-700",
+        dark ? "bg-plum-900" : "bg-cream-100",
+      )}
+    >
       {/* Product photography sits on the right; the copy gets its own column so
           nothing overlaps the bottles the way a full-bleed background would. */}
       <div className="absolute inset-y-0 right-0 hidden w-[58%] overflow-hidden lg:block">
         {track("58vw")}
-        {/* Softens the edge where the photograph meets the copy column */}
-        <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-cream-50 to-transparent" />
+        <div
+          className={cn(
+            "absolute inset-y-0 left-0 w-40 bg-gradient-to-r to-transparent transition-colors duration-700",
+            dark ? "from-plum-900" : "from-cream-100",
+          )}
+        />
       </div>
 
       <div className="container-vel relative grid min-h-[440px] items-center py-14 lg:min-h-[540px] lg:grid-cols-2">
@@ -94,20 +110,35 @@ export default function Hero() {
         <div className="max-w-lg lg:pl-12">
           {/* Keyed so the words fade up again on every slide */}
           <div key={i} className="hero-copy">
-            <h1 className="font-display text-[2.9rem] leading-[1.05] text-plum-800 sm:text-[3.6rem]">
+            <h1
+              className={cn(
+                "font-display text-[2.9rem] leading-[1.05] sm:text-[3.6rem]",
+                dark ? "text-cream-50" : "text-plum-800",
+              )}
+            >
               {slide.headline.map((line, n) => (
                 <span
                   key={line}
-                  className={cn("block", n === slide.headline.length - 1 && "text-gold-600")}
+                  className={cn(
+                    "block",
+                    n === slide.headline.length - 1 && (dark ? "text-gold-300" : "text-gold-600"),
+                  )}
                 >
                   {line}
                 </span>
               ))}
             </h1>
 
-            <p className="mt-5 max-w-sm text-[0.95rem] leading-relaxed text-ink-soft">{slide.copy}</p>
+            <p
+              className={cn(
+                "mt-5 max-w-sm text-[0.95rem] leading-relaxed",
+                dark ? "text-cream-200/75" : "text-ink-soft",
+              )}
+            >
+              {slide.copy}
+            </p>
 
-            <Button href={slide.cta.href} size="lg" className="mt-7">
+            <Button href={slide.cta.href} size="lg" variant={dark ? "gold" : "primary"} className="mt-7">
               {slide.cta.label}
             </Button>
           </div>
@@ -115,8 +146,13 @@ export default function Hero() {
           <ul className="mt-10 flex flex-wrap gap-x-7 gap-y-4">
             {BADGES.map(({ Icon, label }) => (
               <li key={label} className="flex items-center gap-2">
-                <Icon className="size-5 shrink-0 text-gold-600" />
-                <span className="label-caps whitespace-pre-line text-[0.55rem] leading-tight text-ink-soft">
+                <Icon className={cn("size-5 shrink-0", dark ? "text-gold-400" : "text-gold-600")} />
+                <span
+                  className={cn(
+                    "label-caps whitespace-pre-line text-[0.55rem] leading-tight",
+                    dark ? "text-cream-200/70" : "text-ink-soft",
+                  )}
+                >
                   {label}
                 </span>
               </li>
@@ -156,8 +192,11 @@ export default function Hero() {
           onClick={() => go(d)}
           aria-label={label}
           className={cn(
-            "absolute top-1/2 hidden size-9 -translate-y-1/2 place-items-center rounded-full border border-gold-400/50 bg-cream-50/80 text-plum-800 backdrop-blur transition-colors hover:bg-cream-50 lg:grid",
+            "absolute top-1/2 hidden size-9 -translate-y-1/2 place-items-center rounded-full border backdrop-blur transition-colors lg:grid",
             side,
+            dark
+              ? "border-gold-400/40 bg-plum-800/70 text-gold-200 hover:bg-plum-800"
+              : "border-gold-400/50 bg-cream-50/80 text-plum-800 hover:bg-cream-50",
           )}
         >
           <Icon className="size-4" />
