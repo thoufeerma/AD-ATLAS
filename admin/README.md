@@ -79,7 +79,7 @@ Hand-rolled SVG, no charting dependency. They follow a specific set of rules:
 Most of the panel reads the live database through the API: the dashboard,
 orders, customers, inbox, products, categories, inventory, reviews, coupons,
 offers, pages, media, banners, testimonials, FAQs, subscribers, users, settings,
-shipping, email log, activity — and all three reports (Sales, Products,
+shipping, email log, activity, returns — and all three reports (Sales, Products,
 Customers), which count the same orders as the dashboard.
 
 These screens still show sample figures from [`lib/mock.ts`](lib/mock.ts) and

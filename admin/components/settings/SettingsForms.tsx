@@ -6,7 +6,7 @@ import { AlertCircle, Check, Loader2, Lock } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { api, ApiError } from "@/lib/api/client";
-import type { Coupon, SiteCopy, SiteSettings, SocialLinks, StoreDetails } from "@/lib/api/types";
+import type { Coupon, ReturnPolicy, SiteCopy, SiteSettings, SocialLinks, StoreDetails } from "@/lib/api/types";
 import { cn, same } from "@/lib/utils";
 
 const SOCIAL_FIELDS: { name: keyof SocialLinks; label: string; placeholder: string }[] = [
@@ -56,6 +56,7 @@ export default function SettingsForms({
       <StoreCard initial={settings.store ?? EMPTY_STORE} editable={canEditStore} />
       <div className="space-y-5">
         <WelcomeCard current={settings.welcomeOffer.code} coupons={coupons} editable={canEditStore} />
+        <ReturnsCard initial={settings.returns} editable={canEditStore} />
         <CopyCard initial={settings.copy} editable={canEditCopy} />
       </div>
     </div>
@@ -186,6 +187,87 @@ function WelcomeCard({
           page. They hide automatically if the coupon is switched off, expires or runs out.
         </p>
         {editable && <SaveRow save={save} dirty={code !== (current ?? "")} />}
+      </form>
+    </Card>
+  );
+}
+
+/* ── Returns ── */
+
+function ReturnsCard({ initial, editable }: { initial: ReturnPolicy; editable: boolean }) {
+  const [values, setValues] = useState({
+    accepted: initial.accepted,
+    windowDays: String(initial.windowDays),
+    instructions: initial.instructions,
+  });
+  const save = useSave("PUT", "/admin/settings/returns");
+  const body = { ...values, windowDays: Number(values.windowDays) };
+  const dirty = !same(body, initial);
+
+  return (
+    <Card title="Returns">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          save.run(body);
+        }}
+        className="space-y-4"
+        noValidate
+      >
+        {!editable && <ReadOnlyNote who="Super Administrators" />}
+        <p className="rounded-lg bg-plane px-3.5 py-2.5 text-[0.7rem] leading-relaxed text-ink-2">
+          The storefront offers a return on delivered orders inside this window, and the Returns
+          screen is where you answer. Your policy page can print the number with{" "}
+          <code className="rounded bg-card px-1 py-0.5">{"{{return_window_days}}"}</code>, so the
+          two never disagree.
+        </p>
+
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            checked={values.accepted}
+            disabled={!editable}
+            onChange={(e) => setValues((s) => ({ ...s, accepted: e.target.checked }))}
+            className="mt-0.5 size-4 accent-series-1"
+          />
+          <span className="text-[0.78rem] leading-tight text-ink">
+            Accept returns
+            <span className="mt-0.5 block text-[0.68rem] text-muted">
+              Off hides the request form and turns new requests away. Requests you already have are
+              unaffected.
+            </span>
+          </span>
+        </label>
+
+        <Field
+          label="Return Window (days)"
+          hint="Counted from the day the order was delivered."
+          value={values.windowDays}
+          error={save.fields.windowDays}
+          disabled={!editable || !values.accepted}
+          onChange={(v) => setValues((s) => ({ ...s, windowDays: v.replace(/[^0-9]/g, "") }))}
+        />
+
+        <label className="block">
+          <span className="mb-1.5 block text-[0.7rem] font-medium text-ink-2">What to tell the customer</span>
+          <textarea
+            value={values.instructions}
+            disabled={!editable || !values.accepted}
+            onChange={(e) => setValues((s) => ({ ...s, instructions: e.target.value }))}
+            rows={3}
+            maxLength={600}
+            className={inputCls(!!save.fields.instructions, !editable || !values.accepted)}
+          />
+          {save.fields.instructions ? (
+            <span className="mt-1 block text-[0.7rem] text-critical">{save.fields.instructions}</span>
+          ) : (
+            <span className="mt-1 block text-[0.68rem] text-muted">
+              Shown above the request form, e.g. how to pack the parcel.
+            </span>
+          )}
+        </label>
+
+        {editable && <SaveRow save={save} dirty={dirty} />}
       </form>
     </Card>
   );

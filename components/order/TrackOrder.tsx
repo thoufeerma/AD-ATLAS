@@ -22,6 +22,7 @@ import {
   XCircle,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
+import ReturnPanel from "@/components/order/ReturnPanel";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { LAST_ORDER_KEY, type LastOrder } from "@/components/checkout/lastOrder";
 import { useAccount } from "@/lib/account";
@@ -197,7 +198,7 @@ export default function TrackOrder({ products }: { products: Product[] }) {
         </p>
       </section>
 
-      {order && <OrderResult order={order} bySlug={bySlug} />}
+      {order && <OrderResult order={order} bySlug={bySlug} email={email.trim()} />}
 
       {/* Help */}
       <section className="rounded-[var(--radius-card)] border border-gold-200/70 bg-blush-100 p-6 sm:p-8">
@@ -242,7 +243,16 @@ export default function TrackOrder({ products }: { products: Product[] }) {
   );
 }
 
-function OrderResult({ order, bySlug }: { order: TrackedOrder; bySlug: Map<string, Product> }) {
+function OrderResult({
+  order,
+  bySlug,
+  email,
+}: {
+  order: TrackedOrder;
+  bySlug: Map<string, Product>;
+  /** The address the order was looked up with — how a guest proves it's theirs. */
+  email: string;
+}) {
   const stopped = order.status === "CANCELLED" || order.status === "REFUNDED";
   const reached = STAGES.findIndex((s) => s.status === order.status);
   const firstAt = (status: OrderStatus) => order.events.find((e) => e.status === status)?.at;
@@ -411,6 +421,9 @@ function OrderResult({ order, bySlug }: { order: TrackedOrder; bySlug: Map<strin
             </p>
             <p className="font-display text-2xl font-semibold text-plum-800">{inrPaise(order.totalPaise)}</p>
           </div>
+
+          {/* Shows itself only when there's something to say about returns */}
+          <ReturnPanel orderNumber={order.number} email={email} />
         </div>
       </section>
     </>

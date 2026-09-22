@@ -10,10 +10,12 @@ import {
   NotificationSettings,
   PAGE_TOKENS,
   PageBody,
+  ReturnSettings,
   StoreSettings,
   WelcomeOfferSettings,
   readCopy,
   readNotifications,
+  readReturns,
   readStore,
 } from "../../lib/settings.js";
 import { emailServiceConnected } from "../../lib/mail.js";
@@ -25,7 +27,7 @@ export const adminSettingsRouter = Router();
 
 const readSettings = async () => {
   const [rows, shipping] = await Promise.all([
-    prisma.setting.findMany({ where: { key: { in: ["store", "welcomeOffer", "copy", "notifications"] } } }),
+    prisma.setting.findMany({ where: { key: { in: ["store", "welcomeOffer", "copy", "notifications", "returns"] } } }),
     prisma.shippingMethod.findFirst({
       where: { isEnabled: true },
       orderBy: { sortOrder: "asc" },
@@ -39,6 +41,7 @@ const readSettings = async () => {
     welcomeOffer: { code: welcome?.code ?? null },
     copy: readCopy(values.copy),
     notifications: readNotifications(values.notifications),
+    returns: readReturns(values.returns),
     // Read-only: whether emails really go out, and from which address.
     email: { connected: emailServiceConnected(), from: env.EMAIL_FROM },
     // Read-only here; shown so page editors can see what shipping tokens become.
@@ -80,6 +83,13 @@ adminSettingsRouter.put("/notifications", allow(...ROLES.catalog), async (req, r
   const notifications = parse(NotificationSettings, req.body);
   await save("notifications", notifications);
   await logActivity(req, "Updated email notifications", "Setting", "notifications");
+  res.json({ data: await readSettings() });
+});
+
+adminSettingsRouter.put("/returns", allow(...ROLES.catalog), async (req, res) => {
+  const returns = parse(ReturnSettings, req.body);
+  await save("returns", returns);
+  await logActivity(req, `Returns ${returns.accepted ? `open for ${returns.windowDays} days` : "switched off"}`, "Setting", "returns");
   res.json({ data: await readSettings() });
 });
 

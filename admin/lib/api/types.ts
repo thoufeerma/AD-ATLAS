@@ -328,6 +328,8 @@ export type NotificationSettings = {
   shippingUpdates: boolean;
   alertNewOrder: boolean;
   alertNewMessage: boolean;
+  returnUpdates: boolean;
+  alertReturnRequest: boolean;
   alertRecipients: string[];
 };
 
@@ -336,6 +338,7 @@ export type SiteSettings = {
   welcomeOffer: { code: string | null };
   copy: SiteCopy;
   notifications: NotificationSettings;
+  returns: ReturnPolicy;
   /** Whether an email service is connected; if not, emails are only logged. */
   email: { connected: boolean; from: string };
   shipping: { name: string; pricePaise: number; freeAbovePaise: number | null } | null;
@@ -519,3 +522,79 @@ export type CustomerReport = {
   newByMonth: { month: string; count: number }[];
   top: { name: string; email: string; hasAccount: boolean; orders: number; spentPaise: number }[];
 };
+
+/* ── Returns ── */
+
+export type ReturnStatus = "REQUESTED" | "APPROVED" | "REJECTED" | "RECEIVED" | "REFUNDED";
+export type ReturnReason =
+  | "DAMAGED"
+  | "WRONG_ITEM"
+  | "NOT_AS_DESCRIBED"
+  | "REACTION"
+  | "CHANGED_MIND"
+  | "OTHER";
+
+export const RETURN_STATUS_LABEL: Record<ReturnStatus, string> = {
+  REQUESTED: "Requested",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  RECEIVED: "Received",
+  REFUNDED: "Refunded",
+};
+
+export const RETURN_REASON_LABEL: Record<ReturnReason, string> = {
+  DAMAGED: "Arrived damaged",
+  WRONG_ITEM: "Wrong item sent",
+  NOT_AS_DESCRIBED: "Not as described",
+  REACTION: "Caused a reaction",
+  CHANGED_MIND: "Changed their mind",
+  OTHER: "Something else",
+};
+
+/** What a return may become next; the API enforces the same list. */
+export const RETURN_NEXT: Record<ReturnStatus, ReturnStatus[]> = {
+  REQUESTED: ["APPROVED", "REJECTED"],
+  APPROVED: ["RECEIVED", "REJECTED"],
+  RECEIVED: ["REFUNDED", "REJECTED"],
+  REJECTED: [],
+  REFUNDED: [],
+};
+
+export type ReturnRequest = {
+  number: string;
+  status: ReturnStatus;
+  reason: ReturnReason;
+  /** The customer's own words. */
+  note: string | null;
+  /** What the team replied; it goes into the customer's email. */
+  staffNote: string | null;
+  refundPaise: number | null;
+  /** What the listed items came to — what a full refund would be. */
+  suggestedRefundPaise: number;
+  requestedAt: string;
+  resolvedAt: string | null;
+  order: {
+    number: string;
+    email: string;
+    shipName: string;
+    shipPhone: string;
+    totalPaise: number;
+    status: OrderStatus;
+    paymentMethod: PaymentMethod | null;
+    placedAt: string;
+  };
+  items: {
+    id: string;
+    name: string;
+    sku: string;
+    shade: string | null;
+    quantity: number;
+    orderedQuantity: number;
+    unitPricePaise: number;
+  }[];
+};
+
+export type ReturnCounts = { open: number; requested: number };
+
+/** Returns policy, from Settings. */
+export type ReturnPolicy = { accepted: boolean; windowDays: number; instructions: string };

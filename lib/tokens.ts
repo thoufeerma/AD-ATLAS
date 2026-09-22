@@ -6,7 +6,7 @@ import { inrPaise } from "./utils";
  * that says "free on orders above {{free_shipping_above}}" follows the
  * shipping threshold set in the admin. Unknown tokens are left as written.
  */
-export function fillTokens(text: string, { store, shipping }: Settings) {
+export function fillTokens(text: string, { store, shipping, returns }: Settings) {
   const values: Record<string, string | undefined> = {
     free_shipping_above:
       shipping?.freeAbovePaise != null ? inrPaise(shipping.freeAbovePaise) : undefined,
@@ -17,6 +17,7 @@ export function fillTokens(text: string, { store, shipping }: Settings) {
     store_name: store.name,
     legal_entity: store.legalEntity,
     city: store.city,
+    return_window_days: String(returns.windowDays),
   };
   return text.replace(/\{\{\s*([a-z_]+)\s*\}\}/g, (match, key: string) => values[key] ?? match);
 }

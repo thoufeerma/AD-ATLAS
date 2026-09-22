@@ -19,6 +19,16 @@ const TOGGLES: { key: keyof Omit<NotificationSettings, "alertRecipients">; label
   },
   { key: "alertNewOrder", label: "New-order alert", note: "To the team below for every new order." },
   { key: "alertNewMessage", label: "Message alert", note: "To the team below for contact messages and collab applications." },
+  {
+    key: "returnUpdates",
+    label: "Return updates",
+    note: "To the customer when a return is approved, turned down, received or refunded.",
+  },
+  {
+    key: "alertReturnRequest",
+    label: "Return alert",
+    note: "To the team below when a customer asks to send something back.",
+  },
 ];
 
 export default function NotificationsForm({
@@ -46,7 +56,7 @@ export default function NotificationsForm({
       .filter(Boolean),
   };
   const dirty = !same(body, initial);
-  const alertsOn = body.alertNewOrder || body.alertNewMessage;
+  const alertsOn = body.alertNewOrder || body.alertNewMessage || body.alertReturnRequest;
 
   async function save(e: React.FormEvent) {
     e.preventDefault();

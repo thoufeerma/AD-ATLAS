@@ -345,6 +345,29 @@ async function main() {
       create: { ...p, status: "PUBLISHED" },
     });
   }
+
+  // Sentences earlier seeds wrote that have since been improved. Each is only
+  // replaced while it still reads exactly as seeded — anything an admin has
+  // reworded on the Pages screen is left alone.
+  const REWORDED: Record<string, [string, string][]> = {
+    returns: [
+      [
+        "Unopened products in their original packaging can be returned within 7 days of delivery.",
+        "Unopened products in their original packaging can be returned within {{return_window_days}} days of delivery.",
+      ],
+      [
+        "Email {{support_email}} with your order number and the reason for the return, or call us during support hours.",
+        "Ask for a return from your account's order history or the Track Order page, or email {{support_email}} with your order number and the reason.",
+      ],
+    ],
+  };
+  for (const [slug, swaps] of Object.entries(REWORDED)) {
+    const page = await prisma.page.findUnique({ where: { slug } });
+    if (!page) continue;
+    const before = JSON.stringify(page.body);
+    const after = swaps.reduce((text, [old, now]) => text.split(JSON.stringify(old).slice(1, -1)).join(JSON.stringify(now).slice(1, -1)), before);
+    if (after !== before) await prisma.page.update({ where: { slug }, data: { body: JSON.parse(after) } });
+  }
   log(`${policies.length} policy pages`);
 
   if ((await prisma.review.count()) === 0) {

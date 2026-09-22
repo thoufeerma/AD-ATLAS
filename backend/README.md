@@ -58,7 +58,7 @@ under **Users & Roles**.
 | `db:studio` | Prisma Studio, a GUI over the database |
 | `admin:reset` | Forgotten admin password: lists the admin emails and gives one a new one-time password (`-- email` to pick one when there are several). Uses `DATABASE_URL` — see [DEPLOY.md](../DEPLOY.md) for the online database |
 | `db:up` / `db:down` | Start / stop the Docker database |
-| `smoke` | 220 end-to-end API checks — **dev databases only**, see below |
+| `smoke` | 243 end-to-end API checks — **dev databases only**, see below |
 
 ## API
 
@@ -87,9 +87,10 @@ All routes are under `/api/v1`. Every error has the same shape:
 | GET | `/account/orders` | Order history — only once the email is verified |
 | GET · POST · PATCH · DELETE | `/account/addresses` (`/:id`) | Saved addresses (up to 10) |
 | POST | `/contact` · `/newsletter` · `/collab-applications` | Forms |
+| GET · POST | `/orders/:number/returns` (`?email=`) | Whether a return is possible and what's left to return; ask for one. Identified like order tracking — number plus email — or by the signed-in customer's own orders |
 
-Public POSTs are rate-limited per IP (in memory): orders 20, reviews 5 and each
-form 10 per 10 minutes. Behind a proxy, make sure it sets `X-Forwarded-For`.
+Public POSTs are rate-limited per IP (in memory): orders 20, reviews 5, return
+requests 10 and each form 10 per 10 minutes. Behind a proxy, make sure it sets `X-Forwarded-For`.
 
 ### Admin — session cookie required (except `/auth/login`)
 
@@ -106,6 +107,9 @@ form 10 per 10 minutes. Behind a proxy, make sure it sets `X-Forwarded-For`.
 | `/admin/dashboard` | GET | all |
 | `/admin/reports/sales` · `/products` | GET | all (revenue, no customer details) |
 | `/admin/reports/customers` | GET | Order Manager, Support |
+| `/admin/returns` · `/counts` · `/:number` | GET | Order Manager, Support |
+| `/admin/returns/:number` | PATCH `{ status, staffNote?, refundPaise? }` | Order Manager |
+| `/admin/settings/returns` | PUT | super admin only |
 | `/admin/products` · `/:id` | GET · POST · PATCH · DELETE (archives) | read: Order Manager, Support |
 | `/admin/products/:id/stock` | PATCH `{ set }` or `{ adjust }` | Order Manager |
 | `/admin/orders` · `/:number` | GET | Order Manager, Support |
@@ -130,8 +134,9 @@ frontends pass `/uploads/*` through to the API.
 
 The store emails customers an **order confirmation** and **order updates**
 (shipped, out for delivery, delivered, cancelled, refunded — with any note the
-team adds, such as a tracking number), and emails the team **alerts** for new
-orders, contact messages and collab applications. Each can be switched off, and
+team adds, such as a tracking number) and **return updates** (approved, turned
+down, received, refunded), and emails the team **alerts** for new orders,
+return requests, contact messages and collab applications. Each can be switched off, and
 alert recipients set, under Settings → Notifications in the admin.
 
 Emails are sent through [Resend](https://resend.com) when `RESEND_API_KEY` is set
@@ -221,7 +226,7 @@ npm run dev      # in one terminal
 npm run smoke    # in another
 ```
 
-Runs 51 storefront and 169 admin checks, including a concurrent-purchase race,
+Runs 53 storefront and 190 admin checks, including a concurrent-purchase race,
 the admin account lifecycle and regression tests for the partial-update bug.
 Rerunnable against a used database: every fixture it creates is suffixed per
 run. It **refuses to target anything but localhost**, because it places orders

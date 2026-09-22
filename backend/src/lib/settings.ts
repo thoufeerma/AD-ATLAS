@@ -96,6 +96,33 @@ export function readCopy(stored: unknown): CopySettings {
   return { ...DEFAULT_COPY, ...(parsed.success ? parsed.data : {}) };
 }
 
+/**
+ * Returns. The window is counted from the day the order was delivered, and the
+ * policy page can print it with {{return_window_days}} so the two never drift
+ * apart. Turning `accepted` off hides the request form and refuses new requests;
+ * requests already in hand are unaffected.
+ */
+export const ReturnSettings = z.object({
+  accepted: z.boolean(),
+  windowDays: z.number().int().min(1).max(90),
+  /** Shown above the request form, e.g. how to pack the parcel. */
+  instructions: z.string().trim().max(600),
+});
+
+export type ReturnSettings = z.infer<typeof ReturnSettings>;
+
+export const DEFAULT_RETURNS: ReturnSettings = {
+  accepted: true,
+  windowDays: 7,
+  instructions:
+    "Send items back unused, in their original packaging, with the invoice. We'll email you the pickup or courier details once your request is approved.",
+};
+
+export function readReturns(stored: unknown): ReturnSettings {
+  const parsed = ReturnSettings.partial().safeParse(stored ?? {});
+  return { ...DEFAULT_RETURNS, ...(parsed.success ? parsed.data : {}) };
+}
+
 /** Which emails the store sends, and who receives the store's own alerts. */
 export const NotificationSettings = z.object({
   /** To the customer when an order is placed. */
@@ -106,6 +133,10 @@ export const NotificationSettings = z.object({
   alertNewOrder: z.boolean(),
   /** To the team when a contact message or collab application arrives. */
   alertNewMessage: z.boolean(),
+  /** To the customer when a return is approved, rejected or refunded. */
+  returnUpdates: z.boolean(),
+  /** To the team when a customer asks to return something. */
+  alertReturnRequest: z.boolean(),
   alertRecipients: z
     .array(z.email().transform((e) => e.toLowerCase()))
     .max(10)
@@ -119,6 +150,8 @@ export const DEFAULT_NOTIFICATIONS: NotificationSettings = {
   shippingUpdates: true,
   alertNewOrder: true,
   alertNewMessage: true,
+  returnUpdates: true,
+  alertReturnRequest: true,
   alertRecipients: [],
 };
 
@@ -155,4 +188,5 @@ export const PAGE_TOKENS = [
   "store_name",
   "legal_entity",
   "city",
+  "return_window_days",
 ] as const;

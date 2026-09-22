@@ -79,6 +79,8 @@ export type Settings = {
     firstOrderOnly: boolean;
     minOrderPaise: number;
   } | null;
+  /** Returns policy (Settings → Returns). */
+  returns: { accepted: boolean; windowDays: number; instructions: string };
   /** Marketing lines the admin can edit (Settings → Site Copy). */
   copy: {
     ratingHeadline: string;

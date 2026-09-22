@@ -465,7 +465,7 @@ console.log("\n[Emails]");
   const team = `team.${RUN}@example.com`;
   try {
     const put = await call("PUT", "/admin/settings/notifications", {
-      orderConfirmation: true, shippingUpdates: true, alertNewOrder: true, alertNewMessage: true, alertRecipients: [team],
+      ...before, orderConfirmation: true, shippingUpdates: true, alertNewOrder: true, alertNewMessage: true, alertRecipients: [team],
     });
     ok(put.status === 200 && put.json.data.notifications.alertRecipients[0] === team, "save notification settings");
     ok((await call("PUT", "/admin/settings/notifications", { ...before, alertRecipients: ["not-an-email"] })).status === 400, "alert recipients must be email addresses");
@@ -644,6 +644,72 @@ console.log("\n[Media uploads]");
   const del = await call("DELETE", `/admin/media/${a.id}`);
   ok(del.status === 204 && (await fetch(ORIGIN + a.url)).status === 404, "unused image deleted, file removed");
   await call("DELETE", `/admin/media/${j.id}`);
+}
+
+console.log("\n[Returns]");
+{
+  // A fresh delivered order of two serums, placed as a guest. Stock is topped
+  // up for it and put back afterwards: the public suite relies on the serum
+  // having fewer than 20 in stock.
+  const serum = (await call("GET", "/admin/products?take=100")).json.data.find((p) => p.slug === "face-serum");
+  await call("PATCH", `/admin/products/${serum.id}/stock`, { set: serum.stock + 2 });
+  const email = `returns.${RUN}@example.com`;
+  const placed = await pub("POST", "/orders", { ...shipTo, email, name: "Returns Tester", items: [{ slug: "face-serum", quantity: 2 }], paymentMethod: "COD" });
+  const order = placed.json.data.number;
+  const lookup = `/orders/${order}/returns?email=${encodeURIComponent(email)}`;
+
+  const early = await pub("GET", lookup);
+  ok(early.status === 200 && early.json.data.canRequest === false, "no return before the order is delivered", early.json.data.reason);
+  for (const status of ["PROCESSING", "SHIPPED", "DELIVERED"]) await call("PATCH", `/admin/orders/${order}/status`, { status });
+
+  const info = (await pub("GET", lookup)).json.data;
+  const line = info.items[0];
+  ok(info.canRequest && line.returnable === 2 && info.windowDays >= 1, "delivered order can be returned, window from settings", `closes ${new Date(info.closesAt).toDateString()}`);
+  ok((await pub("GET", `/orders/${order}/returns?email=someone.else@example.com`)).status === 404, "another email can't see or return the order");
+
+  const tooMany = await pub("POST", `/orders/${order}/returns`, { email, reason: "DAMAGED", items: [{ orderItemId: line.id, quantity: 3 }] });
+  ok(tooMany.status === 400, "can't return more than was ordered", tooMany.json.error.message);
+  const created = await pub("POST", `/orders/${order}/returns`, { email, reason: "DAMAGED", note: "Smoke test, safe to ignore.", items: [{ orderItemId: line.id, quantity: 2 }] });
+  const rn = created.json.data?.number;
+  ok(created.status === 201 && /^RT\d{10}$/.test(rn ?? "") && created.json.data.status === "REQUESTED", "return requested", rn);
+  const again = await pub("POST", `/orders/${order}/returns`, { email, reason: "OTHER", items: [{ orderItemId: line.id, quantity: 1 }] });
+  ok(again.status === 409, "one open return per order", again.json.error.message);
+
+  const counts = (await call("GET", "/admin/returns/counts")).json.data;
+  ok(counts.requested >= 1 && counts.open >= counts.requested, "sidebar count includes it", JSON.stringify(counts));
+  const listed = (await call("GET", `/admin/returns?q=${order}`)).json.data;
+  ok(listed.length === 1 && listed[0].suggestedRefundPaise === 2 * serum.pricePaise, "admin sees the request and what a full refund comes to");
+
+  const skip = await call("PATCH", `/admin/returns/${rn}`, { status: "REFUNDED" });
+  ok(skip.status === 409, "can't jump straight from requested to refunded", skip.json.error.message);
+  const early2 = await call("PATCH", `/admin/returns/${rn}`, { status: "APPROVED", refundPaise: 100 });
+  ok(early2.status === 400, "a refund amount only goes with 'refunded'");
+  for (const status of ["APPROVED", "RECEIVED"]) {
+    const r = await call("PATCH", `/admin/returns/${rn}`, { status, staffNote: `Smoke: ${status.toLowerCase()}` });
+    ok(r.status === 200 && r.json.data.status === status, `return moves to ${status.toLowerCase()}`);
+  }
+  const refunded = await call("PATCH", `/admin/returns/${rn}`, { status: "REFUNDED" });
+  ok(refunded.status === 200 && refunded.json.data.refundPaise === 2 * serum.pricePaise && refunded.json.data.resolvedAt, "refunded, amount defaults to the items' value");
+  const after = (await call("GET", `/admin/orders/${order}`)).json.data;
+  ok(after.status === "REFUNDED" && after.paymentStatus === "REFUNDED", "whole order returned -> the order itself is refunded (so reports stop counting it)");
+  ok((await call("PATCH", `/admin/returns/${rn}`, { status: "APPROVED" })).status === 409, "a refunded return is closed for good");
+  const status = (await pub("GET", lookup)).json.data;
+  ok(status.requests[0]?.status === "REFUNDED" && !status.canRequest, "the customer sees it refunded, and can't return it twice");
+
+  const mails = (await call("GET", `/admin/emails?q=${encodeURIComponent(email)}`)).json.data.filter((m) => m.kind === "return.update");
+  ok(mails.length === 3, "customer emailed at approved, received and refunded", mails.map((m) => m.subject.replace(/.*return RT\d+ /, "")).join(" / "));
+
+  // Switching returns off turns new requests away.
+  const before = (await call("GET", "/admin/settings")).json.data.returns;
+  const off = await call("PUT", "/admin/settings/returns", { ...before, accepted: false });
+  ok(off.status === 200 && off.json.data.returns.accepted === false, "returns can be switched off");
+  const shown = (await pub("GET", "/settings/public")).json.data.returns;
+  ok(shown.accepted === false, "…and the storefront knows");
+  const tooLong = await call("PUT", "/admin/settings/returns", { ...before, windowDays: 400 });
+  ok(tooLong.status === 400, "return window is validated", tooLong.json.error.details?.[0]?.path);
+  await call("PUT", "/admin/settings/returns", before);
+  ok((await pub("GET", "/settings/public")).json.data.returns.accepted === before.accepted, "returns setting restored");
+  await call("PATCH", `/admin/products/${serum.id}/stock`, { set: serum.stock });
 }
 
 console.log("\n[Race: two shoppers, one stock pool]");

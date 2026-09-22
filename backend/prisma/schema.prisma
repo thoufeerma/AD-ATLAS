@@ -222,6 +222,7 @@ model Order {
   customer   Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
   items      OrderItem[]
   events     OrderEvent[]
+  returns    ReturnRequest[]
 
   placedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -246,9 +247,52 @@ model OrderItem {
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String?
   product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  returns   ReturnItem[]
 
   @@index([orderId])
   @@map("order_items")
+}
+
+/// A customer asking to send part (or all) of a delivered order back.
+/// Money is never moved here — the team records the refund once it's paid.
+model ReturnRequest {
+  id     String       @id @default(cuid())
+  /// Customer-facing reference, e.g. RT2609201234
+  number String       @unique
+  status ReturnStatus @default(REQUESTED)
+  reason ReturnReason
+  /// The customer's own words.
+  note      String?
+  /// What the team replied; it goes into the update email.
+  staffNote String?
+  /// What was actually refunded, set when the request is settled.
+  refundPaise Int?
+
+  orderId String
+  order   Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  items   ReturnItem[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  resolvedAt DateTime?
+
+  @@index([orderId])
+  @@index([status])
+  @@map("return_requests")
+}
+
+model ReturnItem {
+  id       String @id @default(cuid())
+  quantity Int
+
+  requestId   String
+  request     ReturnRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  orderItemId String
+  orderItem   OrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, orderItemId])
+  @@index([orderItemId])
+  @@map("return_items")
 }
 
 /// The status timeline behind Track Order.
@@ -265,6 +309,27 @@ model OrderEvent {
 }
 
 /* ─────────────────────────── Promotions ──────────────────────────── */
+
+enum ReturnStatus {
+  /// Waiting for the team to look at it.
+  REQUESTED
+  /// Send it back — the customer has been told how.
+  APPROVED
+  REJECTED
+  /// The parcel is back with us.
+  RECEIVED
+  /// Money returned; the request is closed.
+  REFUNDED
+}
+
+enum ReturnReason {
+  DAMAGED
+  WRONG_ITEM
+  NOT_AS_DESCRIBED
+  REACTION
+  CHANGED_MIND
+  OTHER
+}
 
 enum CouponType {
   PERCENTAGE

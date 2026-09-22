@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Check, Loader2, LogOut, MailCheck, MapPin, Package, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import Button from "@/components/ui/Button";
+import ReturnPanel from "@/components/order/ReturnPanel";
 import { api, ApiError } from "@/lib/api/client";
 import { setSignedIn, signOut, useAccount, type Me } from "@/lib/account";
 import type { OrderStatus, Product } from "@/lib/api/types";
@@ -215,6 +216,8 @@ function Orders({ verified, products }: { verified: boolean; products: Product[]
                   Track order →
                 </Link>
               </div>
+              {/* Shows itself only when there's something to say about returns */}
+              <ReturnPanel orderNumber={o.number} />
             </li>
           ))}
         </ul>

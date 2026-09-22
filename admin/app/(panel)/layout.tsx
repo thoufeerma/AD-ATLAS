@@ -3,7 +3,7 @@ import { KeyRound } from "lucide-react";
 import Shell from "@/components/layout/Shell";
 import ChangePasswordForm from "@/components/account/ChangePasswordForm";
 import { apiGet, requireAdmin } from "@/lib/api/server";
-import type { InboxCounts } from "@/lib/api/types";
+import type { InboxCounts, ReturnCounts } from "@/lib/api/types";
 
 /**
  * Every panel screen renders inside this layout, which asks the API who is
@@ -34,13 +34,18 @@ export default async function PanelLayout({ children }: LayoutProps<"/">) {
     );
   }
 
-  // Open inbox items for the sidebar badge. Never worth breaking the panel over.
-  const inbox = await apiGet<InboxCounts>("/admin/inbox/counts").catch((err: unknown) => {
+  // Open inbox items and returns for the sidebar badges. Never worth breaking
+  // the panel over.
+  const quiet = (err: unknown) => {
     unstable_rethrow(err); // but still honour an expired-session redirect
     return null;
-  });
+  };
+  const [inbox, returns] = await Promise.all([
+    apiGet<InboxCounts>("/admin/inbox/counts").catch(quiet),
+    apiGet<ReturnCounts>("/admin/returns/counts").catch(quiet),
+  ]);
   return (
-    <Shell admin={admin} badges={{ "/inbox": inbox?.total ?? 0 }}>
+    <Shell admin={admin} badges={{ "/inbox": inbox?.total ?? 0, "/returns": returns?.requested ?? 0 }}>
       {children}
     </Shell>
   );

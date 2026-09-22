@@ -32,6 +32,8 @@ import { adminShippingRouter } from "./routes/admin/shipping.js";
 import { adminEmailsRouter } from "./routes/admin/emails.js";
 import { adminMediaRouter } from "./routes/admin/media.js";
 import { adminReportsRouter } from "./routes/admin/reports.js";
+import { adminReturnsRouter } from "./routes/admin/returns.js";
+import { returnsRouter } from "./routes/public/returns.js";
 import { UPLOAD_ROOT } from "./lib/media.js";
 
 export function createApp() {
@@ -75,6 +77,7 @@ export function createApp() {
   v1.use(checkoutRouter);
   v1.use(contentRouter);
   v1.use("/account", accountRouter);
+  v1.use(returnsRouter);
 
   // ── Admin API (CMS) ── everything past /auth requires a session, and a
   // password of the admin's own choosing (see requireCurrentPassword).
@@ -103,6 +106,7 @@ export function createApp() {
   admin.use("/emails", adminEmailsRouter);
   admin.use("/media", adminMediaRouter);
   admin.use("/reports", adminReportsRouter);
+  admin.use("/returns", adminReturnsRouter);
 
   v1.use("/admin", admin);
   app.use("/api/v1", v1);

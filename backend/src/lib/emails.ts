@@ -1,4 +1,4 @@
-import type { Order, OrderItem, OrderStatus } from "../generated/prisma/client.js";
+import type { Order, OrderItem, OrderStatus, ReturnReason, ReturnStatus } from "../generated/prisma/client.js";
 import { prisma } from "../db.js";
 import { env } from "../env.js";
 import { formatInr } from "./money.js";
@@ -367,4 +367,131 @@ export function passwordResetEmail(c: { name: string; email: string }, token: st
     "This link works once and expires in 1 hour. If you didn't ask for this, ignore this email.",
   ].join("\n");
   return { to: c.email, subject: `Reset your ${store.name} password`, html, text, kind: "account.reset", replyTo: store.supportEmail || undefined };
+}
+
+/* ── Returns ──────────────────────────────────────────────────────────── */
+
+type ReturnMail = {
+  number: string;
+  status: ReturnStatus;
+  reason: ReturnReason;
+  /** The customer's own words, shown to the team. */
+  note: string | null;
+  staffNote: string | null;
+  refundPaise: number | null;
+  items: { productName: string; shadeName: string | null; quantity: number }[];
+};
+
+export const RETURN_REASON_LABEL: Record<ReturnReason, string> = {
+  DAMAGED: "Arrived damaged",
+  WRONG_ITEM: "Wrong item sent",
+  NOT_AS_DESCRIBED: "Not as described",
+  REACTION: "Caused a reaction",
+  CHANGED_MIND: "Changed their mind",
+  OTHER: "Something else",
+};
+
+const RETURN_MAIL: Partial<Record<ReturnStatus, { subject: string; title: string; line: (r: ReturnMail, o: Order) => string }>> = {
+  APPROVED: {
+    subject: "is approved",
+    title: "Your return is approved",
+    line: (r, o) =>
+      `We've approved the return for order <strong>#${esc(o.number)}</strong>. Send the items back unused and in their original packaging — we'll email the pickup or courier details next.`,
+  },
+  REJECTED: {
+    subject: "couldn't be accepted",
+    title: "About your return request",
+    line: (r, o) =>
+      `We're sorry — we can't accept the return for order <strong>#${esc(o.number)}</strong>. The note below explains why, and you can reply to this email if anything looks wrong.`,
+  },
+  RECEIVED: {
+    subject: "has arrived with us",
+    title: "We've received your return",
+    line: (r, o) =>
+      `Your parcel for order <strong>#${esc(o.number)}</strong> is back with us and being checked. The refund follows shortly.`,
+  },
+  REFUNDED: {
+    subject: "has been refunded",
+    title: "Your refund is on its way",
+    line: (r, o) =>
+      `We've refunded ${r.refundPaise != null ? `<strong>${formatInr(r.refundPaise)}</strong>` : "your return"} for order <strong>#${esc(o.number)}</strong>. Bank transfers usually take 3–5 working days to appear.`,
+  },
+};
+
+/** Whether the customer hears about a return reaching this state. */
+export const customerHearsAboutReturn = (status: ReturnStatus) => status in RETURN_MAIL;
+
+export function returnUpdate(r: ReturnMail, o: Order, store: Store): Email | null {
+  const m = RETURN_MAIL[r.status];
+  if (!m) return null;
+  const noteHtml = r.staffNote
+    ? `<p style="margin:0 0 14px;padding:12px 14px;background:#fcf6f2;border-left:3px solid #c1883e">${escLines(r.staffNote)}</p>`
+    : "";
+  const list = r.items
+    .map((i) => `${esc(i.productName)}${i.shadeName ? ` — ${esc(i.shadeName)}` : ""} × ${i.quantity}`)
+    .join("<br>");
+  const html = layout(
+    store,
+    `Return ${esc(r.number)} ${m.subject}.`,
+    [h1(esc(m.title)), p(m.line(r, o)), noteHtml, heading("Items"), p(list), button(trackUrl(o), "View your order")].join(""),
+  );
+  const text = [
+    m.title,
+    m.line(r, o).replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&#39;/g, "'"),
+    r.staffNote ? `\nNote from our team: ${r.staffNote}` : "",
+    "",
+    "Items:",
+    ...r.items.map((i) => `- ${i.productName}${i.shadeName ? ` — ${i.shadeName}` : ""} x ${i.quantity}`),
+    "",
+    `View your order: ${trackUrl(o)}`,
+  ].join("\n");
+  return {
+    to: o.email,
+    subject: `Your ${store.name} return ${r.number} ${m.subject}`,
+    html,
+    text,
+    kind: "return.update",
+    orderId: o.id,
+    replyTo: store.supportEmail || undefined,
+  };
+}
+
+export function alertReturnRequest(r: ReturnMail, o: Order, store: Store, to: string): Email {
+  const link = `${env.ADMIN_URL}/returns`;
+  const list = r.items
+    .map((i) => `${esc(i.productName)}${i.shadeName ? ` — ${esc(i.shadeName)}` : ""} × ${i.quantity}`)
+    .join("<br>");
+  const html = layout(
+    store,
+    `Return requested for #${esc(o.number)}.`,
+    [
+      h1(`Return requested — ${esc(r.number)}`),
+      p(
+        `<strong>${esc(o.shipName)}</strong> · <a href="mailto:${esc(o.email)}" style="color:#8a5a26">${esc(o.email)}</a><br>Order #${esc(o.number)} · ${esc(RETURN_REASON_LABEL[r.reason])}`,
+      ),
+      r.note ? `<p style="margin:0 0 14px;padding:12px 14px;background:#fcf6f2;border-left:3px solid #c1883e">${escLines(r.note)}</p>` : "",
+      heading("Items"),
+      p(list),
+      button(link, "Open in admin"),
+    ].join(""),
+  );
+  const text = [
+    `Return requested — ${r.number}`,
+    `${o.shipName} <${o.email}> · order #${o.number}`,
+    RETURN_REASON_LABEL[r.reason],
+    r.note ? `\n"${r.note}"` : "",
+    "",
+    ...r.items.map((i) => `- ${i.productName}${i.shadeName ? ` — ${i.shadeName}` : ""} x ${i.quantity}`),
+    "",
+    link,
+  ].join("\n");
+  return {
+    to,
+    subject: `Return requested for #${o.number} — ${RETURN_REASON_LABEL[r.reason]}`,
+    html,
+    text,
+    kind: "alert.return",
+    orderId: o.id,
+    replyTo: o.email,
+  };
 }

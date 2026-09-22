@@ -19,6 +19,7 @@ import {
   UserPlus,
   Search,
   BarChart3,
+  PackageCheck,
   PackageSearch,
   UserSearch,
   Activity,
@@ -60,6 +61,7 @@ export const NAV: NavGroup[] = [
     items: [
       { href: "/", label: "Dashboard", Icon: LayoutDashboard },
       { href: "/orders", label: "Orders", Icon: ShoppingCart },
+      { href: "/returns", label: "Returns", Icon: PackageCheck },
       { href: "/customers", label: "Customers", Icon: Users },
       { href: "/inbox", label: "Inbox", Icon: Inbox },
       { href: "/products", label: "Products", Icon: Package },

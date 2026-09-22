@@ -25,7 +25,7 @@ export default async function EditPage({ params }: PageProps<"/pages/[slug]">) {
     if (err instanceof ApiError && err.status === 404) notFound();
     throw err;
   }
-  const { store, shipping } = await apiGet<SiteSettings>("/admin/settings");
+  const { store, shipping, returns } = await apiGet<SiteSettings>("/admin/settings");
 
   // What each token becomes on the storefront right now.
   const tokenValues: Record<string, string> = {
@@ -39,6 +39,7 @@ export default async function EditPage({ params }: PageProps<"/pages/[slug]">) {
       legal_entity: store.legalEntity,
       city: store.city,
     }),
+    return_window_days: String(returns.windowDays),
   };
 
   return (
