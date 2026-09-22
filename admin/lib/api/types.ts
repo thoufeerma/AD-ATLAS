@@ -132,6 +132,8 @@ export type OrderDetail = {
   invoicedAt: string | null;
   /** Whether invoices can be issued at all (a GSTIN is saved under Settings → Tax). */
   invoicing: { configured: boolean };
+  /** GST credit notes against the invoice, oldest first. */
+  creditNotes: CreditNoteSummary[];
   items: {
     id: string;
     productName: string;
@@ -358,6 +360,23 @@ export type SiteSettings = {
   shipping: { name: string; pricePaise: number; freeAbovePaise: number | null } | null;
 };
 
+export type CreditNoteReason = "RETURN" | "CANCELLATION" | "REFUND";
+
+export const CREDIT_REASON_LABEL: Record<CreditNoteReason, string> = {
+  RETURN: "Return",
+  CANCELLATION: "Cancelled",
+  REFUND: "Refunded",
+};
+
+export type CreditNoteSummary = {
+  id: string;
+  number: string;
+  reason: CreditNoteReason;
+  totalPaise: number;
+  issuedAt: string;
+  returnRequest: { number: string } | null;
+};
+
 /** GST registration, for invoices. Invoicing is on once a GSTIN is saved. */
 export type TaxDetails = {
   gstin: string | null;
@@ -368,14 +387,19 @@ export type TaxDetails = {
   state: { code: string; name: string } | null;
 };
 
-type GstSums = { taxablePaise: number; cgstPaise: number; sgstPaise: number; igstPaise: number };
+type GstSums = { taxablePaise: number; cgstPaise: number; sgstPaise: number; igstPaise: number; totalPaise: number };
 
 export type GstReport = {
   month: string;
   /** Months with anything to show, newest first. */
   months: string[];
   seller: { gstin: string; legalName: string; state: { code: string; name: string } | null } | null;
-  totals: GstSums & { invoices: number; cancelled: number; totalPaise: number };
+  totals: {
+    invoices: GstSums & { count: number };
+    creditNotes: GstSums & { count: number };
+    /** Invoices less credit notes. */
+    net: GstSums;
+  };
   invoices: (GstSums & {
     number: string;
     issuedAt: string;
@@ -384,10 +408,22 @@ export type GstReport = {
     state: string;
     stateCode: string | null;
     status: OrderStatus;
-    totalPaise: number;
   })[];
+  creditNotes: (GstSums & {
+    id: string;
+    number: string;
+    issuedAt: string;
+    reason: CreditNoteReason;
+    returnNumber: string | null;
+    invoiceNumber: string;
+    orderNumber: string;
+    customer: string;
+    state: string;
+    stateCode: string | null;
+  })[];
+  /** Net of credit notes. */
   byState: (GstSums & { state: string; stateCode: string | null; rateBps: number })[];
-  byHsn: (GstSums & { hsnCode: string; rateBps: number; quantity: number; totalPaise: number })[];
+  byHsn: (GstSums & { hsnCode: string; rateBps: number; quantity: number })[];
 };
 
 export type PageSection = { heading: string; body: string[] };
@@ -615,8 +651,10 @@ export type ReturnRequest = {
   /** What the team replied; it goes into the customer's email. */
   staffNote: string | null;
   refundPaise: number | null;
-  /** What the listed items came to — what a full refund would be. */
+  /** What the customer paid for the listed items (after any coupon) — what a full refund would be. */
   suggestedRefundPaise: number;
+  /** Issued with the refund when the order had a GST invoice. */
+  creditNote: { id: string; number: string; totalPaise: number; issuedAt: string } | null;
   requestedAt: string;
   resolvedAt: string | null;
   order: {

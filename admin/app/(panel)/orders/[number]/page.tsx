@@ -210,6 +210,7 @@ export default async function OrderDetailPage({ params }: PageProps<"/orders/[nu
               invoiceNumber={order.invoiceNumber}
               invoicedAt={order.invoicedAt}
               configured={order.invoicing.configured}
+              creditNotes={order.creditNotes}
             />
           </Card>
 

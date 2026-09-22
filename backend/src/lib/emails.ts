@@ -379,6 +379,8 @@ type ReturnMail = {
   note: string | null;
   staffNote: string | null;
   refundPaise: number | null;
+  /** The GST credit note issued with the refund, if the order had an invoice. */
+  creditNote?: string | null;
   items: { productName: string; shadeName: string | null; quantity: number }[];
 };
 
@@ -414,7 +416,9 @@ const RETURN_MAIL: Partial<Record<ReturnStatus, { subject: string; title: string
     subject: "has been refunded",
     title: "Your refund is on its way",
     line: (r, o) =>
-      `We've refunded ${r.refundPaise != null ? `<strong>${formatInr(r.refundPaise)}</strong>` : "your return"} for order <strong>#${esc(o.number)}</strong>. Bank transfers usually take 3–5 working days to appear.`,
+      `We've refunded ${r.refundPaise != null ? `<strong>${formatInr(r.refundPaise)}</strong>` : "your return"} for order <strong>#${esc(o.number)}</strong>. Bank transfers usually take 3–5 working days to appear.${
+        r.creditNote ? ` Credit note <strong>${esc(r.creditNote)}</strong>, which reduces your invoice, is with your order.` : ""
+      }`,
   },
 };
 

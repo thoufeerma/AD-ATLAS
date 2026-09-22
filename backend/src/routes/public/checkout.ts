@@ -277,6 +277,7 @@ checkoutRouter.get("/orders/track", async (req, res) => {
     include: {
       items: { include: { product: { select: { slug: true } } } },
       events: { orderBy: { createdAt: "asc" } },
+      creditNotes: { orderBy: { issuedAt: "asc" }, select: { id: true, number: true, issuedAt: true, totalPaise: true } },
     },
   });
   // Same response for "no such order" and "wrong email", so the endpoint
@@ -312,7 +313,7 @@ checkoutRouter.get("/orders/track", async (req, res) => {
         lineTotalPaise: i.lineTotalPaise,
       })),
       events: order.events.map((e) => ({ status: e.status, note: e.note, at: e.createdAt })),
-      // A signed link to the GST invoice, once the order has one.
+      // Signed links to the GST invoice and any credit notes, once it has one.
       invoice: await invoiceLink(order),
     },
   });

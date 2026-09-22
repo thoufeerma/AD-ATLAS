@@ -112,6 +112,16 @@ function ReturnCard({ request: r }: { request: ReturnRequest }) {
           <span className="block text-[0.66rem] font-normal text-muted">
             {r.refundPaise != null ? "refunded" : "if refunded in full"}
           </span>
+          {r.creditNote && (
+            <a
+              href={`/api/v1/admin/orders/${encodeURIComponent(r.order.number)}/credit-notes/${r.creditNote.id}`}
+              target="_blank"
+              rel="noopener"
+              className="mt-0.5 block text-[0.66rem] font-normal text-series-1 hover:underline"
+            >
+              Credit note {r.creditNote.number}
+            </a>
+          )}
         </p>
       </div>
 

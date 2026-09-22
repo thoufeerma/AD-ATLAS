@@ -8,7 +8,8 @@ import { logActivity } from "../../lib/activity.js";
 import { afterResponse } from "../../lib/mail.js";
 import { customerHearsAbout, mailContext, orderStatusUpdate } from "../../lib/emails.js";
 import { invoiceOnShipping, invoiceView, issueInvoice, taxSettings } from "../../lib/invoices.js";
-import { renderInvoice, sendInvoiceHtml, invoiceProblemPage } from "../../lib/invoiceHtml.js";
+import { creditNoteView, issueCreditNote } from "../../lib/creditNotes.js";
+import { renderCreditNote, renderInvoice, sendInvoiceHtml, invoiceProblemPage } from "../../lib/invoiceHtml.js";
 
 export const adminOrdersRouter = Router();
 
@@ -98,6 +99,10 @@ adminOrdersRouter.get("/:number", allow(...ROLES.ordersRead), async (req, res) =
       items: true,
       events: { orderBy: { createdAt: "asc" } },
       customer: { select: { id: true, name: true, email: true, phone: true } },
+      creditNotes: {
+        orderBy: { issuedAt: "asc" },
+        select: { id: true, number: true, reason: true, totalPaise: true, issuedAt: true, returnRequest: { select: { number: true } } },
+      },
     },
   });
   if (!order) throw notFound("Order");
@@ -115,6 +120,20 @@ adminOrdersRouter.get("/:number/invoice", allow(...ROLES.ordersRead), async (req
     return;
   }
   sendInvoiceHtml(res, 200, renderInvoice(view));
+});
+
+/** A printable credit note of this order. */
+adminOrdersRouter.get("/:number/credit-notes/:id", allow(...ROLES.ordersRead), async (req, res) => {
+  const note = await prisma.creditNote.findUnique({
+    where: { id: param(req, "id") },
+    include: { order: { include: { items: true } }, returnRequest: { select: { number: true } } },
+  });
+  const view = note && note.order.number === param(req, "number") ? creditNoteView(note.order, note) : null;
+  if (!view) {
+    sendInvoiceHtml(res, 404, invoiceProblemPage("Credit note not found", "It may belong to another order."));
+    return;
+  }
+  sendInvoiceHtml(res, 200, renderCreditNote(view));
 });
 
 /**
@@ -152,7 +171,7 @@ adminOrdersRouter.patch("/:number/status", allow(...ROLES.ordersWrite), async (r
   const updated = await prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
       where: { number: param(req, "number") },
-      include: { items: true },
+      include: { items: true, creditNotes: { select: { lines: true } } },
     });
     if (!order) throw notFound("Order");
 
@@ -178,6 +197,12 @@ adminOrdersRouter.patch("/:number/status", allow(...ROLES.ordersWrite), async (r
     // Goods leave with their tax invoice: shipping issues it if it wasn't
     // created earlier (once a GSTIN is saved under Settings → Tax).
     if (await invoiceOnShipping(tx, order, body.status)) await issueInvoice(tx, order);
+
+    // Calling off or refunding an invoiced order takes back whatever of the
+    // invoice returns haven't already credited.
+    if (body.status === "CANCELLED" || body.status === "REFUNDED") {
+      await issueCreditNote(tx, order, body.status === "CANCELLED" ? "CANCELLATION" : "REFUND");
+    }
 
     return tx.order.update({
       where: { id: order.id },

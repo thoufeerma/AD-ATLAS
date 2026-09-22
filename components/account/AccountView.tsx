@@ -225,6 +225,18 @@ function Orders({ verified, products }: { verified: boolean; products: Product[]
                       <FileText className="size-3.5" /> Invoice
                     </a>
                   )}
+                  {o.invoice?.creditNotes.map((n, i) => (
+                    <a
+                      key={n.number}
+                      href={n.url}
+                      target="_blank"
+                      rel="noopener"
+                      title={n.number}
+                      className="inline-flex items-center gap-1 text-plum-600 hover:text-gold-600"
+                    >
+                      <FileText className="size-3.5" /> Credit note{o.invoice!.creditNotes.length > 1 ? ` ${i + 1}` : ""}
+                    </a>
+                  ))}
                   <Link href={`/track-order?order=${o.number}`} className="text-gold-700 hover:text-gold-600">
                     Track order →
                   </Link>

@@ -21,6 +21,21 @@ export async function taxSettings(db: Db = prisma) {
   return readTax(row?.value);
 }
 
+/**
+ * The next number in a series for the current financial year, e.g. 7 for the
+ * seventh invoice of 2026-27. Runs inside the caller's transaction: if that
+ * rolls back, so does the count, so no number is ever skipped or reused.
+ */
+export async function nextNumber(tx: Prisma.TransactionClient, series: "INV" | "CN", at: Date) {
+  const fy = financialYear(at);
+  const { lastNumber } = await tx.documentSequence.upsert({
+    where: { series: `${series}-${fy}` },
+    create: { series: `${series}-${fy}`, lastNumber: 1 },
+    update: { lastNumber: { increment: 1 } },
+  });
+  return { fy, serial: String(lastNumber).padStart(5, "0") };
+}
+
 /** Placed and not called off. Unpaid online orders and cancelled ones don't get one. */
 export const invoiceable = (status: OrderStatus) => status !== "PENDING" && status !== "CANCELLED";
 
@@ -68,13 +83,8 @@ export async function issueInvoice(tx: Prisma.TransactionClient, order: Order) {
   };
 
   const now = new Date();
-  const fy = financialYear(now);
-  const { lastNumber } = await tx.invoiceSequence.upsert({
-    where: { financialYear: fy },
-    create: { financialYear: fy, lastNumber: 1 },
-    update: { lastNumber: { increment: 1 } },
-  });
-  const invoiceNumber = `${tax.invoicePrefix}/${fy}/${String(lastNumber).padStart(5, "0")}`;
+  const { fy, serial } = await nextNumber(tx, "INV", now);
+  const invoiceNumber = `${tax.invoicePrefix}/${fy}/${serial}`;
 
   const { count } = await tx.order.updateMany({
     where: { id: order.id, invoiceNumber: null },
@@ -121,14 +131,18 @@ export function invoiceView(order: Order & { items: OrderItem[] }) {
 /* ── Links for customers ──
  * Guests prove an order is theirs with its number and email, which can't go
  * in a link that ends up in browser history. So the pages that have already
- * checked (Track Order, the account) hand out a signed link to that one
- * invoice, good for a day.
+ * checked (Track Order, the account) hand out signed links to that order's
+ * invoice and credit notes, good for a day.
  */
 
 const secret = new TextEncoder().encode(env.JWT_SECRET);
 const LINK_HOURS = 24;
 
-export async function invoiceLink(order: Pick<Order, "id" | "number" | "invoiceNumber" | "invoicedAt">) {
+type LinkedOrder = Pick<Order, "id" | "number" | "invoiceNumber" | "invoicedAt"> & {
+  creditNotes?: { id: string; number: string; issuedAt: Date; totalPaise: number }[];
+};
+
+export async function invoiceLink(order: LinkedOrder) {
   if (!order.invoiceNumber || !order.invoicedAt) return null;
   const token = await new SignJWT({})
     .setProtectedHeader({ alg: "HS256" })
@@ -137,10 +151,18 @@ export async function invoiceLink(order: Pick<Order, "id" | "number" | "invoiceN
     .setIssuedAt()
     .setExpirationTime(`${LINK_HOURS}h`)
     .sign(secret);
+  const base = `/api/v1/orders/${encodeURIComponent(order.number)}`;
   return {
     number: order.invoiceNumber,
     issuedAt: order.invoicedAt,
-    url: `/api/v1/orders/${encodeURIComponent(order.number)}/invoice?t=${token}`,
+    url: `${base}/invoice?t=${token}`,
+    // The same signed link opens any document of this order.
+    creditNotes: (order.creditNotes ?? []).map((n) => ({
+      number: n.number,
+      issuedAt: n.issuedAt,
+      totalPaise: n.totalPaise,
+      url: `${base}/credit-notes/${n.id}?t=${token}`,
+    })),
   };
 }
 

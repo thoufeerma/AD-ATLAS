@@ -203,8 +203,16 @@ export type PlacedOrder = {
   }[];
 };
 
-/** A signed link to an order's GST invoice, good for a day; null until it has one. */
-export type InvoiceLink = { number: string; issuedAt: string; url: string } | null;
+/**
+ * Signed links to an order's GST invoice and any credit notes against it,
+ * good for a day; null until the order has an invoice.
+ */
+export type InvoiceLink = {
+  number: string;
+  issuedAt: string;
+  url: string;
+  creditNotes: { number: string; issuedAt: string; totalPaise: number; url: string }[];
+} | null;
 
 export type TrackedOrder = Omit<PlacedOrder, "taxPaise" | "items"> & {
   shipping: { name: string; city: string; state: string; pincode: string };

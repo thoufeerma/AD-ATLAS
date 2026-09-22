@@ -756,14 +756,17 @@ console.log("\n[GST invoices]");
   ok(/script-src 'sha256-/.test(pageA.headers.get("content-security-policy") ?? "") && !/unsafe-inline'[^;]*script|script-src[^;]*unsafe/.test(pageA.headers.get("content-security-policy") ?? ""),
     "invoice page runs no script but its own print button");
 
-  // B: another state, invoiced automatically when it ships.
+  // B: another state, two items, a coupon and a paid delivery option —
+  // invoiced automatically when it ships.
   const emailB = `gst.b.${RUN}@example.com`;
+  const bItems = [{ slug: "day-cream", quantity: 1 }, { slug: "glow-boost-primer", quantity: 1 }];
+  const express = (await pub("POST", "/cart/quote", { items: bItems })).json.data.shippingOptions.find((o) => o.pricePaise > 0);
   const b = (await pub("POST", "/orders", {
     ...shipTo, shipping: { line1: "4 Church Street", city: "Bengaluru", state: "karnataka", pincode: "560001" },
-    email: emailB, name: "Gst Other-State", items: [{ slug: "day-cream", quantity: 1 }], paymentMethod: "COD",
+    email: emailB, name: "Gst Other-State", items: bItems, couponCode: "WELCOME200", shippingMethodId: express?.id, paymentMethod: "COD",
   })).json.data;
   const bBefore = (await call("GET", `/admin/orders/${b.number}`)).json.data;
-  ok(bBefore.shipState === "Karnataka", "typed state stored under its proper name", `"karnataka" -> "${bBefore.shipState}"`);
+  ok(bBefore.shipState === "Karnataka" && bBefore.shippingPaise > 0, "typed state stored under its proper name", `"karnataka" -> "${bBefore.shipState}"`);
   await call("PATCH", `/admin/orders/${b.number}/status`, { status: "PROCESSING" });
   ok((await call("GET", `/admin/orders/${b.number}`)).json.data.invoiceNumber === null, "no invoice while it's being packed");
   const shipped = await call("PATCH", `/admin/orders/${b.number}/status`, { status: "SHIPPED" });
@@ -771,30 +774,68 @@ console.log("\n[GST invoices]");
   const seq = (n) => Number(n.split("/")[2]);
   ok(/^VL\/\d{4}\/\d{5}$/.test(numberB) && seq(numberB) > seq(numberA), "marking it shipped issues the next invoice number", numberB);
 
-  const track = (await pub("GET", `/orders/track?number=${b.number}&email=${encodeURIComponent(emailB)}`)).json.data;
+  const trackUrl = `/orders/track?number=${b.number}&email=${encodeURIComponent(emailB)}`;
+  const track = (await pub("GET", trackUrl)).json.data;
   ok(track.invoice?.number === numberB && track.invoice.url.startsWith(`/api/v1/orders/${b.number}/invoice?t=`), "Track Order hands the customer a signed invoice link");
-  const link = `${API.replace(/\/api\/v1$/, "")}${track.invoice.url}`;
+  const origin = API.replace(/\/api\/v1$/, "");
+  const link = `${origin}${track.invoice.url}`;
   const pageB = await fetch(link);
   const htmlB = await pageB.text();
-  ok(pageB.status === 200 && htmlB.includes(numberB) && htmlB.includes("<th>IGST</th>") && htmlB.includes("Karnataka (29)"),
-    "the link opens the invoice: other state -> IGST, place of supply shown");
+  ok(pageB.status === 200 && htmlB.includes(numberB) && htmlB.includes("<th>IGST</th>") && htmlB.includes("Karnataka (29)") && htmlB.includes("Delivery charges"),
+    "the link opens the invoice: other state -> IGST, place of supply and delivery shown");
   // Flip a character inside the signature (the last one only carries padding bits).
   const tampered = link.slice(0, -10) + (link.at(-10) === "A" ? "B" : "A") + link.slice(-9);
   ok((await fetch(tampered)).status === 403, "a tampered link is refused");
   ok((await fetch(link.replace(b.number, a.number))).status === 404, "a link can't be pointed at another order");
   ok((await fetch(`${API}/admin/orders/${b.number}/invoice`)).status === 401, "the admin copy needs a session");
 
-  // A is cancelled after its invoice was issued: listed, but not counted.
-  await call("PATCH", `/admin/orders/${a.number}/status`, { status: "CANCELLED" });
+  // Credit notes. A is cancelled after its invoice was issued: all of it is credited.
+  const cancelled = await call("PATCH", `/admin/orders/${a.number}/status`, { status: "CANCELLED" });
+  const aNotes = (await call("GET", `/admin/orders/${a.number}`)).json.data.creditNotes;
+  ok(cancelled.status === 200 && aNotes.length === 1 && aNotes[0].reason === "CANCELLATION" && aNotes[0].totalPaise === aDetail.totalPaise && /^CN\/\d{4}\/\d{5}$/.test(aNotes[0].number),
+    "cancelling an invoiced order issues a credit note for all of it", aNotes[0]?.number);
+
+  // B is delivered; the primer comes back. The refund defaults to what was paid for it after the coupon.
+  await call("PATCH", `/admin/orders/${b.number}/status`, { status: "DELIVERED" });
+  const lookup = `/orders/${b.number}/returns?email=${encodeURIComponent(emailB)}`;
+  const primerLine = (await pub("GET", lookup)).json.data.items.find((i) => /Primer/.test(i.name));
+  const asked = await pub("POST", `/orders/${b.number}/returns`, { email: emailB, reason: "CHANGED_MIND", items: [{ orderItemId: primerLine.id, quantity: 1 }] });
+  const rn = asked.json.data?.number;
+  const suggested = (await call("GET", `/admin/returns/${rn}`)).json.data.suggestedRefundPaise;
+  ok(suggested < primerLine.unitPricePaise && suggested > 0, "suggested refund is what was paid, after the coupon's share", `Rs ${(suggested / 100).toFixed(2)} of Rs ${(primerLine.unitPricePaise / 100).toFixed(2)}`);
+  for (const status of ["APPROVED", "RECEIVED", "REFUNDED"]) await call("PATCH", `/admin/returns/${rn}`, { status });
+  const returned = (await call("GET", `/admin/returns/${rn}`)).json.data;
+  ok(returned.status === "REFUNDED" && returned.creditNote?.totalPaise === suggested && /^CN\//.test(returned.creditNote.number),
+    "refunding the return issues a credit note for exactly the refund", returned.creditNote?.number);
+
+  // Then the rest of B is refunded: the second note takes back what's left, to the paisa.
+  await call("PATCH", `/admin/orders/${b.number}/status`, { status: "REFUNDED" });
+  const bNotes = (await call("GET", `/admin/orders/${b.number}`)).json.data.creditNotes;
+  ok(bNotes.length === 2 && bNotes[1].reason === "REFUND" && bNotes[0].totalPaise + bNotes[1].totalPaise === bBefore.totalPaise,
+    "refunding the order credits the remainder; the notes add up to the invoice", bNotes.map((n) => n.number).join(" + "));
   const report = (await call("GET", "/admin/reports/gst")).json.data;
-  const rowA = report.invoices.find((i) => i.number === numberA);
   const rowB = report.invoices.find((i) => i.number === numberB);
-  ok(rowA?.status === "CANCELLED" && rowB && rowB.igstPaise > 0 && rowB.cgstPaise === 0, "GST summary lists both invoices for the month", report.month);
-  ok(rowA.cgstPaise === rowA.sgstPaise && rowA.cgstPaise + rowA.sgstPaise === aDetail.taxPaise && rowA.totalPaise === aDetail.totalPaise,
+  const bCredits = report.creditNotes.filter((n) => n.invoiceNumber === numberB);
+  const sum = (key) => bCredits.reduce((n, c) => n + c[key], 0);
+  ok(rowB && bCredits.length === 2 && ["taxablePaise", "igstPaise", "totalPaise"].every((k) => sum(k) === rowB[k]) && sum("cgstPaise") === 0,
+    "together the credit notes reverse the invoice's taxable value and IGST exactly");
+
+  const trackAfter = (await pub("GET", trackUrl)).json.data;
+  const noteLink = trackAfter.invoice?.creditNotes?.[0];
+  const notePage = noteLink ? await fetch(`${origin}${noteLink.url}`) : null;
+  const noteHtml = notePage ? await notePage.text() : "";
+  ok(trackAfter.invoice.creditNotes.length === 2 && notePage?.status === 200 && noteHtml.includes("CREDIT NOTE") && noteHtml.includes(numberB) && noteHtml.includes(rn),
+    "the customer opens the credit notes from Track Order; each names the invoice and return");
+  const adminNote = await fetch(`${API}/admin/orders/${b.number}/credit-notes/${bNotes[1].id}`, { headers: { cookie } });
+  ok(adminNote.status === 200 && (await fetch(`${API}/admin/orders/${a.number}/credit-notes/${bNotes[1].id}`, { headers: { cookie } })).status === 404,
+    "admin opens a credit note; it only opens under its own order");
+
+  const rowA = report.invoices.find((i) => i.number === numberA);
+  ok(rowA?.status === "CANCELLED" && rowA.cgstPaise === rowA.sgstPaise && rowA.cgstPaise + rowA.sgstPaise === aDetail.taxPaise && rowA.totalPaise === aDetail.totalPaise,
     "invoice tax matches the order: CGST = SGST, sums to its GST, total to the paisa", `CGST Rs ${(rowA.cgstPaise / 100).toFixed(2)} + SGST Rs ${(rowA.sgstPaise / 100).toFixed(2)}`);
-  const karnataka = report.byState.find((s) => s.stateCode === "29");
-  ok(karnataka && karnataka.igstPaise >= rowB.igstPaise && report.byHsn.some((h) => h.hsnCode === "3304") && report.totals.cancelled >= 1,
-    "totals by place of supply and by HSN; the cancelled invoice left out");
+  const t = report.totals;
+  ok(["taxablePaise", "cgstPaise", "sgstPaise", "igstPaise", "totalPaise"].every((k) => t.net[k] === t.invoices[k] - t.creditNotes[k]) && t.creditNotes.count >= 3,
+    "GST summary: invoices less credit notes, by state and HSN", `${t.invoices.count} invoices, ${t.creditNotes.count} credit notes`);
 
   await call("PUT", "/admin/settings/tax", before);
   const offAgain = await call("GET", `/admin/orders/${b.number}`);

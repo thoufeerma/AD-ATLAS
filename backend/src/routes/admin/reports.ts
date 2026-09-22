@@ -6,6 +6,7 @@ import { parse } from "../../lib/http.js";
 import { delta, monthsAgo, REVENUE } from "../../lib/revenue.js";
 import { istMonth, istMonthOf, stateForGstin } from "../../lib/gst.js";
 import { invoiceView, taxSettings } from "../../lib/invoices.js";
+import { creditNoteView } from "../../lib/creditNotes.js";
 
 /**
  * Sales, product and customer reports, all read from the orders the store has
@@ -221,20 +222,28 @@ const GstQuery = z.object({
     .optional(),
 });
 
-type Sums = { taxablePaise: number; cgstPaise: number; sgstPaise: number; igstPaise: number };
-const zero = (): Sums => ({ taxablePaise: 0, cgstPaise: 0, sgstPaise: 0, igstPaise: 0 });
-const add = (into: Sums, from: Sums) => {
-  into.taxablePaise += from.taxablePaise;
-  into.cgstPaise += from.cgstPaise;
-  into.sgstPaise += from.sgstPaise;
-  into.igstPaise += from.igstPaise;
+type Sums = { taxablePaise: number; cgstPaise: number; sgstPaise: number; igstPaise: number; totalPaise: number };
+const zero = (): Sums => ({ taxablePaise: 0, cgstPaise: 0, sgstPaise: 0, igstPaise: 0, totalPaise: 0 });
+/** Adds (sign 1) or takes away (sign -1) one document's or line's amounts. */
+const add = (into: Sums, from: Sums, sign = 1) => {
+  into.taxablePaise += sign * from.taxablePaise;
+  into.cgstPaise += sign * from.cgstPaise;
+  into.sgstPaise += sign * from.sgstPaise;
+  into.igstPaise += sign * from.igstPaise;
+  into.totalPaise += sign * from.totalPaise;
 };
+const amounts = (s: Sums): Sums => ({
+  taxablePaise: s.taxablePaise,
+  cgstPaise: s.cgstPaise,
+  sgstPaise: s.sgstPaise,
+  igstPaise: s.igstPaise,
+  totalPaise: s.totalPaise,
+});
 
 /**
- * The month's invoices the way GST returns ask for them: every invoice
- * (the sales register), totals by place of supply and rate, and by HSN code.
- * Months run in IST, by invoice date. Invoices whose order was later
- * cancelled are listed but left out of the totals.
+ * The month's invoices and credit notes the way GST returns ask for them:
+ * both registers, and totals by place of supply and rate, and by HSN code,
+ * with credit notes taken off. Months run in IST, by document date.
  */
 adminReportsRouter.get("/gst", allow(...ROLES.ordersRead), async (req, res) => {
   const q = parse(GstQuery, req.query);
@@ -242,11 +251,16 @@ adminReportsRouter.get("/gst", allow(...ROLES.ordersRead), async (req, res) => {
   const month = q.month ?? thisMonth;
   const { from, to } = istMonth(month);
 
-  const [orders, tax, first] = await Promise.all([
+  const [orders, notes, tax, first] = await Promise.all([
     prisma.order.findMany({
       where: { invoicedAt: { gte: from, lt: to } },
       include: { items: true },
       orderBy: { invoicedAt: "asc" },
+    }),
+    prisma.creditNote.findMany({
+      where: { issuedAt: { gte: from, lt: to } },
+      include: { order: { include: { items: true } }, returnRequest: { select: { number: true } } },
+      orderBy: { issuedAt: "asc" },
     }),
     taxSettings(),
     prisma.order.findFirst({
@@ -266,67 +280,92 @@ adminReportsRouter.get("/gst", allow(...ROLES.ordersRead), async (req, res) => {
     [y, m] = m === 1 ? [y - 1, 12] : [y, m - 1];
   }
 
-  const invoices = [];
   const byState = new Map<string, Sums & { state: string; stateCode: string | null; rateBps: number }>();
-  const byHsn = new Map<string, Sums & { hsnCode: string; rateBps: number; quantity: number; totalPaise: number }>();
-  const totals = { ...zero(), invoices: 0, cancelled: 0, totalPaise: 0 };
+  const byHsn = new Map<string, Sums & { hsnCode: string; rateBps: number; quantity: number }>();
+  const tally = (
+    state: { name: string; code: string | null },
+    line: Sums & { hsnCode: string; rateBps: number; quantity: number | null },
+    sign: 1 | -1,
+  ) => {
+    const sKey = `${state.code ?? state.name}|${line.rateBps}`;
+    const s = byState.get(sKey) ?? { ...zero(), state: state.name, stateCode: state.code, rateBps: line.rateBps };
+    add(s, line, sign);
+    byState.set(sKey, s);
 
+    const hKey = `${line.hsnCode}|${line.rateBps}`;
+    const h = byHsn.get(hKey) ?? { ...zero(), hsnCode: line.hsnCode, rateBps: line.rateBps, quantity: 0 };
+    add(h, line, sign);
+    h.quantity += sign * (line.quantity ?? 0);
+    byHsn.set(hKey, h);
+  };
+
+  const invoiced = { ...zero(), count: 0 };
+  const invoices = [];
   for (const order of orders) {
     const v = invoiceView(order);
     if (!v) continue;
-    const cancelled = order.status === "CANCELLED";
+    const state = { name: v.placeOfSupply?.name ?? order.shipState, code: v.placeOfSupply?.code ?? null };
     invoices.push({
       number: v.number,
       issuedAt: v.issuedAt,
       orderNumber: order.number,
       customer: order.shipName,
-      state: v.placeOfSupply?.name ?? order.shipState,
-      stateCode: v.placeOfSupply?.code ?? null,
+      state: state.name,
+      stateCode: state.code,
       status: order.status,
-      taxablePaise: v.totals.taxablePaise,
-      cgstPaise: v.totals.cgstPaise,
-      sgstPaise: v.totals.sgstPaise,
-      igstPaise: v.totals.igstPaise,
-      totalPaise: v.totals.totalPaise,
+      ...amounts(v.totals),
     });
-    if (cancelled) {
-      totals.cancelled += 1;
-      continue;
-    }
-    totals.invoices += 1;
-    totals.totalPaise += v.totals.totalPaise;
-    add(totals, v.totals);
-
-    for (const line of v.lines) {
-      const stateCode = v.placeOfSupply?.code ?? null;
-      const sKey = `${stateCode ?? order.shipState}|${line.rateBps}`;
-      const s = byState.get(sKey) ?? {
-        ...zero(),
-        state: v.placeOfSupply?.name ?? order.shipState,
-        stateCode,
-        rateBps: line.rateBps,
-      };
-      add(s, line);
-      byState.set(sKey, s);
-
-      const hKey = `${line.hsnCode}|${line.rateBps}`;
-      const h = byHsn.get(hKey) ?? { ...zero(), hsnCode: line.hsnCode, rateBps: line.rateBps, quantity: 0, totalPaise: 0 };
-      add(h, line);
-      h.quantity += line.quantity ?? 0;
-      h.totalPaise += line.totalPaise;
-      byHsn.set(hKey, h);
-    }
+    invoiced.count += 1;
+    add(invoiced, v.totals);
+    for (const line of v.lines) tally(state, line, 1);
   }
+
+  const credited = { ...zero(), count: 0 };
+  const creditNotes = [];
+  for (const note of notes) {
+    const v = creditNoteView(note.order, note);
+    if (!v) continue;
+    const state = {
+      name: v.invoice.placeOfSupply?.name ?? note.order.shipState,
+      code: v.invoice.placeOfSupply?.code ?? null,
+    };
+    creditNotes.push({
+      id: note.id,
+      number: note.number,
+      issuedAt: note.issuedAt,
+      reason: note.reason,
+      returnNumber: v.returnNumber,
+      invoiceNumber: v.invoice.number,
+      orderNumber: note.order.number,
+      customer: note.order.shipName,
+      state: state.name,
+      stateCode: state.code,
+      ...amounts(note),
+    });
+    credited.count += 1;
+    add(credited, note);
+    for (const line of v.note.lines) tally(state, line, -1);
+  }
+
+  const net = zero();
+  add(net, invoiced);
+  add(net, credited, -1);
 
   res.json({
     data: {
       month,
       months,
       seller: tax.gstin ? { gstin: tax.gstin, legalName: tax.legalName, state: stateForGstin(tax.gstin) } : null,
-      totals,
+      totals: { invoices: invoiced, creditNotes: credited, net },
       invoices,
-      byState: [...byState.values()].sort((a, b) => a.state.localeCompare(b.state) || a.rateBps - b.rateBps),
-      byHsn: [...byHsn.values()].sort((a, b) => a.hsnCode.localeCompare(b.hsnCode) || a.rateBps - b.rateBps),
+      creditNotes,
+      // Net of credit notes, which is how they're reported for sales to consumers.
+      byState: [...byState.values()]
+        .filter((s) => s.totalPaise !== 0)
+        .sort((a, b) => a.state.localeCompare(b.state) || a.rateBps - b.rateBps),
+      byHsn: [...byHsn.values()]
+        .filter((h) => h.totalPaise !== 0 || h.quantity !== 0)
+        .sort((a, b) => a.hsnCode.localeCompare(b.hsnCode) || a.rateBps - b.rateBps),
     },
   });
 });

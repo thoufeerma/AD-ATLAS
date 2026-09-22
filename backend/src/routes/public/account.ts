@@ -277,7 +277,10 @@ accountRouter.get("/orders", async (req, res) => {
     where: { customerId: customer.id },
     orderBy: { placedAt: "desc" },
     take: 100,
-    include: { items: { include: { product: { select: { slug: true } } } } },
+    include: {
+      items: { include: { product: { select: { slug: true } } } },
+      creditNotes: { orderBy: { issuedAt: "asc" }, select: { id: true, number: true, issuedAt: true, totalPaise: true } },
+    },
   });
   res.json({
     data: await Promise.all(orders.map(async (o) => ({

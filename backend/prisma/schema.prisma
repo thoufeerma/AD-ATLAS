@@ -236,6 +236,7 @@ model Order {
   items      OrderItem[]
   events     OrderEvent[]
   returns    ReturnRequest[]
+  creditNotes CreditNote[]
 
   placedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -287,6 +288,8 @@ model ReturnRequest {
   orderId String
   order   Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
   items   ReturnItem[]
+  /// Issued when the refund is recorded, if the order had a GST invoice.
+  creditNote CreditNote?
 
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -399,14 +402,52 @@ model ShippingMethod {
   @@map("shipping_methods")
 }
 
-/// The last invoice number used in each financial year ("2627" is April 2026
-/// to March 2027). Incremented inside the transaction that issues an invoice,
+/// The last number used in each numbered series, per financial year:
+/// "INV-2627" for invoices issued April 2026 to March 2027, "CN-2627" for
+/// credit notes. Incremented inside the transaction that issues the document,
 /// so numbers never repeat or skip.
-model InvoiceSequence {
-  financialYear String @id
-  lastNumber    Int
+model DocumentSequence {
+  series     String @id
+  lastNumber Int
 
-  @@map("invoice_sequences")
+  @@map("document_sequences")
+}
+
+enum CreditNoteReason {
+  /// Items sent back and refunded.
+  RETURN
+  /// An invoiced order called off before delivery.
+  CANCELLATION
+  /// An order refunded as a whole.
+  REFUND
+}
+
+/// A GST credit note: takes back part or all of an order's invoice when money
+/// is returned. Unlike the invoice, its lines are stored as issued, because
+/// they depend on what was refunded that day.
+model CreditNote {
+  id     String           @id @default(cuid())
+  /// e.g. CN/2627/00001
+  number String           @unique
+  reason CreditNoteReason
+
+  orderId       String
+  order         Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  returnId      String?        @unique
+  returnRequest ReturnRequest? @relation(fields: [returnId], references: [id], onDelete: SetNull)
+
+  /// The credited lines (CreditLine[] in lib/creditNotes.ts), frozen.
+  lines        Json
+  taxablePaise Int
+  cgstPaise    Int
+  sgstPaise    Int
+  igstPaise    Int
+  totalPaise   Int
+  issuedAt     DateTime @default(now())
+
+  @@index([orderId])
+  @@index([issuedAt])
+  @@map("credit_notes")
 }
 
 /* ───────────────────────────── Reviews ───────────────────────────── */

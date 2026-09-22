@@ -58,7 +58,7 @@ under **Users & Roles**.
 | `db:studio` | Prisma Studio, a GUI over the database |
 | `admin:reset` | Forgotten admin password: lists the admin emails and gives one a new one-time password (`-- email` to pick one when there are several). Uses `DATABASE_URL` — see [DEPLOY.md](../DEPLOY.md) for the online database |
 | `db:up` / `db:down` | Start / stop the Docker database |
-| `smoke` | 268 end-to-end API checks — **dev databases only**, see below |
+| `smoke` | 274 end-to-end API checks — **dev databases only**, see below |
 
 ## API
 
@@ -88,7 +88,7 @@ All routes are under `/api/v1`. Every error has the same shape:
 | GET · POST · PATCH · DELETE | `/account/addresses` (`/:id`) | Saved addresses (up to 10) |
 | POST | `/contact` · `/newsletter` · `/collab-applications` | Forms |
 | GET · POST | `/orders/:number/returns` (`?email=`) | Whether a return is possible and what's left to return; ask for one. Identified like order tracking — number plus email — or by the signed-in customer's own orders |
-| GET | `/orders/:number/invoice?t=` | The GST invoice as a printable page. `t` is the signed link that `/orders/track` and `/account/orders` return (`invoice.url`), good for 24 hours |
+| GET | `/orders/:number/invoice?t=` · `/credit-notes/:id?t=` | The GST invoice and credit notes as printable pages. `t` is the signed link that `/orders/track` and `/account/orders` return (`invoice.url`, `invoice.creditNotes[].url`), good for 24 hours |
 
 Public POSTs are rate-limited per IP (in memory): orders 20, reviews 5, return
 requests 10 and each form 10 per 10 minutes. Behind a proxy, make sure it sets `X-Forwarded-For`.
@@ -117,6 +117,7 @@ requests 10 and each form 10 per 10 minutes. Behind a proxy, make sure it sets `
 | `/admin/orders` · `/:number` | GET | Order Manager, Support |
 | `/admin/orders/:number/status` | PATCH (marking it `SHIPPED` issues the invoice) | Order Manager |
 | `/admin/orders/:number/invoice` | GET (printable page) · POST (issue it now) | read: Support |
+| `/admin/orders/:number/credit-notes/:id` | GET (printable page) | Order Manager, Support |
 | `/admin/customers` · `/:id` | GET | Order Manager, Support |
 | `/admin/reviews` · `/:id` | GET · PATCH · DELETE | Support Agent |
 | `/admin/categories` · `/coupons` · `/offers` | CRUD | — |
@@ -188,12 +189,26 @@ then on:
   snapshots plus the seller details frozen when the invoice was issued
   (`orders.invoiceSeller`), so they read the same each time. Changing
   `taxLines` changes past invoices too.
-- **`/admin/reports/gst`** gives each month's invoices, totals by place of
-  supply and rate, and by HSN — the shape GST returns ask for. Invoices whose
-  order was later cancelled are listed but left out of the totals.
-- **Not covered:** credit notes for returns and refunds, B2B invoices with the
-  buyer's GSTIN, and e-invoicing (IRN/QR), which only applies above ₹5 crore
-  turnover.
+- **Credit notes are issued automatically** (`src/lib/creditNotes.ts`),
+  numbered `CN/2627/00001` in their own series:
+  - a return marked refunded → the returned items, for the amount refunded
+    (anything beyond what was paid for them goes to delivery, then the rest
+    of the order);
+  - an invoiced order cancelled, or refunded as a whole → whatever of the
+    invoice hasn't been credited yet.
+
+  Unlike invoices, their lines are stored as issued. Tax is reversed in the
+  form the invoice charged it, and crediting everything that's left reverses
+  exactly what's left, so a fully credited invoice nets to zero to the paisa.
+  A return's suggested refund is what was paid for the items after the
+  order's coupon, not their list price.
+- **`/admin/reports/gst`** gives each month's invoices and credit notes, and
+  totals by place of supply and rate, and by HSN — net of credit notes, the
+  shape GST returns ask for.
+- **Not covered:** B2B invoices with the buyer's GSTIN, and e-invoicing
+  (IRN/QR), which only applies above ₹5 crore turnover. Refunds are recorded,
+  not paid: once Razorpay is connected, online orders' refunds can be sent
+  from the Returns screen and attached to the same credit note.
 
 ## Security properties
 
@@ -258,7 +273,7 @@ npm run dev      # in one terminal
 npm run smoke    # in another
 ```
 
-Runs 53 storefront and 215 admin checks, including a concurrent-purchase race,
+Runs 53 storefront and 221 admin checks, including a concurrent-purchase race,
 the admin account lifecycle and regression tests for the partial-update bug.
 Rerunnable against a used database: every fixture it creates is suffixed per
 run. It **refuses to target anything but localhost**, because it places orders

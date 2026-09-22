@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, ExternalLink, FileText, Loader2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { api } from "@/lib/api/client";
-import type { OrderStatus } from "@/lib/api/types";
+import { CREDIT_REASON_LABEL, type CreditNoteSummary, type OrderStatus } from "@/lib/api/types";
+import { inr } from "@/lib/utils";
 
 const day = (iso: string) =>
   new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
@@ -21,12 +22,14 @@ export default function InvoiceCard({
   invoiceNumber,
   invoicedAt,
   configured,
+  creditNotes,
 }: {
   number: string;
   status: OrderStatus;
   invoiceNumber: string | null;
   invoicedAt: string | null;
   configured: boolean;
+  creditNotes: CreditNoteSummary[];
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -51,11 +54,29 @@ export default function InvoiceCard({
         >
           <ExternalLink className="size-3.5" /> Open to print or save as PDF
         </a>
-        {status === "CANCELLED" && (
-          <p className="text-[0.7rem] leading-relaxed text-muted">
-            The order was cancelled after this invoice was issued. It stays in the GST summary, marked
-            cancelled, so your accountant can cancel it or raise a credit note.
-          </p>
+        {creditNotes.length > 0 && (
+          <div className="border-t border-hairline pt-3">
+            <p className="mb-2 text-[0.68rem] font-semibold uppercase tracking-wider text-muted">Credit notes</p>
+            <ul className="space-y-2">
+              {creditNotes.map((n) => (
+                <li key={n.id} className="flex items-start justify-between gap-3 text-[0.76rem]">
+                  <a
+                    href={`/api/v1/admin/orders/${encodeURIComponent(number)}/credit-notes/${n.id}`}
+                    target="_blank"
+                    rel="noopener"
+                    className="group min-w-0"
+                  >
+                    <span className="tnum block font-medium text-ink group-hover:text-series-1">{n.number}</span>
+                    <span className="block text-[0.68rem] text-muted">
+                      {CREDIT_REASON_LABEL[n.reason]}
+                      {n.returnRequest ? ` ${n.returnRequest.number}` : ""} · {day(n.issuedAt)}
+                    </span>
+                  </a>
+                  <span className="tnum shrink-0 text-ink">−{inr(n.totalPaise / 100)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
     );

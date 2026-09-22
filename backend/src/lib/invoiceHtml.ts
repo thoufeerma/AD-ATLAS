@@ -1,14 +1,16 @@
 import { createHash } from "node:crypto";
 import type { Response } from "express";
+import type { CreditNoteReason, Order } from "../generated/prisma/client.js";
 import { env } from "../env.js";
 import { formatInr } from "./money.js";
-import { rupeesInWords } from "./gst.js";
-import type { InvoiceView } from "./invoices.js";
+import { rupeesInWords, type GstState } from "./gst.js";
+import type { InvoiceSeller, InvoiceView } from "./invoices.js";
+import type { CreditNoteView } from "./creditNotes.js";
 
 /**
- * The printable tax invoice: one self-contained HTML page, laid out for A4.
- * The shopper or the team opens it in a new tab and prints it, or saves it
- * as a PDF from the print dialog. Served with its own strict CSP — the only
+ * The printable tax invoice and credit note: self-contained HTML pages, laid
+ * out for A4. The shopper or the team opens one in a new tab and prints it, or
+ * saves it as a PDF from the print dialog. Served with its own strict CSP — the only
  * script allowed is the print button's, pinned by hash.
  */
 
@@ -87,15 +89,56 @@ tfoot td{font-weight:700;border-bottom:2px solid #2a122b}
 @media (max-width:760px){.bar{padding:12px 16px}.page{padding:16px;margin-bottom:0}.parties{grid-template-columns:1fr}.sums{flex-direction:column}.words{max-width:none}table{font-size:11px}.top img{height:34px}}
 `;
 
-export function renderInvoice(v: NonNullable<InvoiceView>) {
-  const { seller, order: o, lines, totals, interState, placeOfSupply } = v;
-  const taxCols = interState
-    ? `<th>IGST</th>`
-    : `<th>CGST</th><th>SGST</th>`;
-  const taxCells = (l: { rateBps: number; cgstPaise: number; sgstPaise: number; igstPaise: number }) =>
+type DocLine = {
+  description: string;
+  detail: string | null;
+  hsnCode: string;
+  quantity: number | null;
+  unitPricePaise?: number | null;
+  grossPaise?: number;
+  discountPaise?: number;
+  taxablePaise: number;
+  rateBps: number;
+  cgstPaise: number;
+  sgstPaise: number;
+  igstPaise: number;
+  totalPaise: number;
+};
+
+type Totals = { taxablePaise: number; cgstPaise: number; sgstPaise: number; igstPaise: number; totalPaise: number };
+
+/** What an invoice and a credit note share: the parties, the lines and the sums. */
+type Doc = {
+  title: "TAX INVOICE" | "CREDIT NOTE";
+  number: string;
+  /** Rows for the box beside the seller, e.g. invoice number and date. */
+  facts: [string, string][];
+  seller: InvoiceSeller;
+  order: Order;
+  placeOfSupply: GstState | null;
+  interState: boolean;
+  lines: DocLine[];
+  totals: Totals;
+  /** Gross and discount columns: on the invoice, not on a credit note. */
+  showGross: boolean;
+  totalLabel: string;
+  notice: string | null;
+  note: string | null;
+  footer: string;
+};
+
+function renderDoc(d: Doc) {
+  const { seller, order: o, lines, totals, interState, placeOfSupply } = d;
+  const taxHead = interState ? `<th>IGST</th>` : `<th>CGST</th><th>SGST</th>`;
+  const taxCells = (l: Pick<DocLine, "rateBps" | "cgstPaise" | "sgstPaise" | "igstPaise">) =>
     interState
       ? `<td>${money(l.igstPaise)}<br><small>${pct(l.rateBps)}</small></td>`
       : `<td>${money(l.cgstPaise)}<br><small>${pct(l.rateBps / 2)}</small></td><td>${money(l.sgstPaise)}<br><small>${pct(l.rateBps / 2)}</small></td>`;
+  const grossHead = d.showGross ? `<th>Gross</th><th>Discount</th>` : "";
+  const grossCells = (l: DocLine) =>
+    d.showGross
+      ? `<td>${money(l.grossPaise ?? l.totalPaise)}</td><td>${l.discountPaise ? `−${money(l.discountPaise)}` : "—"}</td>`
+      : "";
 
   const rows = lines
     .map(
@@ -108,8 +151,7 @@ export function renderInvoice(v: NonNullable<InvoiceView>) {
       }</td>
 <td>${esc(l.hsnCode)}</td>
 <td>${l.quantity ?? ""}</td>
-<td>${money(l.grossPaise)}</td>
-<td>${l.discountPaise ? `−${money(l.discountPaise)}` : "—"}</td>
+${grossCells(l)}
 <td>${money(l.taxablePaise)}</td>
 ${taxCells(l)}
 <td>${money(l.totalPaise)}</td>
@@ -118,28 +160,15 @@ ${taxCells(l)}
     .join("\n");
 
   const quantity = lines.reduce((n, l) => n + (l.quantity ?? 0), 0);
-  const discount = lines.reduce((n, l) => n + l.discountPaise, 0);
-  const gross = lines.reduce((n, l) => n + l.grossPaise, 0);
-
+  const discount = lines.reduce((n, l) => n + (l.discountPaise ?? 0), 0);
+  const gross = lines.reduce((n, l) => n + (l.grossPaise ?? l.totalPaise), 0);
+  const grossTotals = d.showGross ? `<td>${money(gross)}</td><td>${discount ? `−${money(discount)}` : "—"}</td>` : "";
+  const taxTotals = interState
+    ? `<td>${money(totals.igstPaise)}</td>`
+    : `<td>${money(totals.cgstPaise)}</td><td>${money(totals.sgstPaise)}</td>`;
   const sums = interState
     ? `<tr><td>IGST</td><td>${money(totals.igstPaise)}</td></tr>`
     : `<tr><td>CGST</td><td>${money(totals.cgstPaise)}</td></tr><tr><td>SGST</td><td>${money(totals.sgstPaise)}</td></tr>`;
-
-  const paid =
-    o.paymentStatus === "PAID"
-      ? "paid"
-      : o.paymentStatus === "REFUNDED"
-        ? "refunded"
-        : o.paymentMethod === "COD"
-          ? "not yet collected"
-          : "awaiting payment";
-
-  const notice =
-    o.status === "CANCELLED"
-      ? `<p class="notice">This order was cancelled after the invoice was issued.</p>`
-      : o.status === "REFUNDED"
-        ? `<p class="notice">This order was refunded.</p>`
-        : "";
 
   const shipTo = [o.shipLine1, o.shipLine2, `${o.shipCity}, ${o.shipState} – ${o.shipPincode}`, o.shipCountry]
     .filter(Boolean)
@@ -152,20 +181,20 @@ ${taxCells(l)}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Invoice ${esc(v.number)}</title>
+<title>${d.title === "CREDIT NOTE" ? "Credit note" : "Invoice"} ${esc(d.number)}</title>
 <style>${CSS}</style>
 </head>
 <body>
-<div class="bar"><p>Tax invoice ${esc(v.number)}</p><button id="print" type="button">Print or save as PDF</button></div>
+<div class="bar"><p>${d.title === "CREDIT NOTE" ? "Credit note" : "Tax invoice"} ${esc(d.number)}</p><button id="print" type="button">Print or save as PDF</button></div>
 <main class="page">
   <div class="top">
     <img src="${esc(env.STORE_URL)}/brand/logo.png" alt="${esc(seller.tradeName)}">
     <div class="title">
-      <h1>TAX INVOICE</h1>
+      <h1>${d.title}</h1>
       <p>Original for recipient</p>
     </div>
   </div>
-  ${notice}
+  ${d.notice ? `<p class="notice">${esc(d.notice)}</p>` : ""}
 
   <section class="parties">
     <div>
@@ -178,11 +207,7 @@ ${taxCells(l)}
     </div>
     <div>
       <dl>
-        <dt>Invoice no.</dt><dd class="strong">${esc(v.number)}</dd>
-        <dt>Invoice date</dt><dd>${day(v.issuedAt)}</dd>
-        <dt>Order no.</dt><dd>${esc(o.number)}</dd>
-        <dt>Order date</dt><dd>${day(o.placedAt)}</dd>
-        <dt>Payment</dt><dd>${esc(PAYMENT[o.paymentMethod ?? ""] ?? "—")} · ${paid}</dd>
+${d.facts.map(([k, v], i) => `        <dt>${esc(k)}</dt><dd${i === 0 ? ' class="strong"' : ""}>${esc(v)}</dd>`).join("\n")}
       </dl>
     </div>
     <div>
@@ -203,17 +228,13 @@ ${taxCells(l)}
   <div class="lines">
   <table>
     <thead>
-      <tr><th>#</th><th>Item</th><th>HSN</th><th>Qty</th><th>Gross</th><th>Discount</th><th>Taxable value</th>${taxCols}<th>Total</th></tr>
+      <tr><th>#</th><th>Item</th><th>HSN</th><th>Qty</th>${grossHead}<th>Taxable value</th>${taxHead}<th>Total</th></tr>
     </thead>
     <tbody>
 ${rows}
     </tbody>
     <tfoot>
-      <tr><td></td><td>Total</td><td></td><td>${quantity}</td><td>${money(gross)}</td><td>${discount ? `−${money(discount)}` : "—"}</td><td>${money(totals.taxablePaise)}</td>${
-        interState
-          ? `<td>${money(totals.igstPaise)}</td>`
-          : `<td>${money(totals.cgstPaise)}</td><td>${money(totals.sgstPaise)}</td>`
-      }<td>${money(totals.totalPaise)}</td></tr>
+      <tr><td></td><td>Total</td><td></td><td>${quantity || ""}</td>${grossTotals}<td>${money(totals.taxablePaise)}</td>${taxTotals}<td>${money(totals.totalPaise)}</td></tr>
     </tfoot>
   </table>
   </div>
@@ -222,17 +243,17 @@ ${rows}
     <div class="words">
       <h2>Amount in words</h2>
       <p>${esc(rupeesInWords(totals.totalPaise))}</p>
-      ${o.couponCode ? `<p style="margin-top:8px;color:#6b5a63">Coupon ${esc(o.couponCode)} applied; its discount is shared across the items above.</p>` : ""}
+      ${d.note ? `<p style="margin-top:8px;color:#6b5a63">${esc(d.note)}</p>` : ""}
     </div>
     <table>
       <tr><td>Taxable value</td><td>${money(totals.taxablePaise)}</td></tr>
       ${sums}
-      <tr class="total"><td>Invoice total</td><td>${money(totals.totalPaise)}</td></tr>
+      <tr class="total"><td>${esc(d.totalLabel)}</td><td>${money(totals.totalPaise)}</td></tr>
     </table>
   </div>
 
   <div class="foot">
-    <p>Prices include GST. This is a computer-generated invoice.</p>
+    <p>${esc(d.footer)}</p>
     <div class="sign">
       <p>For ${esc(seller.legalName)}</p>
       <p class="line">Authorised signatory</p>
@@ -242,6 +263,82 @@ ${rows}
 <script>${PRINT_SCRIPT}</script>
 </body>
 </html>`;
+}
+
+const paymentLine = (o: Order) => {
+  const status =
+    o.paymentStatus === "PAID"
+      ? "paid"
+      : o.paymentStatus === "REFUNDED"
+        ? "refunded"
+        : o.paymentMethod === "COD"
+          ? "not yet collected"
+          : "awaiting payment";
+  return `${PAYMENT[o.paymentMethod ?? ""] ?? "—"} · ${status}`;
+};
+
+export function renderInvoice(v: NonNullable<InvoiceView>) {
+  const o = v.order;
+  return renderDoc({
+    title: "TAX INVOICE",
+    number: v.number,
+    facts: [
+      ["Invoice no.", v.number],
+      ["Invoice date", day(v.issuedAt)],
+      ["Order no.", o.number],
+      ["Order date", day(o.placedAt)],
+      ["Payment", paymentLine(o)],
+    ],
+    seller: v.seller,
+    order: o,
+    placeOfSupply: v.placeOfSupply,
+    interState: v.interState,
+    lines: v.lines,
+    totals: v.totals,
+    showGross: true,
+    totalLabel: "Invoice total",
+    notice:
+      o.status === "CANCELLED"
+        ? "This order was cancelled after the invoice was issued; see the credit note."
+        : o.status === "REFUNDED"
+          ? "This order was refunded; see the credit note."
+          : null,
+    note: o.couponCode ? `Coupon ${o.couponCode} applied; its discount is shared across the items above.` : null,
+    footer: "Prices include GST. This is a computer-generated invoice.",
+  });
+}
+
+const CREDIT_REASON: Record<CreditNoteReason, string> = {
+  RETURN: "Goods returned",
+  CANCELLATION: "Order cancelled",
+  REFUND: "Order refunded",
+};
+
+export function renderCreditNote(v: NonNullable<CreditNoteView>) {
+  const { note, invoice } = v;
+  return renderDoc({
+    title: "CREDIT NOTE",
+    number: note.number,
+    facts: [
+      ["Credit note no.", note.number],
+      ["Date", day(note.issuedAt)],
+      ["Against invoice", invoice.number],
+      ["Invoice date", day(invoice.issuedAt)],
+      ["Order no.", invoice.order.number],
+      ["Reason", v.returnNumber ? `${CREDIT_REASON[note.reason]} (return ${v.returnNumber})` : CREDIT_REASON[note.reason]],
+    ],
+    seller: invoice.seller,
+    order: invoice.order,
+    placeOfSupply: invoice.placeOfSupply,
+    interState: invoice.interState,
+    lines: note.lines,
+    totals: note,
+    showGross: false,
+    totalLabel: "Credit note total",
+    notice: null,
+    note: `Reduces invoice ${invoice.number} by this amount, with the GST charged on it.`,
+    footer: "This is a computer-generated credit note.",
+  });
 }
 
 /** A short page for a link that no longer works, in the invoice's own style. */

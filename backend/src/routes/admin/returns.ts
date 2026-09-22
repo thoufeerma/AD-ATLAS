@@ -8,10 +8,13 @@ import { logActivity } from "../../lib/activity.js";
 import { afterResponse } from "../../lib/mail.js";
 import { customerHearsAboutReturn, mailContext, returnUpdate } from "../../lib/emails.js";
 import { OPEN_STATUSES } from "../../lib/returns.js";
+import { paidPerLine } from "../../lib/gst.js";
+import { issueCreditNote } from "../../lib/creditNotes.js";
 
 /**
  * Returns, from the team's side. Money is never moved here — Velastia refunds
- * by hand (COD orders are cash), so "Refunded" records what was paid back.
+ * by hand (COD orders are cash), so "Refunded" records what was paid back,
+ * and issues the GST credit note for it when the order was invoiced.
  */
 export const adminReturnsRouter = Router();
 
@@ -39,18 +42,29 @@ const DETAIL = {
       shipName: true,
       shipPhone: true,
       totalPaise: true,
+      discountPaise: true,
       status: true,
       paymentMethod: true,
       placedAt: true,
+      items: { select: { id: true, lineTotalPaise: true } },
     },
   },
+  creditNote: { select: { id: true, number: true, totalPaise: true, issuedAt: true } },
 } as const;
 
 type WithDetail = Prisma.ReturnRequestGetPayload<{ include: typeof DETAIL }>;
 
-/** What the customer would get back if every listed item is accepted. */
-const itemsValue = (r: WithDetail) =>
-  r.items.reduce((n, i) => n + i.orderItem.unitPricePaise * i.quantity, 0);
+/**
+ * What the customer paid for the items being returned — their share of the
+ * order's coupon discount taken off — which is what a full refund comes to.
+ */
+function itemsValue(r: WithDetail) {
+  const paid = paidPerLine(r.order);
+  return r.items.reduce(
+    (n, i) => n + Math.round(((paid.get(i.orderItem.id) ?? 0) * i.quantity) / i.orderItem.quantity),
+    0,
+  );
+}
 
 const shape = (r: WithDetail) => ({
   number: r.number,
@@ -62,7 +76,17 @@ const shape = (r: WithDetail) => ({
   suggestedRefundPaise: itemsValue(r),
   requestedAt: r.createdAt,
   resolvedAt: r.resolvedAt,
-  order: r.order,
+  order: {
+    number: r.order.number,
+    email: r.order.email,
+    shipName: r.order.shipName,
+    shipPhone: r.order.shipPhone,
+    totalPaise: r.order.totalPaise,
+    status: r.order.status,
+    paymentMethod: r.order.paymentMethod,
+    placedAt: r.order.placedAt,
+  },
+  creditNote: r.creditNote,
   items: r.items.map((i) => ({
     id: i.orderItem.id,
     name: i.orderItem.productName,
@@ -147,45 +171,53 @@ adminReturnsRouter.patch("/:number", allow(...ROLES.ordersWrite), async (req, re
   }
 
   const settled = body.status === "REFUNDED" || body.status === "REJECTED";
-  const updated = await prisma.returnRequest.update({
-    where: { number },
-    data: {
-      status: body.status,
-      staffNote: body.staffNote ?? found.staffNote,
-      // Default to what the items came to, which is what the team usually pays.
-      ...(body.status === "REFUNDED" ? { refundPaise: body.refundPaise ?? itemsValue(found) } : {}),
-      resolvedAt: settled ? new Date() : null,
-    },
-    include: DETAIL,
-  });
-
-  // When everything in the order has come back and been refunded, the order
-  // itself is refunded — so the dashboard and reports stop counting it as
-  // revenue. A partial return leaves the order as it is.
-  if (body.status === "REFUNDED") {
-    const order = await prisma.order.findUnique({
-      where: { number: found.order.number },
-      include: { items: { select: { id: true, quantity: true } }, returns: { where: { status: "REFUNDED" }, include: { items: true } } },
+  const updated = await prisma.$transaction(async (tx) => {
+    const saved = await tx.returnRequest.update({
+      where: { number },
+      data: {
+        status: body.status,
+        staffNote: body.staffNote ?? found.staffNote,
+        // Default to what the items cost the customer, which is what the team usually pays.
+        ...(body.status === "REFUNDED" ? { refundPaise: body.refundPaise ?? itemsValue(found) } : {}),
+        resolvedAt: settled ? new Date() : null,
+      },
+      include: DETAIL,
     });
-    if (order && order.status !== "REFUNDED") {
+    if (body.status !== "REFUNDED") return saved;
+
+    const order = await tx.order.findUniqueOrThrow({
+      where: { number: found.order.number },
+      include: {
+        items: true,
+        creditNotes: { select: { lines: true } },
+        returns: { where: { status: "REFUNDED" }, include: { items: true } },
+      },
+    });
+
+    // The GST credit note for the refund, if the order was invoiced.
+    await issueCreditNote(tx, order, "RETURN", {
+      id: saved.id,
+      refundPaise: saved.refundPaise ?? 0,
+      items: saved.items.map((i) => ({ orderItemId: i.orderItem.id, quantity: i.quantity })),
+    });
+
+    // When everything in the order has come back and been refunded, the order
+    // itself is refunded — so the dashboard and reports stop counting it as
+    // revenue. A partial return leaves the order as it is.
+    if (order.status !== "REFUNDED") {
       const refunded = new Map<string, number>();
       for (const r of order.returns) {
         for (const i of r.items) refunded.set(i.orderItemId, (refunded.get(i.orderItemId) ?? 0) + i.quantity);
       }
-      const whole = order.items.every((i) => (refunded.get(i.id) ?? 0) >= i.quantity);
-      if (whole) {
-        await prisma.$transaction([
-          prisma.order.update({
-            where: { id: order.id },
-            data: { status: "REFUNDED", paymentStatus: "REFUNDED" },
-          }),
-          prisma.orderEvent.create({
-            data: { orderId: order.id, status: "REFUNDED", note: `Return ${updated.number} refunded` },
-          }),
-        ]);
+      if (order.items.every((i) => (refunded.get(i.id) ?? 0) >= i.quantity)) {
+        await tx.order.update({ where: { id: order.id }, data: { status: "REFUNDED", paymentStatus: "REFUNDED" } });
+        await tx.orderEvent.create({
+          data: { orderId: order.id, status: "REFUNDED", note: `Return ${saved.number} refunded` },
+        });
       }
     }
-  }
+    return tx.returnRequest.findUniqueOrThrow({ where: { id: saved.id }, include: DETAIL });
+  });
 
   await logActivity(
     req,
@@ -209,6 +241,7 @@ adminReturnsRouter.patch("/:number", allow(...ROLES.ordersWrite), async (req, re
           note: updated.note,
           staffNote: updated.staffNote,
           refundPaise: updated.refundPaise,
+          creditNote: updated.creditNote?.number ?? null,
           items: updated.items.map((i) => ({
             productName: i.orderItem.productName,
             shadeName: i.orderItem.shadeName,

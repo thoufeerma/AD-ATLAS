@@ -135,6 +135,8 @@ export const istMonthOf = (at: Date) => new Date(at.getTime() + IST_MS).toISOStr
 /* ── Splitting tax-inclusive prices ── */
 
 export type TaxLineInput = {
+  /** The order line's id, when there is one (credit notes refer back to it). */
+  id?: string;
   productName: string;
   shadeName: string | null;
   sku: string;
@@ -146,6 +148,8 @@ export type TaxLineInput = {
 };
 
 export type TaxLine = {
+  /** The order line's id, or "delivery". */
+  key: string;
   description: string;
   detail: string | null;
   hsnCode: string;
@@ -178,7 +182,7 @@ export type TaxTotals = {
  * Shares `amount` out in proportion to `weights`, to the paisa: each gets its
  * rounded-down share, and the paise left over go to the largest remainders.
  */
-function allocate(amount: number, weights: number[]) {
+export function allocate(amount: number, weights: number[]) {
   const sum = weights.reduce((a, b) => a + b, 0);
   if (amount <= 0 || sum <= 0) return weights.map(() => 0);
   const exact = weights.map((w) => (amount * w) / sum);
@@ -196,7 +200,7 @@ function allocate(amount: number, weights: number[]) {
  * CGST and half SGST — worked out as one half and doubled, so the two are
  * always equal — and in any other state it's all IGST.
  */
-function split(grossPaise: number, rateBps: number, interState: boolean) {
+export function split(grossPaise: number, rateBps: number, interState: boolean) {
   if (interState) {
     const igst = Math.round((grossPaise * rateBps) / (10_000 + rateBps));
     return { taxablePaise: grossPaise - igst, cgstPaise: 0, sgstPaise: 0, igstPaise: igst };
@@ -215,15 +219,17 @@ export function taxLines(
   order: { items: TaxLineInput[]; discountPaise: number; shippingPaise: number; shippingMethod: string | null },
   interState: boolean,
 ): { lines: TaxLine[]; totals: TaxTotals } {
+  const items = inOrder(order.items);
   const discounts = allocate(
     order.discountPaise,
-    order.items.map((i) => i.lineTotalPaise),
+    items.map((i) => i.lineTotalPaise),
   );
 
-  const lines: TaxLine[] = order.items.map((item, n) => {
+  const lines: TaxLine[] = items.map((item, n) => {
     const discountPaise = discounts[n]!;
     const totalPaise = item.lineTotalPaise - discountPaise;
     return {
+      key: item.id ?? String(n),
       description: item.productName,
       detail: [item.shadeName && `Shade: ${item.shadeName}`, `SKU ${item.sku}`].filter(Boolean).join(" · "),
       hsnCode: item.hsnCode,
@@ -237,11 +243,12 @@ export function taxLines(
     };
   });
 
-  if (order.shippingPaise > 0 && order.items.length > 0) {
-    const principal = [...order.items].sort(
+  if (order.shippingPaise > 0 && items.length > 0) {
+    const principal = [...items].sort(
       (a, b) => b.gstRateBps - a.gstRateBps || b.lineTotalPaise - a.lineTotalPaise,
     )[0]!;
     lines.push({
+      key: "delivery",
       description: "Delivery charges",
       detail: order.shippingMethod,
       hsnCode: principal.hsnCode,
@@ -265,6 +272,24 @@ export function taxLines(
     totalPaise: sum((l) => l.totalPaise),
   };
   return { lines, totals };
+}
+
+/**
+ * Order lines in a fixed order (by id, which follows the cart), so the paisa
+ * left over when a discount is shared always lands on the same line.
+ */
+function inOrder<T extends { id?: string }>(items: T[]) {
+  return items.every((i) => i.id) ? [...items].sort((a, b) => (a.id! < b.id! ? -1 : a.id! > b.id! ? 1 : 0)) : items;
+}
+
+/**
+ * What each order line actually cost the customer once the order's discount
+ * is shared out — the fair default for a refund. Keyed by order line id.
+ */
+export function paidPerLine(order: { items: { id: string; lineTotalPaise: number }[]; discountPaise: number }) {
+  const items = inOrder(order.items);
+  const shares = allocate(order.discountPaise, items.map((i) => i.lineTotalPaise));
+  return new Map(items.map((i, n) => [i.id, i.lineTotalPaise - shares[n]!]));
 }
 
 /* ── Amount in words, Indian style (lakh, crore) ── */
