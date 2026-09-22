@@ -58,7 +58,7 @@ under **Users & Roles**.
 | `db:studio` | Prisma Studio, a GUI over the database |
 | `admin:reset` | Forgotten admin password: lists the admin emails and gives one a new one-time password (`-- email` to pick one when there are several). Uses `DATABASE_URL` — see [DEPLOY.md](../DEPLOY.md) for the online database |
 | `db:up` / `db:down` | Start / stop the Docker database |
-| `smoke` | 274 end-to-end API checks — **dev databases only**, see below |
+| `smoke` | 281 end-to-end API checks — **dev databases only**, see below |
 
 ## API
 
@@ -86,6 +86,7 @@ All routes are under `/api/v1`. Every error has the same shape:
 | POST | `/account/verify` · `/verify/resend` | Confirm the email (emailed link) |
 | GET | `/account/orders` | Order history — only once the email is verified |
 | GET · POST · PATCH · DELETE | `/account/addresses` (`/:id`) | Saved addresses (up to 10) |
+| GET · POST · DELETE | `/account/wishlist` (`/:slug`) · `/merge` | The account's wishlist (up to 100), as product slugs. `merge` folds in what the shopper's browser had saved when they sign in |
 | POST | `/contact` · `/newsletter` · `/collab-applications` | Forms |
 | GET · POST | `/orders/:number/returns` (`?email=`) | Whether a return is possible and what's left to return; ask for one. Identified like order tracking — number plus email — or by the signed-in customer's own orders |
 | GET | `/orders/:number/invoice?t=` · `/credit-notes/:id?t=` | The GST invoice and credit notes as printable pages. `t` is the signed link that `/orders/track` and `/account/orders` return (`invoice.url`, `invoice.creditNotes[].url`), good for 24 hours |
@@ -273,7 +274,7 @@ npm run dev      # in one terminal
 npm run smoke    # in another
 ```
 
-Runs 53 storefront and 221 admin checks, including a concurrent-purchase race,
+Runs 53 storefront and 228 admin checks, including a concurrent-purchase race,
 the admin account lifecycle and regression tests for the partial-update bug.
 Rerunnable against a used database: every fixture it creates is suffixed per
 run. It **refuses to target anything but localhost**, because it places orders

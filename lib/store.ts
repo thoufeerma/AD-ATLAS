@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { clearWishOnAccount, pushWish } from "./wishlist";
 
 /** The API accepts up to 20 of one item per order. */
 export const MAX_QTY = 20;
@@ -23,7 +24,10 @@ type CartState = {
   remove: (slug: string, shade?: string) => void;
   clear: () => void;
   toggleWish: (slug: string) => void;
+  /** "Clear all" on the wishlist page — the account's copy goes too. */
   clearWishlist: () => void;
+  /** Drops this browser's copy only, on sign-out. */
+  resetWishlist: () => void;
   setCoupon: (code: string) => void;
   removeCoupon: () => void;
 };
@@ -67,13 +71,20 @@ export const useStore = create<CartState>()(
       clear: () => set({ lines: [], coupon: null }),
 
       toggleWish: (slug) =>
-        set((s) => ({
-          wishlist: s.wishlist.includes(slug)
-            ? s.wishlist.filter((w) => w !== slug)
-            : [...s.wishlist, slug],
-        })),
+        set((s) => {
+          const wished = !s.wishlist.includes(slug);
+          // Signed in? The account keeps it too, so it follows them to their
+          // other devices. Nothing here waits for that to finish.
+          void pushWish(slug, wished);
+          return { wishlist: wished ? [...s.wishlist, slug] : s.wishlist.filter((w) => w !== slug) };
+        }),
 
-      clearWishlist: () => set({ wishlist: [] }),
+      clearWishlist: () => {
+        void clearWishOnAccount();
+        set({ wishlist: [] });
+      },
+
+      resetWishlist: () => set({ wishlist: [] }),
 
       setCoupon: (code) => set({ coupon: code.trim().toUpperCase() }),
 

@@ -562,6 +562,20 @@ console.log("\n[Customer accounts]");
   ok(added.status === 201 && added.json.data.filter((a) => a.isDefault).length === 1 && added.json.data[0].city === "Chennai", "new default address replaces the old default");
   ok(added.json.data[0].state === "Tamil Nadu", "state saved under its proper name", `"tamilnadu" -> "${added.json.data[0].state}"`);
 
+  // The wishlist follows the account, not the browser.
+  ok((await shop(null, "GET", "/account/wishlist")).status === 401, "a wishlist needs a sign-in");
+  const wished = await shop(cookie, "POST", "/account/wishlist", { slug: "velvet-matte-lipstick" });
+  const twice = await shop(cookie, "POST", "/account/wishlist", { slug: "velvet-matte-lipstick" });
+  ok(wished.status === 200 && wished.json.data.includes("velvet-matte-lipstick") && twice.json.data.length === 1,
+    "saving to the wishlist, and saving it twice changes nothing");
+  ok((await shop(cookie, "POST", "/account/wishlist", { slug: "no-such-product" })).status === 404, "only real products can be saved");
+  const merged = await shop(cookie, "POST", "/account/wishlist/merge", { slugs: ["day-cream", "velvet-matte-lipstick"] });
+  ok(merged.json.data.length === 2, "signing in merges what the browser had saved", merged.json.data.join(", "));
+  ok((await shop(other.cookie, "GET", "/account/wishlist")).json.data.length === 0, "another shopper's wishlist is their own");
+  const dropped = await shop(cookie, "DELETE", "/account/wishlist/day-cream");
+  ok(dropped.json.data.length === 1 && !dropped.json.data.includes("day-cream"), "removing one item");
+  ok((await shop(cookie, "DELETE", "/account/wishlist")).json.data.length === 0, "clearing the lot");
+
   // A guest's past orders: signing up with their email doesn't reveal them until verified.
   const guest = `guest.${RUN}@example.com`;
   await pub("POST", "/orders", { email: guest, name: "Guest Buyer", ...shipTo, items: [{ slug: "lip-liner", quantity: 1 }], paymentMethod: "COD" });

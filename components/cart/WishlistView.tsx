@@ -16,6 +16,7 @@ import {
 import Button from "@/components/ui/Button";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { useStore, useHydrated } from "@/lib/store";
+import { useAccount } from "@/lib/account";
 import type { Product } from "@/lib/api/types";
 import { inrPaise, productImage } from "@/lib/utils";
 
@@ -32,6 +33,7 @@ export default function WishlistView({ products }: { products: Product[] }) {
   ];
 
   const hydrated = useHydrated();
+  const status = useAccount((s) => s.status);
   const wishlist = useStore((s) => s.wishlist);
   const toggleWish = useStore((s) => s.toggleWish);
   const clearWishlist = useStore((s) => s.clearWishlist);
@@ -60,9 +62,18 @@ export default function WishlistView({ products }: { products: Product[] }) {
         </div>
       ) : (
         <>
+          {status === "guest" && (
+            <p className="mb-5 rounded-sm bg-blush-100 px-4 py-3 text-[0.75rem] text-ink-soft">
+              <Link href="/login?next=/wishlist" className="font-medium text-plum-600 hover:text-gold-600">
+                Sign in
+              </Link>{" "}
+              and we&apos;ll keep this wishlist with your account, so it&apos;s there on your other devices too.
+            </p>
+          )}
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <p className="text-sm text-plum-800">
               {items.length} {items.length === 1 ? "Item" : "Items"}
+              {status === "signed-in" && <span className="ml-2 text-[0.7rem] text-ink-soft">Saved to your account</span>}
             </p>
             <div className="flex items-center gap-4">
               <button

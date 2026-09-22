@@ -11,7 +11,8 @@ Built from 22 design reference PNGs. They live in a local `reference/` folder th
 - Tailwind CSS v4 (CSS-first `@theme` tokens in [`app/globals.css`](app/globals.css))
 - Data from the Velastia API ([`backend/`](backend/)) — products, prices, stock,
   reviews, content, settings, orders
-- `zustand` for cart + wishlist (persisted to `localStorage`)
+- `zustand` for cart + wishlist (persisted to `localStorage`; a signed-in
+  shopper's wishlist is kept against their account as well)
 - `lucide-react` for icons — note that lucide has **dropped its brand icons**, so
   Instagram / YouTube / Facebook / X / Pinterest are hand-inlined in
   [`components/ui/SocialIcons.tsx`](components/ui/SocialIcons.tsx)
@@ -97,8 +98,10 @@ in INR, stock, star rating) plus their own share preview. Every other page share
 says `noindex`, so a test copy online never appears in Google.
 
 **Customer accounts** (`/login`, `/account`): sign up, sign in ("keep me
-signed in" or just this session), forgot password, profile, saved addresses
-and order history. Checkout fills in a signed-in shopper's details and default
+signed in" or just this session), forgot password, profile, saved addresses,
+order history, and a wishlist that follows them between devices — signing in
+on a new one merges whatever that browser had saved, and signing out leaves
+the list with the account rather than the browser. Checkout fills in a signed-in shopper's details and default
 address, and can save a new address. Order history appears once the email is
 confirmed through an emailed link.
 
@@ -124,6 +127,7 @@ lib/
   api/types.ts          API response shapes (money in integer paise)
   cart.ts               cart lines vs. live catalog, server quote hook
   store.ts              cart + wishlist state (localStorage)
+  wishlist.ts           keeps a signed-in shopper's wishlist with their account
   content.ts            ingredient cards + Instagram tiles (not in the CMS yet)
   site.ts               SITE_URL and ALLOW_INDEXING (sitemap, share previews, robots)
   tokens.ts             fills {{tokens}} in CMS page text from settings
@@ -201,7 +205,6 @@ each collaborator's initials until a real photo is added in the admin.
   linked by email, so signing up alone must not reveal them), and the
   confirmation and forgot-password links are emailed. Until Resend is set up
   they sit in the admin's Email Log instead of reaching customers
-- The wishlist is kept in the browser, not synced to the account yet
 - The homepage hero slides are still in code (not banner-driven)
 - Marketing claims carried over from the designs ("Loved by Thousands",
   "Trusted by 10,000+ Beautiful Souls", "10K+ Happy Customers") are editable under

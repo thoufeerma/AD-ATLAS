@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { api, ApiError } from "./api/client";
+import { forgetWishlist, syncWishlist } from "./wishlist";
 
 /**
  * The signed-in shopper, shared by the header, checkout, Track Order and the
@@ -24,7 +25,11 @@ type AccountState = {
 
 export const useAccount = create<AccountState>(() => ({ status: "loading", me: null }));
 
-export const setSignedIn = (me: Me) => useAccount.setState({ status: "signed-in", me });
+export function setSignedIn(me: Me) {
+  useAccount.setState({ status: "signed-in", me });
+  // Their wishlist follows the account, not this browser.
+  void syncWishlist(me.id);
+}
 
 export async function refreshAccount() {
   try {
@@ -40,6 +45,7 @@ export async function signOut() {
     await api("POST", "/account/logout");
   } finally {
     useAccount.setState({ status: "guest", me: null });
+    forgetWishlist();
   }
 }
 

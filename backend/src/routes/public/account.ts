@@ -380,3 +380,85 @@ accountRouter.delete("/addresses/:id", async (req, res) => {
   res.json({ data: await listAddresses(customer.id) });
 });
 
+
+/* ── Wishlist ─────────────────────────────────────────────────────────── */
+
+/**
+ * Kept against the account so it follows the shopper between their phone and
+ * their laptop. The browser keeps its own copy as well (guests have nothing
+ * else), and the two are reconciled when they sign in — see lib/wishlist.ts
+ * on the storefront.
+ */
+const MAX_WISHLIST = 100;
+
+const WishBody = z.object({ slug: z.string().trim().min(1).max(120) });
+const MergeBody = z.object({ slugs: z.array(z.string().trim().min(1).max(120)).max(MAX_WISHLIST) });
+
+/** Newest first, skipping products that have since been deleted. */
+async function listWishlist(customerId: string) {
+  const rows = await prisma.wishlistItem.findMany({
+    where: { customerId },
+    orderBy: { createdAt: "desc" },
+    select: { product: { select: { slug: true } } },
+  });
+  return rows.map((r) => r.product.slug);
+}
+
+accountRouter.get("/wishlist", async (req, res) => {
+  const { customer } = await signedIn(req);
+  res.json({ data: await listWishlist(customer.id) });
+});
+
+/** Adds products by slug, ignoring ones already saved. Returns the whole list. */
+async function saveToWishlist(customerId: string, slugs: string[]) {
+  if (slugs.length === 0) return;
+  const [products, saved] = await Promise.all([
+    prisma.product.findMany({ where: { slug: { in: [...new Set(slugs)] } }, select: { id: true } }),
+    prisma.wishlistItem.findMany({ where: { customerId }, select: { productId: true } }),
+  ]);
+  const already = new Set(saved.map((w) => w.productId));
+  const adding = products.filter((p) => !already.has(p.id));
+  if (adding.length === 0) return;
+  const room = MAX_WISHLIST - saved.length;
+  if (room <= 0) throw conflict(`A wishlist holds up to ${MAX_WISHLIST} items — remove one first`);
+  await prisma.wishlistItem.createMany({
+    data: adding.slice(0, room).map((p) => ({ customerId, productId: p.id })),
+    skipDuplicates: true,
+  });
+}
+
+accountRouter.post("/wishlist", async (req, res) => {
+  const { customer } = await signedIn(req);
+  const { slug } = parse(WishBody, req.body);
+  const product = await prisma.product.findUnique({ where: { slug }, select: { id: true } });
+  if (!product) throw notFound("Product");
+  await saveToWishlist(customer.id, [slug]);
+  res.json({ data: await listWishlist(customer.id) });
+});
+
+/** "Clear all", from the wishlist page. */
+accountRouter.delete("/wishlist", async (req, res) => {
+  const { customer } = await signedIn(req);
+  await prisma.wishlistItem.deleteMany({ where: { customerId: customer.id } });
+  res.json({ data: [] });
+});
+
+accountRouter.delete("/wishlist/:slug", async (req, res) => {
+  const { customer } = await signedIn(req);
+  await prisma.wishlistItem.deleteMany({
+    where: { customerId: customer.id, product: { slug: param(req, "slug") } },
+  });
+  res.json({ data: await listWishlist(customer.id) });
+});
+
+/**
+ * Signing in on a new device: whatever was saved in that browser joins the
+ * account's list, and the merged list comes back. Afterwards the account is
+ * the one that counts, so removing something doesn't come back.
+ */
+accountRouter.post("/wishlist/merge", async (req, res) => {
+  const { customer } = await signedIn(req);
+  const { slugs } = parse(MergeBody, req.body);
+  await saveToWishlist(customer.id, slugs);
+  res.json({ data: await listWishlist(customer.id) });
+});
