@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { gstinProblem } from "./gst.js";
 
 /**
  * Store-wide settings editable on the admin Settings screen. Each is one row
@@ -121,6 +122,53 @@ export const DEFAULT_RETURNS: ReturnSettings = {
 export function readReturns(stored: unknown): ReturnSettings {
   const parsed = ReturnSettings.partial().safeParse(stored ?? {});
   return { ...DEFAULT_RETURNS, ...(parsed.success ? parsed.data : {}) };
+}
+
+/**
+ * GST registration, for tax invoices. Invoicing is on once a GSTIN is saved:
+ * orders then get an invoice as they ship, and the seller's state (the
+ * GSTIN's first two digits) decides between CGST + SGST and IGST.
+ */
+const Gstin = z
+  .string()
+  .transform((s) => s.toUpperCase().replace(/\s+/g, ""))
+  .superRefine((s, ctx) => {
+    const problem = s ? gstinProblem(s) : null;
+    if (problem) ctx.addIssue({ code: "custom", message: problem });
+  })
+  .transform((s) => s || null);
+
+const TaxFields = z.object({
+  gstin: Gstin.nullable(),
+  /** As on the GST registration certificate. */
+  legalName: z.string().trim().max(120),
+  /** The registered place of business, printed on every invoice. */
+  address: z.string().trim().max(300),
+  /** Invoice numbers read PREFIX/2627/00001; 16 characters at most by law. */
+  invoicePrefix: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z0-9]{1,4}$/, "1 to 4 letters or digits, e.g. VL"),
+});
+
+export const TaxSettings = TaxFields.superRefine((t, ctx) => {
+  if (!t.gstin) return;
+  if (t.legalName.length < 2) {
+    ctx.addIssue({ code: "custom", path: ["legalName"], message: "Enter the legal name on your GST registration" });
+  }
+  if (t.address.length < 10) {
+    ctx.addIssue({ code: "custom", path: ["address"], message: "Enter your registered business address" });
+  }
+});
+
+export type TaxSettings = z.infer<typeof TaxSettings>;
+
+export const DEFAULT_TAX: TaxSettings = { gstin: null, legalName: "", address: "", invoicePrefix: "VL" };
+
+export function readTax(stored: unknown): TaxSettings {
+  const parsed = TaxFields.partial().safeParse(stored ?? {});
+  return { ...DEFAULT_TAX, ...(parsed.success ? parsed.data : {}) };
 }
 
 /** Which emails the store sends, and who receives the store's own alerts. */

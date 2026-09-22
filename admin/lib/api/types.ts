@@ -127,6 +127,11 @@ export type OrderDetail = {
   shipPincode: string;
   shipCountry: string;
   placedAt: string;
+  /** GST invoice, e.g. VL/2627/00001 — null until issued. */
+  invoiceNumber: string | null;
+  invoicedAt: string | null;
+  /** Whether invoices can be issued at all (a GSTIN is saved under Settings → Tax). */
+  invoicing: { configured: boolean };
   items: {
     id: string;
     productName: string;
@@ -135,6 +140,8 @@ export type OrderDetail = {
     unitPricePaise: number;
     quantity: number;
     lineTotalPaise: number;
+    hsnCode: string;
+    gstRateBps: number;
   }[];
   events: { id: string; status: OrderStatus; note: string | null; createdAt: string }[];
   customer: { id: string; name: string; email: string; phone: string | null } | null;
@@ -159,6 +166,8 @@ export type ProductListItem = {
   sku: string;
   name: string;
   pricePaise: number;
+  hsnCode: string;
+  gstRateBps: number;
   status: ProductStatus;
   stock: number;
   lowStockThreshold: number;
@@ -177,6 +186,10 @@ export type ProductDetail = {
   size: string | null;
   pricePaise: number;
   compareAtPaise: number | null;
+  /** GST classification printed on invoices, e.g. 3304. */
+  hsnCode: string;
+  /** Basis points: 1800 = 18%. */
+  gstRateBps: number;
   status: ProductStatus;
   isBestseller: boolean;
   stock: number;
@@ -339,9 +352,42 @@ export type SiteSettings = {
   copy: SiteCopy;
   notifications: NotificationSettings;
   returns: ReturnPolicy;
+  tax: TaxDetails;
   /** Whether an email service is connected; if not, emails are only logged. */
   email: { connected: boolean; from: string };
   shipping: { name: string; pricePaise: number; freeAbovePaise: number | null } | null;
+};
+
+/** GST registration, for invoices. Invoicing is on once a GSTIN is saved. */
+export type TaxDetails = {
+  gstin: string | null;
+  legalName: string;
+  address: string;
+  invoicePrefix: string;
+  /** Read from the GSTIN's first two digits. */
+  state: { code: string; name: string } | null;
+};
+
+type GstSums = { taxablePaise: number; cgstPaise: number; sgstPaise: number; igstPaise: number };
+
+export type GstReport = {
+  month: string;
+  /** Months with anything to show, newest first. */
+  months: string[];
+  seller: { gstin: string; legalName: string; state: { code: string; name: string } | null } | null;
+  totals: GstSums & { invoices: number; cancelled: number; totalPaise: number };
+  invoices: (GstSums & {
+    number: string;
+    issuedAt: string;
+    orderNumber: string;
+    customer: string;
+    state: string;
+    stateCode: string | null;
+    status: OrderStatus;
+    totalPaise: number;
+  })[];
+  byState: (GstSums & { state: string; stateCode: string | null; rateBps: number })[];
+  byHsn: (GstSums & { hsnCode: string; rateBps: number; quantity: number; totalPaise: number })[];
 };
 
 export type PageSection = { heading: string; body: string[] };

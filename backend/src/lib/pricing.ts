@@ -1,6 +1,7 @@
 import type { Coupon, Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../db.js";
-import { applyBps, formatInr, inclusiveTax } from "./money.js";
+import { applyBps, formatInr } from "./money.js";
+import { taxLines } from "./gst.js";
 import { badRequest, conflict } from "./http.js";
 
 /**
@@ -23,6 +24,8 @@ export type QuotedLine = {
   unitPricePaise: number;
   quantity: number;
   lineTotalPaise: number;
+  hsnCode: string;
+  gstRateBps: number;
 };
 
 export type Quote = {
@@ -31,7 +34,11 @@ export type Quote = {
   subtotalPaise: number;
   discountPaise: number;
   shippingPaise: number;
-  /** GST already inside the total — prices are tax-inclusive. */
+  /**
+   * GST already inside the total — prices are tax-inclusive. Worked out at
+   * each product's own rate; the placed order recomputes it once the
+   * delivery state is known (see gstInside).
+   */
   taxPaise: number;
   totalPaise: number;
   coupon: { code: string; type: Coupon["type"] } | null;
@@ -50,8 +57,6 @@ export type ShippingOption = {
   pricePaise: number;
   freeAbovePaise: number | null;
 };
-
-const GST_BPS = 1800;
 
 type Db = Prisma.TransactionClient | typeof prisma;
 
@@ -112,6 +117,8 @@ export async function quoteCart(
       unitPricePaise: product.pricePaise,
       quantity: item.quantity,
       lineTotalPaise: product.pricePaise * item.quantity,
+      hsnCode: product.hsnCode,
+      gstRateBps: product.gstRateBps,
     });
   }
 
@@ -176,13 +183,28 @@ export async function quoteCart(
     subtotalPaise,
     discountPaise,
     shippingPaise,
-    taxPaise: inclusiveTax(afterDiscount, GST_BPS),
+    taxPaise: gstInside({ lines, discountPaise, shippingPaise, interState: true }),
     totalPaise,
     coupon,
     couponError,
     shipping: chosen && { id: chosen.id, name: chosen.name, eta: chosen.eta },
     shippingOptions,
   };
+}
+
+/**
+ * The GST contained in a quote's total, split the way its invoice will split
+ * it: IGST when delivering to another state, CGST + SGST within the seller's.
+ */
+export function gstInside(q: {
+  lines: QuotedLine[];
+  discountPaise: number;
+  shippingPaise: number;
+  interState: boolean;
+}) {
+  const items = q.lines.map((l) => ({ ...l, productName: l.name }));
+  return taxLines({ items, discountPaise: q.discountPaise, shippingPaise: q.shippingPaise, shippingMethod: null }, q.interState)
+    .totals.taxPaise;
 }
 
 type CouponResult =

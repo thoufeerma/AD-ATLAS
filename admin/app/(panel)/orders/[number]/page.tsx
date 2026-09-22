@@ -6,6 +6,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Card from "@/components/ui/Card";
 import Badge, { toneFor } from "@/components/ui/Badge";
 import StatusControl from "@/components/orders/StatusControl";
+import InvoiceCard from "@/components/orders/InvoiceCard";
 import { ApiError, apiGet } from "@/lib/api/server";
 import {
   EMAIL_KIND_LABEL,
@@ -200,6 +201,16 @@ export default async function OrderDetailPage({ params }: PageProps<"/orders/[nu
             <div className="mt-3">
               <Badge tone={toneFor(order.paymentStatus)}>{humanize(order.paymentStatus)}</Badge>
             </div>
+          </Card>
+
+          <Card title="GST Invoice">
+            <InvoiceCard
+              number={order.number}
+              status={order.status}
+              invoiceNumber={order.invoiceNumber}
+              invoicedAt={order.invoicedAt}
+              configured={order.invoicing.configured}
+            />
           </Card>
 
           <Card title="Emails">

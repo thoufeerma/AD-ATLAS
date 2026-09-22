@@ -12,12 +12,15 @@ import {
   PageBody,
   ReturnSettings,
   StoreSettings,
+  TaxSettings,
   WelcomeOfferSettings,
   readCopy,
   readNotifications,
   readReturns,
   readStore,
+  readTax,
 } from "../../lib/settings.js";
+import { stateForGstin } from "../../lib/gst.js";
 import { emailServiceConnected } from "../../lib/mail.js";
 import { env } from "../../env.js";
 
@@ -27,7 +30,9 @@ export const adminSettingsRouter = Router();
 
 const readSettings = async () => {
   const [rows, shipping] = await Promise.all([
-    prisma.setting.findMany({ where: { key: { in: ["store", "welcomeOffer", "copy", "notifications", "returns"] } } }),
+    prisma.setting.findMany({
+      where: { key: { in: ["store", "welcomeOffer", "copy", "notifications", "returns", "tax"] } },
+    }),
     prisma.shippingMethod.findFirst({
       where: { isEnabled: true },
       orderBy: { sortOrder: "asc" },
@@ -42,12 +47,16 @@ const readSettings = async () => {
     copy: readCopy(values.copy),
     notifications: readNotifications(values.notifications),
     returns: readReturns(values.returns),
+    tax: withState(readTax(values.tax)),
     // Read-only: whether emails really go out, and from which address.
     email: { connected: emailServiceConnected(), from: env.EMAIL_FROM },
     // Read-only here; shown so page editors can see what shipping tokens become.
     shipping,
   };
 };
+
+/** Tax settings plus the state the GSTIN is registered in, for display. */
+const withState = (tax: TaxSettings) => ({ ...tax, state: tax.gstin ? stateForGstin(tax.gstin) : null });
 
 const save = (key: string, value: Prisma.InputJsonValue) =>
   prisma.setting.upsert({ where: { key }, update: { value }, create: { key, value } });
@@ -90,6 +99,18 @@ adminSettingsRouter.put("/returns", allow(...ROLES.catalog), async (req, res) =>
   const returns = parse(ReturnSettings, req.body);
   await save("returns", returns);
   await logActivity(req, `Returns ${returns.accepted ? `open for ${returns.windowDays} days` : "switched off"}`, "Setting", "returns");
+  res.json({ data: await readSettings() });
+});
+
+adminSettingsRouter.put("/tax", allow(...ROLES.catalog), async (req, res) => {
+  const tax = parse(TaxSettings, req.body);
+  await save("tax", tax);
+  await logActivity(
+    req,
+    tax.gstin ? `Set GST details (GSTIN ${tax.gstin})` : "Cleared the GSTIN — invoices are off",
+    "Setting",
+    "tax",
+  );
   res.json({ data: await readSettings() });
 });
 

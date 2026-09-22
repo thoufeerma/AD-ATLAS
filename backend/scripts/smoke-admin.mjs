@@ -556,8 +556,11 @@ console.log("\n[Customer accounts]");
   // Addresses belong to their owner only.
   const other = await shop(null, "POST", "/account/register", { name: "Other Person", email: `other.${RUN}@example.com`, password: `plum-silk-${RUN}` });
   ok((await shop(other.cookie, "PATCH", `/account/addresses/${addrs[0].id}`, { city: "Hacked" })).status === 404, "can't touch someone else's address");
-  const added = await shop(cookie, "POST", "/account/addresses", { fullName: "Asha Shopper", phone: "9876543210", line1: "5 Palm Avenue", city: "Chennai", state: "Tamil Nadu", pincode: "600001", isDefault: true });
+  const nowhere = await shop(cookie, "POST", "/account/addresses", { fullName: "Asha Shopper", phone: "9876543210", line1: "5 Palm Avenue", city: "Chennai", state: "Narnia", pincode: "600001" });
+  ok(nowhere.status === 400 && nowhere.json.error.details?.[0]?.path === "state", "an address needs a real state", nowhere.json.error.details?.[0]?.message);
+  const added = await shop(cookie, "POST", "/account/addresses", { fullName: "Asha Shopper", phone: "9876543210", line1: "5 Palm Avenue", city: "Chennai", state: "tamilnadu", pincode: "600001", isDefault: true });
   ok(added.status === 201 && added.json.data.filter((a) => a.isDefault).length === 1 && added.json.data[0].city === "Chennai", "new default address replaces the old default");
+  ok(added.json.data[0].state === "Tamil Nadu", "state saved under its proper name", `"tamilnadu" -> "${added.json.data[0].state}"`);
 
   // A guest's past orders: signing up with their email doesn't reveal them until verified.
   const guest = `guest.${RUN}@example.com`;
@@ -710,6 +713,92 @@ console.log("\n[Returns]");
   await call("PUT", "/admin/settings/returns", before);
   ok((await pub("GET", "/settings/public")).json.data.returns.accepted === before.accepted, "returns setting restored");
   await call("PATCH", `/admin/products/${serum.id}/stock`, { set: serum.stock });
+}
+
+console.log("\n[GST invoices]");
+{
+  const before = (await call("GET", "/admin/settings")).json.data.tax;
+  // A made-up but well-formed GSTIN in Maharashtra (27) — the state shipTo delivers to.
+  const details = { gstin: "27ABCDE1234F1Z0", legalName: "AD Atlas Ventures Pvt Ltd (smoke)", address: "12 MG Road\nPune 411001", invoicePrefix: "VL" };
+  const typo = await call("PUT", "/admin/settings/tax", { ...details, gstin: "27ABCDE1234F1Z1" });
+  ok(typo.status === 400 && typo.json.error.details?.[0]?.path === "gstin", "a GSTIN with a wrong check digit is refused", typo.json.error.details?.[0]?.message);
+  const bare = await call("PUT", "/admin/settings/tax", { ...details, address: "" });
+  ok(bare.status === 400 && bare.json.error.details?.[0]?.path === "address", "a GSTIN needs the registered address with it");
+  const longPrefix = await call("PUT", "/admin/settings/tax", { ...details, invoicePrefix: "VELAS" });
+  ok(longPrefix.status === 400, "invoice prefix kept short (numbers must fit 16 characters)");
+  const saved = await call("PUT", "/admin/settings/tax", details);
+  ok(saved.status === 200 && saved.json.data.tax.state?.name === "Maharashtra", "GST details saved; state read from the GSTIN", saved.json.data.tax.state?.name);
+
+  const product = (await call("GET", "/admin/products?q=day%20cream")).json.data[0];
+  const badHsn = await call("PATCH", `/admin/products/${product.id}`, { hsnCode: "33" });
+  ok(badHsn.status === 400 && product.hsnCode === "3304" && product.gstRateBps === 1800, "products carry an HSN code and GST rate; the code is checked", `${product.hsnCode} at ${product.gstRateBps / 100}%`);
+
+  // A: same state as the seller, with a ₹200 coupon shared across two lines.
+  const emailA = `gst.a.${RUN}@example.com`;
+  const a = (await pub("POST", "/orders", {
+    ...shipTo, email: emailA, name: "Gst Same-State",
+    items: [{ slug: "day-cream", quantity: 1 }, { slug: "glow-boost-primer", quantity: 2 }],
+    couponCode: "WELCOME200", paymentMethod: "COD",
+  })).json.data;
+  const aDetail = (await call("GET", `/admin/orders/${a.number}`)).json.data;
+  ok(aDetail.invoiceNumber === null && aDetail.invoicing.configured && aDetail.items.every((i) => i.hsnCode && i.gstRateBps === 1800),
+    "new order: no invoice yet, lines snapshot HSN and rate");
+  const issued = await call("POST", `/admin/orders/${a.number}/invoice`);
+  const numberA = issued.json.data?.invoiceNumber ?? "";
+  ok(issued.status === 201 && /^VL\/\d{4}\/\d{5}$/.test(numberA) && numberA.length <= 16, "invoice created by hand before shipping", numberA);
+  const again = await call("POST", `/admin/orders/${a.number}/invoice`);
+  ok(again.status === 200 && again.json.data.invoiceNumber === numberA, "creating it twice keeps the same number");
+  const pageA = await fetch(`${API}/admin/orders/${a.number}/invoice`, { headers: { cookie } });
+  const htmlA = await pageA.text();
+  ok(pageA.status === 200 && /text\/html/.test(pageA.headers.get("content-type") ?? "") && htmlA.includes(numberA) && htmlA.includes("27ABCDE1234F1Z0"),
+    "admin opens the printable invoice");
+  ok(htmlA.includes("<th>CGST</th><th>SGST</th>") && !htmlA.includes("<th>IGST</th>"), "same state -> CGST + SGST");
+  ok(/script-src 'sha256-/.test(pageA.headers.get("content-security-policy") ?? "") && !/unsafe-inline'[^;]*script|script-src[^;]*unsafe/.test(pageA.headers.get("content-security-policy") ?? ""),
+    "invoice page runs no script but its own print button");
+
+  // B: another state, invoiced automatically when it ships.
+  const emailB = `gst.b.${RUN}@example.com`;
+  const b = (await pub("POST", "/orders", {
+    ...shipTo, shipping: { line1: "4 Church Street", city: "Bengaluru", state: "karnataka", pincode: "560001" },
+    email: emailB, name: "Gst Other-State", items: [{ slug: "day-cream", quantity: 1 }], paymentMethod: "COD",
+  })).json.data;
+  const bBefore = (await call("GET", `/admin/orders/${b.number}`)).json.data;
+  ok(bBefore.shipState === "Karnataka", "typed state stored under its proper name", `"karnataka" -> "${bBefore.shipState}"`);
+  await call("PATCH", `/admin/orders/${b.number}/status`, { status: "PROCESSING" });
+  ok((await call("GET", `/admin/orders/${b.number}`)).json.data.invoiceNumber === null, "no invoice while it's being packed");
+  const shipped = await call("PATCH", `/admin/orders/${b.number}/status`, { status: "SHIPPED" });
+  const numberB = shipped.json.data?.invoiceNumber ?? "";
+  const seq = (n) => Number(n.split("/")[2]);
+  ok(/^VL\/\d{4}\/\d{5}$/.test(numberB) && seq(numberB) > seq(numberA), "marking it shipped issues the next invoice number", numberB);
+
+  const track = (await pub("GET", `/orders/track?number=${b.number}&email=${encodeURIComponent(emailB)}`)).json.data;
+  ok(track.invoice?.number === numberB && track.invoice.url.startsWith(`/api/v1/orders/${b.number}/invoice?t=`), "Track Order hands the customer a signed invoice link");
+  const link = `${API.replace(/\/api\/v1$/, "")}${track.invoice.url}`;
+  const pageB = await fetch(link);
+  const htmlB = await pageB.text();
+  ok(pageB.status === 200 && htmlB.includes(numberB) && htmlB.includes("<th>IGST</th>") && htmlB.includes("Karnataka (29)"),
+    "the link opens the invoice: other state -> IGST, place of supply shown");
+  // Flip a character inside the signature (the last one only carries padding bits).
+  const tampered = link.slice(0, -10) + (link.at(-10) === "A" ? "B" : "A") + link.slice(-9);
+  ok((await fetch(tampered)).status === 403, "a tampered link is refused");
+  ok((await fetch(link.replace(b.number, a.number))).status === 404, "a link can't be pointed at another order");
+  ok((await fetch(`${API}/admin/orders/${b.number}/invoice`)).status === 401, "the admin copy needs a session");
+
+  // A is cancelled after its invoice was issued: listed, but not counted.
+  await call("PATCH", `/admin/orders/${a.number}/status`, { status: "CANCELLED" });
+  const report = (await call("GET", "/admin/reports/gst")).json.data;
+  const rowA = report.invoices.find((i) => i.number === numberA);
+  const rowB = report.invoices.find((i) => i.number === numberB);
+  ok(rowA?.status === "CANCELLED" && rowB && rowB.igstPaise > 0 && rowB.cgstPaise === 0, "GST summary lists both invoices for the month", report.month);
+  ok(rowA.cgstPaise === rowA.sgstPaise && rowA.cgstPaise + rowA.sgstPaise === aDetail.taxPaise && rowA.totalPaise === aDetail.totalPaise,
+    "invoice tax matches the order: CGST = SGST, sums to its GST, total to the paisa", `CGST Rs ${(rowA.cgstPaise / 100).toFixed(2)} + SGST Rs ${(rowA.sgstPaise / 100).toFixed(2)}`);
+  const karnataka = report.byState.find((s) => s.stateCode === "29");
+  ok(karnataka && karnataka.igstPaise >= rowB.igstPaise && report.byHsn.some((h) => h.hsnCode === "3304") && report.totals.cancelled >= 1,
+    "totals by place of supply and by HSN; the cancelled invoice left out");
+
+  await call("PUT", "/admin/settings/tax", before);
+  const offAgain = await call("GET", `/admin/orders/${b.number}`);
+  ok(offAgain.json.data.invoiceNumber === numberB, "tax settings restored; issued invoices stay");
 }
 
 console.log("\n[Race: two shoppers, one stock pool]");

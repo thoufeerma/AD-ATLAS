@@ -4,6 +4,7 @@ import type { Customer } from "../../generated/prisma/client.js";
 import { prisma } from "../../db.js";
 import { badRequest, conflict, HttpError, notFound, param, parse, parsePatch, tooMany, unauthorized } from "../../lib/http.js";
 import { clientIp } from "../../lib/clientIp.js";
+import { invoiceLink } from "../../lib/invoices.js";
 import {
   clearLoginAttempts,
   getDummyHash,
@@ -279,7 +280,7 @@ accountRouter.get("/orders", async (req, res) => {
     include: { items: { include: { product: { select: { slug: true } } } } },
   });
   res.json({
-    data: orders.map((o) => ({
+    data: await Promise.all(orders.map(async (o) => ({
       number: o.number,
       status: o.status,
       paymentStatus: o.paymentStatus,
@@ -287,6 +288,7 @@ accountRouter.get("/orders", async (req, res) => {
       placedAt: o.placedAt,
       totalPaise: o.totalPaise,
       shippingMethod: o.shippingMethod,
+      invoice: await invoiceLink(o),
       items: o.items.map((i) => ({
         slug: i.product?.slug ?? null,
         name: i.productName,
@@ -294,7 +296,7 @@ accountRouter.get("/orders", async (req, res) => {
         quantity: i.quantity,
         lineTotalPaise: i.lineTotalPaise,
       })),
-    })),
+    }))),
   });
 });
 

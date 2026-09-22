@@ -3,7 +3,9 @@ import { randomInt } from "node:crypto";
 import { z } from "zod";
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../db.js";
-import { quoteCart } from "../../lib/pricing.js";
+import { gstInside, quoteCart } from "../../lib/pricing.js";
+import { findState, stateForGstin } from "../../lib/gst.js";
+import { invoiceLink, taxSettings } from "../../lib/invoices.js";
 import { badRequest, conflict, notFound, parse } from "../../lib/http.js";
 import { rateLimit } from "../../middleware/rateLimit.js";
 import { AddressFields, IndianMobile } from "../../lib/validate.js";
@@ -168,6 +170,12 @@ checkoutRouter.post("/orders", orderLimit, async (req, res) => {
     const isCod = body.paymentMethod === "COD";
     const status = isCod ? "CONFIRMED" : "PENDING";
 
+    // Now the delivery state is known, the GST splits the way the invoice
+    // will: within the seller's registered state or across states.
+    const { gstin } = await taxSettings(tx);
+    const sellerState = gstin ? stateForGstin(gstin) : null;
+    const interState = !sellerState || sellerState.code !== findState(body.shipping.state)?.code;
+
     return tx.order.create({
       data: {
         number: await uniqueOrderNumber(tx),
@@ -178,7 +186,7 @@ checkoutRouter.post("/orders", orderLimit, async (req, res) => {
         subtotalPaise: quote.subtotalPaise,
         discountPaise: quote.discountPaise,
         shippingPaise: quote.shippingPaise,
-        taxPaise: quote.taxPaise,
+        taxPaise: gstInside({ ...quote, interState }),
         totalPaise: quote.totalPaise,
         couponCode: quote.coupon?.code,
         shippingMethod: quote.shipping.name,
@@ -200,6 +208,8 @@ checkoutRouter.post("/orders", orderLimit, async (req, res) => {
             unitPricePaise: l.unitPricePaise,
             quantity: l.quantity,
             lineTotalPaise: l.lineTotalPaise,
+            hsnCode: l.hsnCode,
+            gstRateBps: l.gstRateBps,
           })),
         },
         events: {
@@ -302,6 +312,8 @@ checkoutRouter.get("/orders/track", async (req, res) => {
         lineTotalPaise: i.lineTotalPaise,
       })),
       events: order.events.map((e) => ({ status: e.status, note: e.note, at: e.createdAt })),
+      // A signed link to the GST invoice, once the order has one.
+      invoice: await invoiceLink(order),
     },
   });
 });

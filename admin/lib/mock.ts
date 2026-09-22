@@ -1,11 +1,11 @@
 /**
  * Sample data for the admin screens that aren't wired to the API yet —
- * Traffic Analytics, Blog Posts, Email Campaigns, Payment Methods, Tax
- * Settings and Backup & Restore. Every screen that uses this file is marked
+ * Traffic Analytics, Blog Posts, Email Campaigns, Payment Methods and
+ * Backup & Restore. Every screen that uses this file is marked
  * "Sample" in the sidebar, so nobody mistakes these figures for the store's.
  *
  * Everything else — the dashboard, orders, products, customers, reviews,
- * coupons, content, settings and all three reports — reads the real database
+ * coupons, content, settings, tax and the reports — reads the real database
  * through the API. Entries are removed from here as each screen is connected.
  *
  * DELIBERATELY SELF-CONTAINED: this app imports nothing from the storefront.
@@ -69,11 +69,6 @@ export const PAYMENT_METHODS = [
   { id: "pm-3", name: "Razorpay — Net Banking", note: "All major Indian banks", enabled: true, fee: "1.9%" },
   { id: "pm-4", name: "Razorpay — Wallets", note: "Paytm, Amazon Pay, Mobikwik", enabled: true, fee: "2%" },
   { id: "pm-5", name: "Cash on Delivery", note: "Pay when the order arrives", enabled: true, fee: "₹40 handling" },
-];
-
-export const TAX_RATES = [
-  { id: "tx-1", name: "GST — Cosmetics", rate: "18%", region: "India (all states)", inclusive: true },
-  { id: "tx-2", name: "GST — Accessories", rate: "12%", region: "India (all states)", inclusive: true },
 ];
 
 export const BACKUPS = [

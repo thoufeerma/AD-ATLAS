@@ -58,7 +58,7 @@ under **Users & Roles**.
 | `db:studio` | Prisma Studio, a GUI over the database |
 | `admin:reset` | Forgotten admin password: lists the admin emails and gives one a new one-time password (`-- email` to pick one when there are several). Uses `DATABASE_URL` — see [DEPLOY.md](../DEPLOY.md) for the online database |
 | `db:up` / `db:down` | Start / stop the Docker database |
-| `smoke` | 243 end-to-end API checks — **dev databases only**, see below |
+| `smoke` | 268 end-to-end API checks — **dev databases only**, see below |
 
 ## API
 
@@ -88,6 +88,7 @@ All routes are under `/api/v1`. Every error has the same shape:
 | GET · POST · PATCH · DELETE | `/account/addresses` (`/:id`) | Saved addresses (up to 10) |
 | POST | `/contact` · `/newsletter` · `/collab-applications` | Forms |
 | GET · POST | `/orders/:number/returns` (`?email=`) | Whether a return is possible and what's left to return; ask for one. Identified like order tracking — number plus email — or by the signed-in customer's own orders |
+| GET | `/orders/:number/invoice?t=` | The GST invoice as a printable page. `t` is the signed link that `/orders/track` and `/account/orders` return (`invoice.url`), good for 24 hours |
 
 Public POSTs are rate-limited per IP (in memory): orders 20, reviews 5, return
 requests 10 and each form 10 per 10 minutes. Behind a proxy, make sure it sets `X-Forwarded-For`.
@@ -109,11 +110,13 @@ requests 10 and each form 10 per 10 minutes. Behind a proxy, make sure it sets `
 | `/admin/reports/customers` | GET | Order Manager, Support |
 | `/admin/returns` · `/counts` · `/:number` | GET | Order Manager, Support |
 | `/admin/returns/:number` | PATCH `{ status, staffNote?, refundPaise? }` | Order Manager |
-| `/admin/settings/returns` | PUT | super admin only |
+| `/admin/settings/returns` · `/tax` | PUT | super admin only |
+| `/admin/reports/gst?month=YYYY-MM` | GET (invoices, and totals by state and HSN) | Order Manager, Support |
 | `/admin/products` · `/:id` | GET · POST · PATCH · DELETE (archives) | read: Order Manager, Support |
 | `/admin/products/:id/stock` | PATCH `{ set }` or `{ adjust }` | Order Manager |
 | `/admin/orders` · `/:number` | GET | Order Manager, Support |
-| `/admin/orders/:number/status` | PATCH | Order Manager |
+| `/admin/orders/:number/status` | PATCH (marking it `SHIPPED` issues the invoice) | Order Manager |
+| `/admin/orders/:number/invoice` | GET (printable page) · POST (issue it now) | read: Support |
 | `/admin/customers` · `/:id` | GET | Order Manager, Support |
 | `/admin/reviews` · `/:id` | GET · PATCH · DELETE | Support Agent |
 | `/admin/categories` · `/coupons` · `/offers` | CRUD | — |
@@ -162,6 +165,35 @@ HTML-escaped in the templates (`src/lib/emails.ts`).
   `parsePatch` keeps only the keys the request actually sent.
 - **Route params use `param(req, name)`** — Express 5 types them as
   `string | string[]`.
+- **States are stored by their proper name.** Addresses must name a real state
+  or union territory (`IndianState` in `src/lib/validate.ts` accepts "tamilnadu"
+  or "TN" and stores "Tamil Nadu"): the invoice's tax depends on it.
+
+## GST invoices
+
+Switched on by saving a GSTIN under Settings → Tax (`/admin/settings/tax`). From
+then on:
+
+- **Each product has an HSN code and GST rate** (default 3304 at 18%), copied
+  onto the order line at purchase. Prices include GST; the invoice shows the tax
+  inside them.
+- **An order gets its invoice when it's marked shipped**, or earlier with
+  `POST /admin/orders/:number/invoice`. Numbers read `PREFIX/2627/00001`, in
+  sequence through each April–March financial year (`invoice_sequences`), never
+  reused. Unpaid online orders and cancelled ones get none.
+- **Same state as the GSTIN → CGST + SGST; any other state → IGST.** The
+  coupon discount is shared across the lines by value; delivery is taxed at the
+  highest item rate. The rules live in `src/lib/gst.ts` (`taxLines`).
+- **Invoices aren't stored as files.** They're rendered from the order's
+  snapshots plus the seller details frozen when the invoice was issued
+  (`orders.invoiceSeller`), so they read the same each time. Changing
+  `taxLines` changes past invoices too.
+- **`/admin/reports/gst`** gives each month's invoices, totals by place of
+  supply and rate, and by HSN — the shape GST returns ask for. Invoices whose
+  order was later cancelled are listed but left out of the totals.
+- **Not covered:** credit notes for returns and refunds, B2B invoices with the
+  buyer's GSTIN, and e-invoicing (IRN/QR), which only applies above ₹5 crore
+  turnover.
 
 ## Security properties
 
@@ -226,7 +258,7 @@ npm run dev      # in one terminal
 npm run smoke    # in another
 ```
 
-Runs 53 storefront and 190 admin checks, including a concurrent-purchase race,
+Runs 53 storefront and 215 admin checks, including a concurrent-purchase race,
 the admin account lifecycle and regression tests for the partial-update bug.
 Rerunnable against a used database: every fixture it creates is suffixed per
 run. It **refuses to target anything but localhost**, because it places orders
@@ -244,7 +276,7 @@ show up, turned off, on the Users & Roles screen.
   The gateway integration must also *release* that stock on payment failure or
   after an expiry window — see the `TODO(payments)` in `routes/public/checkout.ts`.
 - **SMS / WhatsApp** order updates (email only for now).
-- **Remaining CMS resources**: blog posts, campaigns, tax editing. The tables
+- **Remaining CMS resources**: blog posts and campaigns. The tables
   exist; the routes don't. (Pages, store settings, the inbox, subscribers,
   Users & Roles, shipping methods and the media library are done.)
 - **Login throttling and rate limits are in-memory** — correct for one instance,

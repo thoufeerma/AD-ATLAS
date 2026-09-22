@@ -34,6 +34,7 @@ import { adminMediaRouter } from "./routes/admin/media.js";
 import { adminReportsRouter } from "./routes/admin/reports.js";
 import { adminReturnsRouter } from "./routes/admin/returns.js";
 import { returnsRouter } from "./routes/public/returns.js";
+import { invoicesRouter } from "./routes/public/invoices.js";
 import { UPLOAD_ROOT } from "./lib/media.js";
 
 export function createApp() {
@@ -78,6 +79,7 @@ export function createApp() {
   v1.use(contentRouter);
   v1.use("/account", accountRouter);
   v1.use(returnsRouter);
+  v1.use(invoicesRouter);
 
   // ── Admin API (CMS) ── everything past /auth requires a session, and a
   // password of the admin's own choosing (see requireCurrentPassword).

@@ -13,6 +13,7 @@ import { api } from "@/lib/api/client";
 import type { PaymentMethod, PlacedOrder, Product } from "@/lib/api/types";
 import { inrPaise, cn, looksLikeEmail, productImage } from "@/lib/utils";
 import { LAST_ORDER_KEY, type LastOrder } from "./lastOrder";
+import { INDIAN_STATES, listedState } from "@/lib/states";
 import { useAccount } from "@/lib/account";
 import type { SavedAddress } from "@/components/account/AccountView";
 
@@ -69,7 +70,7 @@ function validate(a: Address): Partial<Record<keyof Address, string>> {
   if (!looksLikeEmail(a.email)) errors.email = "Enter a valid email address.";
   if (a.line1.trim().length < 3) errors.line1 = "Enter your street address.";
   if (a.city.trim().length < 2) errors.city = "Enter your city.";
-  if (a.state.trim().length < 2) errors.state = "Enter your state.";
+  if (!listedState(a.state)) errors.state = "Choose your state.";
   if (!/^[1-9]\d{5}$/.test(a.pincode.trim())) errors.pincode = "Enter a 6-digit pincode.";
   return errors;
 }
@@ -399,15 +400,7 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
                   placeholder="Mumbai"
                   autoComplete="address-level2"
                 />
-                <Field
-                  id="state"
-                  label="State"
-                  value={addr.state}
-                  onChange={set("state")}
-                  error={fieldError("state")}
-                  placeholder="Maharashtra"
-                  autoComplete="address-level1"
-                />
+                <StateField value={addr.state} onChange={set("state")} error={fieldError("state")} />
                 <Field
                   id="pincode"
                   label="Pincode"
@@ -709,6 +702,43 @@ function Field({
   );
 }
 
+/** The state, from the list — the invoice's tax depends on it. */
+function StateField({ value, onChange, error }: { value: string; onChange: (v: string) => void; error?: string }) {
+  const inputId = "co-state";
+  return (
+    <div>
+      <label htmlFor={inputId} className="label-caps mb-1.5 block text-[0.6rem] text-gold-700">
+        State
+      </label>
+      <select
+        id={inputId}
+        value={listedState(value)}
+        onChange={(e) => onChange(e.target.value)}
+        autoComplete="address-level1"
+        aria-invalid={!!error}
+        aria-describedby={error ? `${inputId}-error` : undefined}
+        className={cn(
+          "w-full rounded-sm border bg-cream-50 px-3 py-2.5 text-sm text-plum-800 focus:outline-none",
+          error ? "border-danger focus:border-danger" : "border-gold-200 focus:border-gold-500",
+          !listedState(value) && "text-ink-soft/70",
+        )}
+      >
+        <option value="">Choose your state</option>
+        {INDIAN_STATES.map((s) => (
+          <option key={s} value={s} className="text-plum-800">
+            {s}
+          </option>
+        ))}
+      </select>
+      {error && (
+        <p id={`${inputId}-error`} className="mt-1 text-[0.68rem] text-danger">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 /** Fills the address fields from a saved address, keeping the email. */
 function fromSaved(a: Address, saved: SavedAddress): Address {
   return {
@@ -718,7 +748,8 @@ function fromSaved(a: Address, saved: SavedAddress): Address {
     line1: saved.line1,
     line2: saved.line2 ?? "",
     city: saved.city,
-    state: saved.state,
+    // An address saved before states came from a list may need choosing again.
+    state: listedState(saved.state),
     pincode: saved.pincode,
   };
 }

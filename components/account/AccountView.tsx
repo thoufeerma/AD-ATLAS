@@ -4,13 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Check, Loader2, LogOut, MailCheck, MapPin, Package, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { AlertCircle, Check, FileText, Loader2, LogOut, MailCheck, MapPin, Package, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import ReturnPanel from "@/components/order/ReturnPanel";
 import { api, ApiError } from "@/lib/api/client";
 import { setSignedIn, signOut, useAccount, type Me } from "@/lib/account";
-import type { OrderStatus, Product } from "@/lib/api/types";
+import type { InvoiceLink, OrderStatus, Product } from "@/lib/api/types";
 import { cn, inrPaise, productImage } from "@/lib/utils";
+import { INDIAN_STATES, listedState } from "@/lib/states";
 
 type AccountOrder = {
   number: string;
@@ -20,6 +21,7 @@ type AccountOrder = {
   totalPaise: number;
   shippingMethod: string | null;
   items: { slug: string | null; name: string; shade: string | null; quantity: number; lineTotalPaise: number }[];
+  invoice: InvoiceLink;
 };
 
 export type SavedAddress = {
@@ -212,9 +214,21 @@ function Orders({ verified, products }: { verified: boolean; products: Product[]
                   Total <strong className="text-plum-800">{inrPaise(o.totalPaise)}</strong>
                   {o.paymentMethod === "COD" && " · Cash on delivery"}
                 </span>
-                <Link href={`/track-order?order=${o.number}`} className="text-gold-700 hover:text-gold-600">
-                  Track order →
-                </Link>
+                <span className="flex items-center gap-4">
+                  {o.invoice && (
+                    <a
+                      href={o.invoice.url}
+                      target="_blank"
+                      rel="noopener"
+                      className="inline-flex items-center gap-1 text-plum-600 hover:text-gold-600"
+                    >
+                      <FileText className="size-3.5" /> Invoice
+                    </a>
+                  )}
+                  <Link href={`/track-order?order=${o.number}`} className="text-gold-700 hover:text-gold-600">
+                    Track order →
+                  </Link>
+                </span>
               </div>
               {/* Shows itself only when there's something to say about returns */}
               <ReturnPanel orderNumber={o.number} />
@@ -345,11 +359,11 @@ function AddressForm({
   onSave: (d: Omit<AddressDraft, "line2"> & { line2: string | null }) => Promise<void>;
   onCancel: () => void;
 }) {
-  const [d, setD] = useState(initial);
+  const [d, setD] = useState({ ...initial, state: listedState(initial.state) });
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState("");
-  const set = (k: keyof AddressDraft) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setD((v) => ({ ...v, [k]: k === "isDefault" ? e.target.checked : e.target.value }));
+  const set = (k: keyof AddressDraft) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setD((v) => ({ ...v, [k]: k === "isDefault" ? (e.target as HTMLInputElement).checked : e.target.value }));
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -361,8 +375,10 @@ function AddressForm({
           ? "Enter a 10-digit mobile number."
           : d.line1.trim().length < 3
             ? "Enter the street address."
-            : d.city.trim().length < 2 || d.state.trim().length < 2
-              ? "Enter the city and state."
+            : d.city.trim().length < 2
+              ? "Enter the city."
+              : !d.state
+                ? "Choose the state."
               : !/^[1-9]\d{5}$/.test(d.pincode.trim())
                 ? "Enter a 6-digit pincode."
                 : "";
@@ -383,7 +399,14 @@ function AddressForm({
       <input aria-label="Address" placeholder="House, street, area" value={d.line1} onChange={set("line1")} autoComplete="address-line1" className={cn(input, "sm:col-span-2")} />
       <input aria-label="Apartment, landmark (optional)" placeholder="Apartment, landmark (optional)" value={d.line2} onChange={set("line2")} autoComplete="address-line2" className={cn(input, "sm:col-span-2")} />
       <input aria-label="City" placeholder="City" value={d.city} onChange={set("city")} autoComplete="address-level2" className={input} />
-      <input aria-label="State" placeholder="State" value={d.state} onChange={set("state")} autoComplete="address-level1" className={input} />
+      <select aria-label="State" value={d.state} onChange={set("state")} autoComplete="address-level1" className={cn(input, !d.state && "text-ink-soft/70")}>
+        <option value="">State</option>
+        {INDIAN_STATES.map((s) => (
+          <option key={s} value={s} className="text-plum-800">
+            {s}
+          </option>
+        ))}
+      </select>
       <input aria-label="Pincode" placeholder="Pincode" value={d.pincode} onChange={set("pincode")} inputMode="numeric" autoComplete="postal-code" className={input} />
       <label className="flex items-center gap-2 text-[0.75rem] text-ink-soft">
         <input type="checkbox" checked={d.isDefault} onChange={set("isDefault")} className="size-3.5 accent-plum-800" />

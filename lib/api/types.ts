@@ -203,6 +203,9 @@ export type PlacedOrder = {
   }[];
 };
 
+/** A signed link to an order's GST invoice, good for a day; null until it has one. */
+export type InvoiceLink = { number: string; issuedAt: string; url: string } | null;
+
 export type TrackedOrder = Omit<PlacedOrder, "taxPaise" | "items"> & {
   shipping: { name: string; city: string; state: string; pincode: string };
   items: {
@@ -213,4 +216,5 @@ export type TrackedOrder = Omit<PlacedOrder, "taxPaise" | "items"> & {
     lineTotalPaise: number;
   }[];
   events: { status: OrderStatus; note: string | null; at: string }[];
+  invoice: InvoiceLink;
 };

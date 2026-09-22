@@ -1,7 +1,11 @@
 import { Router } from "express";
+import { z } from "zod";
 import { prisma } from "../../db.js";
 import { allow, ROLES } from "../../middleware/auth.js";
+import { parse } from "../../lib/http.js";
 import { delta, monthsAgo, REVENUE } from "../../lib/revenue.js";
+import { istMonth, istMonthOf, stateForGstin } from "../../lib/gst.js";
+import { invoiceView, taxSettings } from "../../lib/invoices.js";
 
 /**
  * Sales, product and customer reports, all read from the orders the store has
@@ -204,6 +208,125 @@ adminReportsRouter.get("/customers", allow(...ROLES.ordersRead), async (_req, re
       ],
       newByMonth: newByMonth.map((r) => ({ month: r.month.toISOString().slice(0, 7), count: Number(r.people) })),
       top: buyers.slice(0, 10),
+    },
+  });
+});
+
+/* ── GST summary ──────────────────────────────────────────────────────── */
+
+const GstQuery = z.object({
+  month: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Use a month like 2026-09")
+    .optional(),
+});
+
+type Sums = { taxablePaise: number; cgstPaise: number; sgstPaise: number; igstPaise: number };
+const zero = (): Sums => ({ taxablePaise: 0, cgstPaise: 0, sgstPaise: 0, igstPaise: 0 });
+const add = (into: Sums, from: Sums) => {
+  into.taxablePaise += from.taxablePaise;
+  into.cgstPaise += from.cgstPaise;
+  into.sgstPaise += from.sgstPaise;
+  into.igstPaise += from.igstPaise;
+};
+
+/**
+ * The month's invoices the way GST returns ask for them: every invoice
+ * (the sales register), totals by place of supply and rate, and by HSN code.
+ * Months run in IST, by invoice date. Invoices whose order was later
+ * cancelled are listed but left out of the totals.
+ */
+adminReportsRouter.get("/gst", allow(...ROLES.ordersRead), async (req, res) => {
+  const q = parse(GstQuery, req.query);
+  const thisMonth = istMonthOf(new Date());
+  const month = q.month ?? thisMonth;
+  const { from, to } = istMonth(month);
+
+  const [orders, tax, first] = await Promise.all([
+    prisma.order.findMany({
+      where: { invoicedAt: { gte: from, lt: to } },
+      include: { items: true },
+      orderBy: { invoicedAt: "asc" },
+    }),
+    taxSettings(),
+    prisma.order.findFirst({
+      where: { invoicedAt: { not: null } },
+      orderBy: { invoicedAt: "asc" },
+      select: { invoicedAt: true },
+    }),
+  ]);
+
+  // The months there's anything to show, newest first, for the picker.
+  const months: string[] = [];
+  const oldest = first?.invoicedAt ? istMonthOf(first.invoicedAt) : thisMonth;
+  for (let [y, m] = thisMonth.split("-").map(Number) as [number, number]; months.length < 36; ) {
+    const key = `${y}-${String(m).padStart(2, "0")}`;
+    months.push(key);
+    if (key <= oldest) break;
+    [y, m] = m === 1 ? [y - 1, 12] : [y, m - 1];
+  }
+
+  const invoices = [];
+  const byState = new Map<string, Sums & { state: string; stateCode: string | null; rateBps: number }>();
+  const byHsn = new Map<string, Sums & { hsnCode: string; rateBps: number; quantity: number; totalPaise: number }>();
+  const totals = { ...zero(), invoices: 0, cancelled: 0, totalPaise: 0 };
+
+  for (const order of orders) {
+    const v = invoiceView(order);
+    if (!v) continue;
+    const cancelled = order.status === "CANCELLED";
+    invoices.push({
+      number: v.number,
+      issuedAt: v.issuedAt,
+      orderNumber: order.number,
+      customer: order.shipName,
+      state: v.placeOfSupply?.name ?? order.shipState,
+      stateCode: v.placeOfSupply?.code ?? null,
+      status: order.status,
+      taxablePaise: v.totals.taxablePaise,
+      cgstPaise: v.totals.cgstPaise,
+      sgstPaise: v.totals.sgstPaise,
+      igstPaise: v.totals.igstPaise,
+      totalPaise: v.totals.totalPaise,
+    });
+    if (cancelled) {
+      totals.cancelled += 1;
+      continue;
+    }
+    totals.invoices += 1;
+    totals.totalPaise += v.totals.totalPaise;
+    add(totals, v.totals);
+
+    for (const line of v.lines) {
+      const stateCode = v.placeOfSupply?.code ?? null;
+      const sKey = `${stateCode ?? order.shipState}|${line.rateBps}`;
+      const s = byState.get(sKey) ?? {
+        ...zero(),
+        state: v.placeOfSupply?.name ?? order.shipState,
+        stateCode,
+        rateBps: line.rateBps,
+      };
+      add(s, line);
+      byState.set(sKey, s);
+
+      const hKey = `${line.hsnCode}|${line.rateBps}`;
+      const h = byHsn.get(hKey) ?? { ...zero(), hsnCode: line.hsnCode, rateBps: line.rateBps, quantity: 0, totalPaise: 0 };
+      add(h, line);
+      h.quantity += line.quantity ?? 0;
+      h.totalPaise += line.totalPaise;
+      byHsn.set(hKey, h);
+    }
+  }
+
+  res.json({
+    data: {
+      month,
+      months,
+      seller: tax.gstin ? { gstin: tax.gstin, legalName: tax.legalName, state: stateForGstin(tax.gstin) } : null,
+      totals,
+      invoices,
+      byState: [...byState.values()].sort((a, b) => a.state.localeCompare(b.state) || a.rateBps - b.rateBps),
+      byHsn: [...byHsn.values()].sort((a, b) => a.hsnCode.localeCompare(b.hsnCode) || a.rateBps - b.rateBps),
     },
   });
 });

@@ -47,7 +47,7 @@ cd admin && npm install && npm run dev
 - **Content Management** — Pages, Blog Posts, Media Library, Banners,
   Testimonials, FAQs
 - **Marketing** — Email Campaigns, Subscribers, SEO Settings
-- **Reports & Analytics** — Sales, Product, Customer, Traffic
+- **Reports & Analytics** — Sales, Product, Customer, GST Summary, Traffic
 - **System Settings** — Users & Roles, Settings, Payment Methods, Shipping
   Methods, Tax Settings, Notifications, Activity Logs, Backup & Restore
 
@@ -79,8 +79,9 @@ Hand-rolled SVG, no charting dependency. They follow a specific set of rules:
 Most of the panel reads the live database through the API: the dashboard,
 orders, customers, inbox, products, categories, inventory, reviews, coupons,
 offers, pages, media, banners, testimonials, FAQs, subscribers, users, settings,
-shipping, email log, activity, returns — and all three reports (Sales, Products,
-Customers), which count the same orders as the dashboard.
+shipping, email log, activity, returns, tax settings with each order's GST
+invoice — and the reports (Sales, Products, Customers, and the GST Summary for
+filing returns), which count the same orders as the dashboard.
 
 These screens still show sample figures from [`lib/mock.ts`](lib/mock.ts) and
 are marked **Sample** in the sidebar, so nothing is mistaken for the store's own
@@ -91,7 +92,6 @@ numbers:
 | Traffic Analytics | Needs an analytics provider; the store collects no visitor data |
 | Blog Posts, Email Campaigns, SEO Settings | Tables and routes not built |
 | Payment Methods | Waiting on Razorpay |
-| Tax Settings | Rates exist in the database, but there's no editor yet |
 | Backup & Restore | Backups belong to the database host |
 
 Each entry is removed from `lib/mock.ts` as its screen is connected.

@@ -7,6 +7,8 @@ import { allow, ROLES } from "../../middleware/auth.js";
 import { logActivity } from "../../lib/activity.js";
 import { afterResponse } from "../../lib/mail.js";
 import { customerHearsAbout, mailContext, orderStatusUpdate } from "../../lib/emails.js";
+import { invoiceOnShipping, invoiceView, issueInvoice, taxSettings } from "../../lib/invoices.js";
+import { renderInvoice, sendInvoiceHtml, invoiceProblemPage } from "../../lib/invoiceHtml.js";
 
 export const adminOrdersRouter = Router();
 
@@ -99,7 +101,44 @@ adminOrdersRouter.get("/:number", allow(...ROLES.ordersRead), async (req, res) =
     },
   });
   if (!order) throw notFound("Order");
-  res.json({ data: order });
+  // Whether invoices can be issued at all yet (a GSTIN is saved).
+  const { gstin } = await taxSettings();
+  res.json({ data: { ...order, invoicing: { configured: Boolean(gstin) } } });
+});
+
+/** The printable GST invoice. Opened in a new tab, so errors are pages too. */
+adminOrdersRouter.get("/:number/invoice", allow(...ROLES.ordersRead), async (req, res) => {
+  const order = await prisma.order.findUnique({ where: { number: param(req, "number") }, include: { items: true } });
+  const view = order ? invoiceView(order) : null;
+  if (!view) {
+    sendInvoiceHtml(res, 404, invoiceProblemPage("No invoice yet", "Create the invoice from the order page first."));
+    return;
+  }
+  sendInvoiceHtml(res, 200, renderInvoice(view));
+});
+
+/**
+ * Issues the invoice now, rather than waiting for the order to ship — for
+ * printing it to go in the parcel.
+ */
+adminOrdersRouter.post("/:number/invoice", allow(...ROLES.ordersWrite), async (req, res) => {
+  const issued = await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({ where: { number: param(req, "number") } });
+    if (!order) throw notFound("Order");
+    if (order.invoiceNumber) return { order, created: false };
+    return { order: await issueInvoice(tx, order), created: true };
+  });
+  if (issued.created) {
+    await logActivity(
+      req,
+      `Created invoice ${issued.order.invoiceNumber} for ${issued.order.number}`,
+      "Order",
+      issued.order.id,
+    );
+  }
+  res.status(issued.created ? 201 : 200).json({
+    data: { invoiceNumber: issued.order.invoiceNumber, invoicedAt: issued.order.invoicedAt },
+  });
 });
 
 const StatusBody = z.object({
@@ -135,6 +174,10 @@ adminOrdersRouter.patch("/:number/status", allow(...ROLES.ordersWrite), async (r
         }
       }
     }
+
+    // Goods leave with their tax invoice: shipping issues it if it wasn't
+    // created earlier (once a GSTIN is saved under Settings → Tax).
+    if (await invoiceOnShipping(tx, order, body.status)) await issueInvoice(tx, order);
 
     return tx.order.update({
       where: { id: order.id },

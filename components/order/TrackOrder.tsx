@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Clock,
   XCircle,
+  FileText,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import ReturnPanel from "@/components/order/ReturnPanel";
@@ -362,6 +363,21 @@ function OrderResult({
               </dd>
             </div>
             <Row label="Total Amount" value={inrPaise(order.totalPaise)} />
+            {order.invoice && (
+              <div className="flex items-center justify-between">
+                <dt className="text-ink-soft">Tax Invoice</dt>
+                <dd>
+                  <a
+                    href={order.invoice.url}
+                    target="_blank"
+                    rel="noopener"
+                    className="inline-flex items-center gap-1.5 text-plum-600 hover:text-gold-600"
+                  >
+                    <FileText className="size-3.5" /> {order.invoice.number}
+                  </a>
+                </dd>
+              </div>
+            )}
             <div className="flex justify-between gap-6">
               <dt className="shrink-0 text-ink-soft">Shipping To</dt>
               <dd className="text-right leading-relaxed text-plum-800">

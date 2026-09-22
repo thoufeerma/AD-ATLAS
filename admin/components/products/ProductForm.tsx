@@ -21,6 +21,9 @@ const STATUSES: { value: ProductStatus; label: string; note: string }[] = [
   { value: "ARCHIVED", label: "Archived", note: "Hidden, kept for order history" },
 ];
 
+/** GST slabs offered in the picker; a product saved at another rate keeps it. */
+const GST_RATES = [0, 500, 1800, 4000];
+
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
@@ -52,6 +55,8 @@ export default function ProductForm({ mode, categories, product }: Props) {
   const [size, setSize] = useState(product?.size ?? "");
   const [price, setPrice] = useState(fromPaise(product?.pricePaise));
   const [compareAt, setCompareAt] = useState(fromPaise(product?.compareAtPaise));
+  const [hsnCode, setHsnCode] = useState(product?.hsnCode ?? "3304");
+  const [gstRateBps, setGstRateBps] = useState(product?.gstRateBps ?? 1800);
   const [stock, setStock] = useState("0");
   const [lowStock, setLowStock] = useState(String(product?.lowStockThreshold ?? 15));
   const [status, setStatus] = useState<ProductStatus>(product?.status ?? "DRAFT");
@@ -87,6 +92,7 @@ export default function ProductForm({ mode, categories, product }: Props) {
     }
     if (!isEdit && !/^\d+$/.test(stock)) local.stock = "Whole number of units";
     if (!/^\d+$/.test(lowStock)) local.lowStockThreshold = "Whole number of units";
+    if (!/^\d{4}(\d{2}){0,2}$/.test(hsnCode.trim())) local.hsnCode = "4, 6 or 8 digits, e.g. 3304";
     if (Object.keys(local).length) {
       setFieldErrors(local);
       setError("Fix the highlighted fields.");
@@ -103,6 +109,8 @@ export default function ProductForm({ mode, categories, product }: Props) {
       size: size.trim() || null,
       pricePaise,
       compareAtPaise,
+      hsnCode: hsnCode.trim(),
+      gstRateBps,
       status,
       isBestseller: bestseller,
       lowStockThreshold: Number(lowStock),
@@ -255,6 +263,16 @@ export default function ProductForm({ mode, categories, product }: Props) {
               )}
               <Field label="Low-stock Alert At" error={fe("lowStockThreshold")} hint="Flagged on the dashboard at or below this">
                 <input inputMode="numeric" value={lowStock} onChange={(e) => setLowStock(e.target.value)} className={inputCls(fe("lowStockThreshold"))} />
+              </Field>
+              <Field label="HSN Code *" error={fe("hsnCode")} hint="Printed on invoices. 3304 = make-up and skin care">
+                <input inputMode="numeric" value={hsnCode} onChange={(e) => setHsnCode(e.target.value)} placeholder="3304" className={inputCls(fe("hsnCode"))} />
+              </Field>
+              <Field label="GST Rate *" error={fe("gstRateBps")} hint="Already inside the price above">
+                <select value={gstRateBps} onChange={(e) => setGstRateBps(Number(e.target.value))} className={inputCls(fe("gstRateBps"))}>
+                  {[...new Set([...GST_RATES, gstRateBps])].sort((a, b) => a - b).map((bps) => (
+                    <option key={bps} value={bps}>{bps / 100}%</option>
+                  ))}
+                </select>
               </Field>
             </div>
           </Card>

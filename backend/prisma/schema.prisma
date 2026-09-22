@@ -51,6 +51,11 @@ model Product {
   size              String?
   pricePaise        Int
   compareAtPaise    Int?
+  /// GST classification, printed on invoices. 3304 covers make-up and
+  /// skin-care preparations.
+  hsnCode           String         @default("3304")
+  /// GST rate in basis points (1800 = 18%). Prices already include it.
+  gstRateBps        Int            @default(1800)
   status            ProductStatus  @default(DRAFT)
   isBestseller      Boolean        @default(false)
   /// Stock is tracked per product for now, not per shade.
@@ -218,6 +223,14 @@ model Order {
   razorpayOrderId   String? @unique
   razorpayPaymentId String?
 
+  /// GST tax invoice, e.g. VL/2627/00001 — issued when the order ships, or
+  /// earlier from the admin. Numbers run in sequence within a financial year.
+  invoiceNumber String?   @unique
+  invoicedAt    DateTime?
+  /// The seller's details as they were on the day of issue (name, GSTIN,
+  /// address, state), so a later change of address never alters old invoices.
+  invoiceSeller Json?
+
   customerId String?
   customer   Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
   items      OrderItem[]
@@ -242,6 +255,9 @@ model OrderItem {
   unitPricePaise Int
   quantity       Int
   lineTotalPaise Int
+  /// The product's GST classification and rate when it was bought.
+  hsnCode        String
+  gstRateBps     Int
 
   orderId   String
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -383,15 +399,14 @@ model ShippingMethod {
   @@map("shipping_methods")
 }
 
-model TaxRate {
-  id          String  @id @default(cuid())
-  name        String
-  /// Basis points: 1800 = 18%
-  rateBps     Int
-  region      String
-  isInclusive Boolean @default(true)
+/// The last invoice number used in each financial year ("2627" is April 2026
+/// to March 2027). Incremented inside the transaction that issues an invoice,
+/// so numbers never repeat or skip.
+model InvoiceSequence {
+  financialYear String @id
+  lastNumber    Int
 
-  @@map("tax_rates")
+  @@map("invoice_sequences")
 }
 
 /* ───────────────────────────── Reviews ───────────────────────────── */

@@ -1,76 +1,123 @@
-"use client";
-
-import { Save, Plus, Pencil } from "lucide-react";
+import type { Metadata } from "next";
+import Link from "next/link";
 import PageHeader from "@/components/ui/PageHeader";
 import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
-import Toggle from "@/components/ui/Toggle";
-import { TAX_RATES } from "@/lib/mock";
+import TaxForm from "@/components/settings/TaxForm";
+import { apiGet, requireAdmin } from "@/lib/api/server";
+import { can, type ProductListItem, type SiteSettings } from "@/lib/api/types";
 
-export default function TaxPage() {
+export const metadata: Metadata = { title: "Tax Settings" };
+
+export default async function TaxPage() {
+  const admin = await requireAdmin();
+  if (!can.editStore(admin.role)) {
+    return (
+      <>
+        <PageHeader title="Tax Settings" />
+        <p className="rounded-[var(--radius-card)] border border-hairline bg-card p-8 text-center text-[0.82rem] text-ink-2">
+          GST details are managed by Super Administrators.
+        </p>
+      </>
+    );
+  }
+
+  const [settings, products] = await Promise.all([
+    apiGet<SiteSettings>("/admin/settings"),
+    apiGet<ProductListItem[]>("/admin/products"),
+  ]);
+
+  // Products grouped by how they're taxed, so a wrong code stands out.
+  const groups = new Map<string, { hsnCode: string; rateBps: number; products: ProductListItem[] }>();
+  for (const p of products) {
+    const key = `${p.hsnCode}|${p.gstRateBps}`;
+    const g = groups.get(key) ?? { hsnCode: p.hsnCode, rateBps: p.gstRateBps, products: [] };
+    g.products.push(p);
+    groups.set(key, g);
+  }
+  const byCode = [...groups.values()].sort((a, b) => a.hsnCode.localeCompare(b.hsnCode) || a.rateBps - b.rateBps);
+
   return (
-    <form onSubmit={(e) => e.preventDefault()}>
+    <>
       <PageHeader
         title="Tax Settings"
-        subtitle="GST rates applied to orders"
+        subtitle="Your GST registration, for the tax invoice each order gets"
         actions={
-          <>
-            <Button variant="outline" size="sm" type="button">
-              <Plus className="size-3.5" /> Add Rate
-            </Button>
-            <Button size="sm" type="submit">
-              <Save className="size-3.5" /> Save Changes
-            </Button>
-          </>
+          <Badge tone={settings.tax.gstin ? "good" : "neutral"}>
+            {settings.tax.gstin ? "Invoicing on" : "Invoicing off"}
+          </Badge>
         }
       />
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <Card title="Tax Rates" bodyClassName="p-0">
-          <ul className="divide-y divide-hairline">
-            {TAX_RATES.map((t) => (
-              <li key={t.id} className="flex items-center gap-4 px-5 py-4">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[0.85rem] font-medium text-ink">{t.name}</p>
-                  <p className="mt-0.5 text-[0.7rem] text-muted">{t.region}</p>
-                </div>
-                <span className="tnum text-[0.85rem] font-medium text-ink">{t.rate}</span>
-                <Badge tone={t.inclusive ? "info" : "neutral"} dot={false}>
-                  {t.inclusive ? "Inclusive" : "Exclusive"}
-                </Badge>
-                <button
-                  type="button"
-                  aria-label={`Edit ${t.name}`}
-                  className="grid size-8 place-items-center rounded-lg border border-hairline text-muted hover:border-series-1 hover:text-series-1"
-                >
-                  <Pencil className="size-3.5" />
-                </button>
-              </li>
-            ))}
-          </ul>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <Card title="GST Registration">
+          <TaxForm initial={settings.tax} legalEntity={settings.store?.legalEntity ?? ""} />
         </Card>
 
-        <Card title="Display">
-          <ul className="space-y-4">
-            {[
-              { label: "Show prices inclusive of tax", on: true },
-              { label: "Show a tax breakdown at checkout", on: true },
-              { label: "Collect GSTIN for business orders", on: true },
-              { label: "Generate GST invoices automatically", on: true },
-            ].map((r) => (
-              <li key={r.label} className="flex items-center justify-between gap-4">
-                <span className="text-[0.78rem] text-ink-2">{r.label}</span>
-                <Toggle defaultOn={r.on} label={r.label} />
-              </li>
-            ))}
+        <Card title="How Invoices Work">
+          <ul className="list-disc space-y-2.5 pl-4 text-[0.76rem] leading-relaxed text-ink-2">
+            <li>
+              An order gets its invoice when you mark it <strong className="font-medium text-ink">Shipped</strong>. To
+              print one for the parcel before then, use <em>Create invoice</em> on the order.
+            </li>
+            <li>Numbers run in sequence through each financial year (April to March) and never repeat.</li>
+            <li>
+              Customers download theirs from Track Order and from their account&apos;s order history. You open it
+              from the order page.
+            </li>
+            <li>
+              Prices already include GST; the invoice shows the tax inside them. A coupon&apos;s discount is shared
+              across the items, and delivery is taxed at the items&apos; rate.
+            </li>
+            <li>
+              Each month&apos;s totals, by state and by HSN code, are under{" "}
+              <Link href="/reports/gst" className="font-medium text-series-1 hover:underline">
+                GST Summary
+              </Link>{" "}
+              for filing your returns.
+            </li>
           </ul>
-          <p className="mt-5 text-[0.68rem] leading-relaxed text-muted">
-            Storefront copy currently reads &ldquo;Inclusive of all taxes&rdquo; on
-            product and cart pages, which matches the inclusive setting above.
+          <p className="mt-4 rounded-lg bg-plane px-3.5 py-2.5 text-[0.7rem] leading-relaxed text-ink-2">
+            Have your accountant check the rates and HSN codes below, and the first few invoices, before you rely
+            on them.
           </p>
         </Card>
       </div>
-    </form>
+
+      <Card title="GST on Your Products" className="mt-5" bodyClassName="p-0">
+        <table className="w-full border-collapse text-left">
+          <thead>
+            <tr className="border-b border-hairline">
+              {["HSN code", "GST rate", "Products"].map((h) => (
+                <th key={h} scope="col" className="px-5 py-2.5 text-[0.66rem] font-semibold uppercase tracking-wider text-muted">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {byCode.map((g) => (
+              <tr key={`${g.hsnCode}-${g.rateBps}`} className="border-b border-hairline align-top last:border-0">
+                <td className="tnum px-5 py-3 text-[0.8rem] font-medium text-ink">{g.hsnCode}</td>
+                <td className="tnum px-5 py-3 text-[0.8rem] text-ink">{g.rateBps / 100}%</td>
+                <td className="px-5 py-3 text-[0.76rem] leading-relaxed text-ink-2">
+                  {g.products.map((p, i) => (
+                    <span key={p.id}>
+                      {i > 0 && ", "}
+                      <Link href={`/products/${p.id}`} className="hover:text-series-1 hover:underline">
+                        {p.name.replace(/^Velastia /, "")}
+                      </Link>
+                    </span>
+                  ))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="border-t border-hairline px-5 py-3 text-[0.7rem] text-muted">
+          Change a product&apos;s HSN code or rate on its page. Orders keep the rate they were placed at.
+        </p>
+      </Card>
+    </>
   );
 }

@@ -39,6 +39,13 @@ const ProductInput = z.object({
   size: z.string().trim().max(40).nullish(),
   pricePaise: z.number().int().min(0),
   compareAtPaise: z.number().int().min(0).nullish(),
+  hsnCode: z
+    .string()
+    .trim()
+    .regex(/^\d{4}(\d{2}){0,2}$/, "4, 6 or 8 digits, e.g. 3304")
+    .default("3304"),
+  /** Basis points: 1800 = 18%. */
+  gstRateBps: z.number().int().min(0).max(4000).default(1800),
   status: z.enum(["ACTIVE", "DRAFT", "COMING_SOON", "ARCHIVED"]).default("DRAFT"),
   isBestseller: z.boolean().default(false),
   stock: z.number().int().min(0).default(0),

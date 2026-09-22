@@ -224,15 +224,7 @@ async function main() {
       ],
     });
   }
-  if ((await prisma.taxRate.count()) === 0) {
-    await prisma.taxRate.createMany({
-      data: [
-        { name: "GST — Cosmetics", rateBps: 1800, region: "India (all states)" },
-        { name: "GST — Accessories", rateBps: 1200, region: "India (all states)" },
-      ],
-    });
-  }
-  log("shipping methods and tax rates");
+  log("shipping methods");
 
   const categoryIds = new Map<string, string>();
   for (const c of CATEGORIES) {
@@ -258,6 +250,8 @@ async function main() {
       stock: p.stock,
       benefits: p.benefits ?? [],
       categoryId: categoryIds.get(p.category)!,
+      // Everything else is make-up or skin care, the schema's default (3304).
+      ...(p.category === "perfume" ? { hsnCode: "3303" } : {}),
     };
     const existing = await prisma.product.findUnique({ where: { slug: p.slug } });
     if (existing) {
@@ -273,6 +267,12 @@ async function main() {
       },
     });
   }
+  // Databases seeded before products had HSN codes gave the perfume the
+  // make-up code; 3303 is perfumes. Only touches it if still on the default.
+  await prisma.product.updateMany({
+    where: { category: { slug: "perfume" }, hsnCode: "3304" },
+    data: { hsnCode: "3303" },
+  });
   log(`${PRODUCTS.length} products`);
 
   const coupons = [
