@@ -196,13 +196,31 @@ async function main() {
         name: "Velastia",
         legalEntity: "AD Atlas Ventures Private Limited",
         tagline: "Luxury. Science. You.",
-        supportEmail: "hello@velastia.com",
-        supportPhone: "+91 98765 43210",
+        supportEmail: "hello@velastia.in",
+        supportPhone: "+91 86066 30088",
         supportHours: "Mon - Sat | 10AM - 7PM",
         city: "Mumbai, India",
       },
     },
   });
+  // The first seeds carried stand-in contact details. Correct them wherever
+  // they're still in place; anything typed in the admin is left alone.
+  const PLACEHOLDER_CONTACT: Record<string, string> = {
+    "hello@velastia.com": "hello@velastia.in",
+    "+91 98765 43210": "+91 86066 30088",
+  };
+  const storeRow = await prisma.setting.findUnique({ where: { key: "store" } });
+  if (storeRow) {
+    const stored = storeRow.value as Record<string, string>;
+    const fixed = { ...stored };
+    for (const field of ["supportEmail", "supportPhone"]) {
+      const value = stored[field];
+      if (typeof value === "string" && PLACEHOLDER_CONTACT[value]) fixed[field] = PLACEHOLDER_CONTACT[value];
+    }
+    if (JSON.stringify(fixed) !== JSON.stringify(stored)) {
+      await prisma.setting.update({ where: { key: "store" }, data: { value: fixed } });
+    }
+  }
   await prisma.setting.upsert({
     where: { key: "welcomeOffer" },
     update: {},
@@ -350,7 +368,35 @@ async function main() {
   // replaced while it still reads exactly as seeded — anything an admin has
   // reworded on the Pages screen is left alone.
   const REWORDED: Record<string, [string, string][]> = {
+    shipping: [
+      [
+        "Once your order ships you will receive an email and SMS containing your tracking link.",
+        "Once your order ships we email you the tracking link, and you can follow the order any time on the Track Order page.",
+      ],
+    ],
+    privacy: [
+      [
+        "We do not store your card details. Payments are handled by Razorpay, and card data goes directly to them.",
+        "Orders are paid in cash on delivery, so we never ask for or hold card or bank details.",
+      ],
+      [
+        "We share the minimum necessary information with delivery partners, our payment gateway, and communication providers who send order notifications on our behalf.",
+        "We share the minimum necessary information with our delivery partners and with the service that sends our order emails.",
+      ],
+    ],
     returns: [
+      [
+        "Refunds are issued to the original payment method once the returned item reaches our warehouse and passes inspection.",
+        "Refunds are issued once the returned item reaches our warehouse and passes inspection.",
+      ],
+      [
+        "The amount typically reflects in your account within 5 to 7 business days, depending on your bank or payment provider.",
+        "Orders are cash on delivery today, so refunds are made by bank transfer to the details you give us, and the amount typically reaches your account within 5 to 7 business days.",
+      ],
+      [
+        "For Cash on Delivery orders, refunds are made by bank transfer to details you provide.",
+        "Every refund is recorded against your invoice with a credit note, which you can open from your order.",
+      ],
       [
         "Unopened products in their original packaging can be returned within 7 days of delivery.",
         "Unopened products in their original packaging can be returned within {{return_window_days}} days of delivery.",

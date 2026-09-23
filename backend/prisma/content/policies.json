@@ -22,7 +22,7 @@
         {
           "heading": "Order Tracking",
           "body": [
-            "Once your order ships you will receive an email and SMS containing your tracking link.",
+            "Once your order ships we email you the tracking link, and you can follow the order any time on the Track Order page.",
             "You can also check the current status any time from the Track Order page using your order number and the email address on the order."
           ]
         },
@@ -73,9 +73,9 @@
         {
           "heading": "Refund Processing",
           "body": [
-            "Refunds are issued to the original payment method once the returned item reaches our warehouse and passes inspection.",
-            "The amount typically reflects in your account within 5 to 7 business days, depending on your bank or payment provider.",
-            "For Cash on Delivery orders, refunds are made by bank transfer to details you provide."
+            "Refunds are issued once the returned item reaches our warehouse and passes inspection.",
+            "Orders are cash on delivery today, so refunds are made by bank transfer to the details you give us, and the amount typically reaches your account within 5 to 7 business days.",
+            "Every refund is recorded against your invoice with a credit note, which you can open from your order."
           ]
         },
         {
@@ -157,7 +157,7 @@
           "body": [
             "Details you give us directly: name, email address, phone number, delivery address, and order history.",
             "Technical information collected automatically: device type, browser, and pages visited, used to improve the store.",
-            "We do not store your card details. Payments are handled by Razorpay, and card data goes directly to them."
+            "Orders are paid in cash on delivery, so we never ask for or hold card or bank details."
           ]
         },
         {
@@ -171,7 +171,7 @@
         {
           "heading": "Sharing",
           "body": [
-            "We share the minimum necessary information with delivery partners, our payment gateway, and communication providers who send order notifications on our behalf.",
+            "We share the minimum necessary information with our delivery partners and with the service that sends our order emails.",
             "We do not sell your personal data to anyone."
           ]
         },
