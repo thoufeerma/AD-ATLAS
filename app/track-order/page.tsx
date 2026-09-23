@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { Suspense } from "react";
 import PageBanner from "@/components/ui/PageBanner";
 import TrackOrder from "@/components/order/TrackOrder";
 import { getProducts } from "@/lib/api/server";
 
-export const metadata: Metadata = {
-  title: "Track Your Order",
-  description: "Stay updated with every step. We're getting your Velastia beauty to you.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("track-order");
+}
 
 export default async function TrackOrderPage() {
   const products = await getProducts();

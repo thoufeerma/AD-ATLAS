@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../db.js";
 import { notFound, param, parse } from "../../lib/http.js";
 import { rateLimit } from "../../middleware/rateLimit.js";
-import { readCopy, readReturns, readStore } from "../../lib/settings.js";
+import { readCopy, readReturns, readSeo, readStore } from "../../lib/settings.js";
 import { afterResponse, type Email } from "../../lib/mail.js";
 import { alertCollabApplication, alertContactMessage, mailContext } from "../../lib/emails.js";
 
@@ -98,7 +98,7 @@ contentRouter.get("/pages/:slug", async (req, res) => {
  * cart — so changing the free-shipping threshold in the admin changes the site.
  * Only keys on this allow-list are public; other settings stay private.
  */
-const PUBLIC_SETTING_KEYS = ["store", "welcomeOffer", "copy", "returns"] as const;
+const PUBLIC_SETTING_KEYS = ["store", "welcomeOffer", "copy", "returns", "seo"] as const;
 
 contentRouter.get("/settings/public", async (_req, res) => {
   const [settings, shipping] = await Promise.all([
@@ -118,6 +118,9 @@ contentRouter.get("/settings/public", async (_req, res) => {
       welcomeOffer: await liveWelcomeOffer(values.welcomeOffer),
       copy: readCopy(values.copy),
       returns: readReturns(values.returns),
+      // Titles, descriptions, the share image and whether search engines are
+      // welcome — the storefront builds every page's metadata from these.
+      seo: readSeo(values.seo),
       shipping,
     },
   });

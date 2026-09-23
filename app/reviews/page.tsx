@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import PageBanner from "@/components/ui/PageBanner";
 import StarRating from "@/components/ui/StarRating";
@@ -7,10 +8,9 @@ import TrustStrip from "@/components/ui/TrustStrip";
 import WriteReview from "@/components/reviews/WriteReview";
 import { getProducts, getRatingSummary, getReviews } from "@/lib/api/server";
 
-export const metadata: Metadata = {
-  title: "Reviews",
-  description: "What Velastia customers say about the products they wear every day.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("reviews");
+}
 
 export default async function ReviewsPage() {
   const [rating, reviews, products] = await Promise.all([

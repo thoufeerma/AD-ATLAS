@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { Mail, Phone, MessageCircle } from "lucide-react";
 import PageBanner from "@/components/ui/PageBanner";
@@ -7,10 +8,9 @@ import { getFaqs, getSettings } from "@/lib/api/server";
 import type { Faq } from "@/lib/api/types";
 import { telHref, whatsappHref } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "FAQs",
-  description: "Answers to the questions we get asked most about Velastia.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("faqs");
+}
 
 export default async function FaqsPage() {
   const [faqs, { store }] = await Promise.all([getFaqs(), getSettings()]);

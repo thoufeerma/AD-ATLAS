@@ -6,10 +6,12 @@
 export const SITE_URL = (process.env.SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
 
 /**
- * Search engines are told to stay away unless ALLOW_INDEXING=true, so a test
- * copy of the store online never shows up in Google. Turn it on at launch.
+ * Whether search engines are welcome is an admin setting (SEO Settings), so it
+ * can be switched on at launch without a deploy. This env var is the override
+ * for copies of the site that must never be indexed whatever the admin says:
+ * set ALLOW_INDEXING=false on a staging or preview deployment.
  */
-export const INDEXABLE = process.env.ALLOW_INDEXING === "true";
+export const INDEXING_BLOCKED = process.env.ALLOW_INDEXING === "false";
 
 /** "/products/x.png" → "https://velastia.com/products/x.png"; absolute URLs pass through. */
 export function absoluteUrl(path: string) {

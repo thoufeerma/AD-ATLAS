@@ -141,7 +141,7 @@ online database. Never run `npm run db:reset` or `npm run smoke` there.
 - **Emails aren't delivered** until a Resend key is added (`RESEND_API_KEY` and
   `EMAIL_FROM` on Render). Until then every email is kept in the admin's Email Log.
 - **Search engines are kept out** (`robots.txt` disallows everything and pages
-  say `noindex`) until the store has `ALLOW_INDEXING=true`.
+  say `noindex`) until indexing is switched on under SEO Settings in the admin.
 - **Payments:** cash on delivery only; Razorpay isn't connected yet.
 - Every push to `main` redeploys all three automatically.
 
@@ -180,6 +180,8 @@ After several wrong passwords, sign-in is paused for 15 minutes for that email.
 
 - Add your own domain in Vercel, then update `SITE_URL`, `STORE_URL`,
   `ADMIN_URL` and `CORS_ORIGINS`.
-- Set `ALLOW_INDEXING=true` on the store project and redeploy.
+- Switch on "Let search engines list the store" under **SEO Settings** in the
+  admin. (Leave `ALLOW_INDEXING` unset in production; set it to `false` only on
+  a staging copy that must never be listed.)
 - Connect Resend with a verified sender domain.
 - Move to paid plans: Render stays awake, and Supabase Pro adds daily backups.

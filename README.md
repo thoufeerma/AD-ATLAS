@@ -70,6 +70,7 @@ checkout; the online methods are shown as "Coming soon".
 | Offers & Deals | Offers page (display only — discounts come from coupons) |
 | FAQs, Testimonials, Collaborators | FAQs page, homepage, cart, Collabs page |
 | Pages | Shipping, Returns, Terms and Privacy policies |
+| SEO Settings | The title, description and share image of every page, and whether search engines may list the store at all |
 | Settings | Support contacts and company name (header, footer, contact, policies), social links (header and footer icons — only the ones filled in are shown — and the homepage Instagram section, which appears once an Instagram link is set), the welcome offer, and marketing copy ("Loved by Thousands", "10K+ Happy Customers", "Why Velastia?") |
 | Shipping Methods | Delivery options at checkout (price, delivery time, free-above amount, order); the first one on is the default behind every "free shipping above…" note |
 | Orders | Track Order page; marking an order shipped, out for delivery, delivered, cancelled or refunded emails the customer |
@@ -87,15 +88,21 @@ every word against product names, descriptions, categories and shade names.
 The shop takes `?category=` and `?filter=bestsellers|coming-soon`, which the
 footer links use.
 
-**Search engines and link previews.** [`app/sitemap.ts`](app/sitemap.ts) lists
-the pages and every product (new products join within a minute),
-[`app/robots.ts`](app/robots.ts) keeps cart, checkout, account and search pages
-out of search results, and product pages carry schema.org Product data (price
-in INR, stock, star rating) plus their own share preview. Every other page shares
-[`public/brand/og-image.png`](public/brand/og-image.png). All of these use
-`SITE_URL`, so **set it to the real domain before launch**. Until
-`ALLOW_INDEXING=true` is set, robots.txt turns every crawler away and each page
-says `noindex`, so a test copy online never appears in Google.
+**Search engines and link previews.** Every page's title, description and share
+image come from **SEO Settings** in the admin ([`lib/seo.ts`](lib/seo.ts)), so
+the wording can change without a deploy; products and the policy pages carry
+their own. [`app/sitemap.ts`](app/sitemap.ts) lists the pages and every product
+(new products join within a minute), [`app/robots.ts`](app/robots.ts) keeps
+cart, checkout, account and search pages out of search results, and product
+pages carry schema.org Product data (price in INR, stock, star rating) plus
+their own share preview. All of these use `SITE_URL`, so **set it to the real
+domain before launch**.
+
+Whether search engines may list the store at all is the switch on that screen,
+off to begin with: robots.txt turns every crawler away and each page says
+`noindex`, so a test copy online never appears in Google. Turn it on at launch.
+`ALLOW_INDEXING=false` overrides it for a copy that must never be listed
+whatever the admin says (a staging or preview deployment).
 
 **Customer accounts** (`/login`, `/account`): sign up, sign in ("keep me
 signed in" or just this session), forgot password, profile, saved addresses,
@@ -129,7 +136,8 @@ lib/
   store.ts              cart + wishlist state (localStorage)
   wishlist.ts           keeps a signed-in shopper's wishlist with their account
   content.ts            ingredient cards + Instagram tiles (not in the CMS yet)
-  site.ts               SITE_URL and ALLOW_INDEXING (sitemap, share previews, robots)
+  site.ts               SITE_URL, and the staging override for indexing
+  seo.ts                page titles, descriptions and share cards from SEO Settings
   tokens.ts             fills {{tokens}} in CMS page text from settings
 proxy.ts                forwards /api/v1 to the API
 public/                 imagery cropped out of the reference PNGs

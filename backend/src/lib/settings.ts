@@ -171,6 +171,104 @@ export function readTax(stored: unknown): TaxSettings {
   return { ...DEFAULT_TAX, ...(parsed.success ? parsed.data : {}) };
 }
 
+/**
+ * Search engines and link previews. The titles and descriptions below are the
+ * ones the storefront shipped with; the admin edits them under SEO Settings,
+ * and anything left empty falls back to these.
+ *
+ * Product pages and the policy pages carry their own (Products → SEO, Pages),
+ * so they aren't listed here.
+ */
+export const SEO_PAGES = [
+  "home",
+  "shop",
+  "about",
+  "offers",
+  "collabs",
+  "reviews",
+  "faqs",
+  "ingredients",
+  "contact",
+  "track-order",
+] as const;
+
+export type SeoPage = (typeof SEO_PAGES)[number];
+
+const PageMeta = z.object({
+  /** Empty means "use the built-in wording". */
+  title: z.string().trim().max(70),
+  description: z.string().trim().max(200),
+});
+
+const PageMetaFields = Object.fromEntries(SEO_PAGES.map((p) => [p, PageMeta])) as Record<
+  SeoPage,
+  typeof PageMeta
+>;
+
+export const SeoSettings = z.object({
+  /** The home page's title, and the fallback for anything without its own. */
+  defaultTitle: z.string().trim().min(2).max(70),
+  /** Added after every other page's title: "Shop Collection | Velastia". */
+  titleSuffix: z.string().trim().max(40),
+  description: z.string().trim().min(10).max(200),
+  /** The picture shown when a link is shared. 1200×630 travels well. */
+  shareImageUrl: z.union([z.literal("").transform(() => null), z.null(), z.string().trim().max(500)]),
+  /**
+   * Off keeps the whole site out of Google — the state a test copy should be
+   * in. Turn it on at launch.
+   */
+  indexable: z.boolean(),
+  pages: z.object(PageMetaFields),
+});
+
+export type SeoSettings = z.infer<typeof SeoSettings>;
+
+const page = (title: string, description: string) => ({ title, description });
+
+export const DEFAULT_SEO: SeoSettings = {
+  defaultTitle: "Velastia — Luxury. Science. You.",
+  titleSuffix: "Velastia",
+  description:
+    "Premium beauty, crafted with science and designed for the modern Indian woman. Clean, cruelty-free and dermatologically tested.",
+  shareImageUrl: "/brand/og-image.png",
+  indexable: false,
+  pages: {
+    home: page("", ""),
+    shop: page(
+      "Shop Collection",
+      "Premium beauty essentials, crafted with science and luxury for the modern Indian woman.",
+    ),
+    about: page(
+      "About Velastia",
+      "Velastia is more than a beauty brand. It's a promise of luxury, backed by science, crafted for the modern Indian woman.",
+    ),
+    offers: page("Offers", "Current Velastia offers and coupon codes."),
+    collabs: page(
+      "Collaborations",
+      "Partnering with creators, makeup artists and beauty experts who inspire beauty every day.",
+    ),
+    reviews: page("Reviews", "What Velastia customers say about the products they wear every day."),
+    faqs: page("FAQs", "Answers to the questions we get asked most about Velastia."),
+    ingredients: page(
+      "Ingredients",
+      "Every Velastia ingredient is chosen for performance and purity. Here's what goes in, and what never does.",
+    ),
+    contact: page("Contact Us", "Questions, feedback or collaboration ideas — we'd love to hear from you."),
+    "track-order": page("Track Your Order", "Stay updated with every step. We're getting your Velastia beauty to you."),
+  },
+};
+
+export function readSeo(stored: unknown): SeoSettings {
+  const parsed = SeoSettings.partial().safeParse(stored ?? {});
+  const seo = parsed.success ? parsed.data : {};
+  return {
+    ...DEFAULT_SEO,
+    ...seo,
+    // A page saved before a new one was added keeps the built-in wording.
+    pages: { ...DEFAULT_SEO.pages, ...(seo.pages ?? {}) },
+  };
+}
+
 /** Which emails the store sends, and who receives the store's own alerts. */
 export const NotificationSettings = z.object({
   /** To the customer when an order is placed. */

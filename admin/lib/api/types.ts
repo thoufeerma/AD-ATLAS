@@ -355,6 +355,7 @@ export type SiteSettings = {
   notifications: NotificationSettings;
   returns: ReturnPolicy;
   tax: TaxDetails;
+  seo: SeoSettings;
   /** Whether an email service is connected; if not, emails are only logged. */
   email: { connected: boolean; from: string };
   shipping: { name: string; pricePaise: number; freeAbovePaise: number | null } | null;
@@ -375,6 +376,33 @@ export type CreditNoteSummary = {
   totalPaise: number;
   issuedAt: string;
   returnRequest: { number: string } | null;
+};
+
+/** The pages whose title and description the admin owns (SEO Settings). */
+export const SEO_PAGES = [
+  "home",
+  "shop",
+  "about",
+  "offers",
+  "collabs",
+  "reviews",
+  "faqs",
+  "ingredients",
+  "contact",
+  "track-order",
+] as const;
+
+export type SeoPage = (typeof SEO_PAGES)[number];
+
+export type SeoSettings = {
+  defaultTitle: string;
+  /** Added after every other page's title. */
+  titleSuffix: string;
+  description: string;
+  shareImageUrl: string | null;
+  /** False keeps the whole storefront out of search results. */
+  indexable: boolean;
+  pages: Record<SeoPage, { title: string; description: string }>;
 };
 
 /** GST registration, for invoices. Invoicing is on once a GSTIN is saved. */

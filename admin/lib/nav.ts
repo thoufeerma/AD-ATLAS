@@ -89,7 +89,7 @@ export const NAV: NavGroup[] = [
     items: [
       { href: "/campaigns", label: "Email Campaigns", Icon: Mail, sample: true },
       { href: "/subscribers", label: "Subscribers", Icon: UserPlus },
-      { href: "/seo", label: "SEO Settings", Icon: Search, sample: true },
+      { href: "/seo", label: "SEO Settings", Icon: Search },
     ],
   },
   {

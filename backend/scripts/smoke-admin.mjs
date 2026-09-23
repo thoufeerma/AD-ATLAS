@@ -856,6 +856,32 @@ console.log("\n[GST invoices]");
   ok(offAgain.json.data.invoiceNumber === numberB, "tax settings restored; issued invoices stay");
 }
 
+console.log("\n[SEO settings]");
+{
+  const before = (await call("GET", "/admin/settings")).json.data.seo;
+  ok(before.indexable === false && Object.keys(before.pages).length === 10 && before.pages.shop.title.length > 0,
+    "SEO settings start hidden from search, with the storefront's own wording", `"${before.pages.shop.title}"`);
+
+  const tooLong = await call("PUT", "/admin/settings/seo", { ...before, defaultTitle: "x".repeat(71) });
+  ok(tooLong.status === 400 && tooLong.json.error.details?.[0]?.path === "defaultTitle", "a title longer than search results show is refused");
+  const badPage = await call("PUT", "/admin/settings/seo", { ...before, pages: { ...before.pages, shop: { title: "Shop", description: "y".repeat(201) } } });
+  ok(badPage.status === 400 && badPage.json.error.details?.[0]?.path === "pages.shop.description", "…and so is an over-long page description", badPage.json.error.details?.[0]?.path);
+
+  const saved = await call("PUT", "/admin/settings/seo", {
+    ...before,
+    indexable: true,
+    description: `Smoke ${RUN}: premium beauty, crafted with science for the modern Indian woman.`,
+    pages: { ...before.pages, shop: { title: `Shop ${RUN}`, description: before.pages.shop.description } },
+  });
+  ok(saved.status === 200 && saved.json.data.seo.pages.shop.title === `Shop ${RUN}`, "titles and descriptions saved");
+  const shown = (await pub("GET", "/settings/public")).json.data.seo;
+  ok(shown.indexable === true && shown.pages.shop.title === `Shop ${RUN}` && shown.description.startsWith(`Smoke ${RUN}`),
+    "…and the storefront reads them, including the search-engine switch");
+
+  await call("PUT", "/admin/settings/seo", before);
+  ok((await pub("GET", "/settings/public")).json.data.seo.indexable === false, "SEO settings restored");
+}
+
 console.log("\n[Race: two shoppers, one stock pool]");
 {
   const nc = (await call("GET", "/admin/products?q=night%20cream")).json.data[0];

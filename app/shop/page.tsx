@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import PageBanner from "@/components/ui/PageBanner";
 import ShopBrowser, { type ShopFilter } from "@/components/shop/ShopBrowser";
 import TrustStrip from "@/components/ui/TrustStrip";
 import { bannerHeadlines, getCategories, getProducts } from "@/lib/api/server";
 
-export const metadata: Metadata = {
-  title: "Shop Collection",
-  description:
-    "Premium beauty essentials, crafted with science and luxury for the modern Indian woman.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("shop");
+}
 
 const FILTERS: ShopFilter[] = ["bestsellers", "coming-soon"];
 

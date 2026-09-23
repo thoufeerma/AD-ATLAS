@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Image from "next/image";
 import { Ban, Leaf, FlaskConical, ShieldCheck } from "lucide-react";
 import PageBanner from "@/components/ui/PageBanner";
 import TrustStrip from "@/components/ui/TrustStrip";
 import Button from "@/components/ui/Button";
 
-export const metadata: Metadata = {
-  title: "Ingredients",
-  description:
-    "Every Velastia ingredient is chosen for performance and purity. Here's what goes in, and what never does.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("ingredients");
+}
 
 const HERO_INGREDIENTS = [
   {

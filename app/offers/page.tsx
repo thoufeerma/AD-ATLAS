@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { Sparkles } from "lucide-react";
 import PageBanner from "@/components/ui/PageBanner";
 import Button from "@/components/ui/Button";
@@ -8,10 +9,9 @@ import CopyCode from "@/components/ui/CopyCode";
 import { getBestsellers, getOffers, getSettings } from "@/lib/api/server";
 import { inrPaise } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Offers",
-  description: "Current Velastia offers and coupon codes.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("offers");
+}
 
 /**
  * No design exists for this page — the Gen B nav links to it but the reference

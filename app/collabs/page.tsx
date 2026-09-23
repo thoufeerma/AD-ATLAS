@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Image from "next/image";
 import { Sparkles, Gift, Megaphone, HandHeart } from "lucide-react";
 import PageBanner from "@/components/ui/PageBanner";
@@ -7,11 +8,9 @@ import CollabForm from "@/components/forms/CollabForm";
 import { getHomeContent } from "@/lib/api/server";
 import { INSTAGRAM } from "@/lib/content";
 
-export const metadata: Metadata = {
-  title: "Collaborations",
-  description:
-    "Partnering with creators, makeup artists and beauty experts who inspire beauty every day.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("collabs");
+}
 
 const BENEFITS = [
   { Icon: Gift, title: "Product Seeding", note: "Full-size launches sent to you first, before they go on sale." },

@@ -11,12 +11,14 @@ import {
   PAGE_TOKENS,
   PageBody,
   ReturnSettings,
+  SeoSettings,
   StoreSettings,
   TaxSettings,
   WelcomeOfferSettings,
   readCopy,
   readNotifications,
   readReturns,
+  readSeo,
   readStore,
   readTax,
 } from "../../lib/settings.js";
@@ -31,7 +33,7 @@ export const adminSettingsRouter = Router();
 const readSettings = async () => {
   const [rows, shipping] = await Promise.all([
     prisma.setting.findMany({
-      where: { key: { in: ["store", "welcomeOffer", "copy", "notifications", "returns", "tax"] } },
+      where: { key: { in: ["store", "welcomeOffer", "copy", "notifications", "returns", "tax", "seo"] } },
     }),
     prisma.shippingMethod.findFirst({
       where: { isEnabled: true },
@@ -48,6 +50,7 @@ const readSettings = async () => {
     notifications: readNotifications(values.notifications),
     returns: readReturns(values.returns),
     tax: withState(readTax(values.tax)),
+    seo: readSeo(values.seo),
     // Read-only: whether emails really go out, and from which address.
     email: { connected: emailServiceConnected(), from: env.EMAIL_FROM },
     // Read-only here; shown so page editors can see what shipping tokens become.
@@ -110,6 +113,18 @@ adminSettingsRouter.put("/tax", allow(...ROLES.catalog), async (req, res) => {
     tax.gstin ? `Set GST details (GSTIN ${tax.gstin})` : "Cleared the GSTIN — invoices are off",
     "Setting",
     "tax",
+  );
+  res.json({ data: await readSettings() });
+});
+
+adminSettingsRouter.put("/seo", allow(...ROLES.content), async (req, res) => {
+  const seo = parse(SeoSettings, req.body);
+  await save("seo", seo);
+  await logActivity(
+    req,
+    seo.indexable ? "Updated SEO settings (search engines allowed)" : "Updated SEO settings (site hidden from search)",
+    "Setting",
+    "seo",
   );
   res.json({ data: await readSettings() });
 });

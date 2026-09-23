@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Image from "next/image";
 import {
   Leaf,
@@ -14,11 +15,9 @@ import {
 } from "lucide-react";
 import { getRatingSummary, getSettings } from "@/lib/api/server";
 
-export const metadata: Metadata = {
-  title: "About Velastia",
-  description:
-    "Velastia is more than a beauty brand. It's a promise of luxury, backed by science, crafted for the modern Indian woman.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("about");
+}
 
 const PILLARS = [
   { label: "Crafted with", value: "Premium Ingredients", Icon: Leaf },

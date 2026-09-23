@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { Mail, Phone, Clock, MapPin, MessageCircle } from "lucide-react";
 import PageBanner from "@/components/ui/PageBanner";
 import TrustStrip from "@/components/ui/TrustStrip";
@@ -6,10 +7,9 @@ import ContactForm from "@/components/forms/ContactForm";
 import { getSettings } from "@/lib/api/server";
 import { telHref, whatsappHref } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Contact Us",
-  description: "Questions, feedback or collaboration ideas — we'd love to hear from you.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("contact");
+}
 
 export default async function ContactPage() {
   const { store } = await getSettings();

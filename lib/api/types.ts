@@ -58,6 +58,19 @@ export type Category = {
   productCount: number;
 };
 
+/** The pages whose metadata the admin edits; the rest carry their own. */
+export type SeoPage =
+  | "home"
+  | "shop"
+  | "about"
+  | "offers"
+  | "collabs"
+  | "reviews"
+  | "faqs"
+  | "ingredients"
+  | "contact"
+  | "track-order";
+
 export type Settings = {
   store: {
     name: string;
@@ -81,6 +94,16 @@ export type Settings = {
   } | null;
   /** Returns policy (Settings → Returns). */
   returns: { accepted: boolean; windowDays: number; instructions: string };
+  /** Titles, descriptions and the share image (SEO Settings). */
+  seo: {
+    defaultTitle: string;
+    titleSuffix: string;
+    description: string;
+    shareImageUrl: string | null;
+    /** False keeps the whole site out of search results. */
+    indexable: boolean;
+    pages: Record<SeoPage, { title: string; description: string }>;
+  };
   /** Marketing lines the admin can edit (Settings → Site Copy). */
   copy: {
     ratingHeadline: string;
