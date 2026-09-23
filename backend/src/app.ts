@@ -35,6 +35,8 @@ import { adminReportsRouter } from "./routes/admin/reports.js";
 import { adminReturnsRouter } from "./routes/admin/returns.js";
 import { returnsRouter } from "./routes/public/returns.js";
 import { invoicesRouter } from "./routes/public/invoices.js";
+import { blogRouter } from "./routes/public/blog.js";
+import { adminBlogRouter } from "./routes/admin/blog.js";
 import { UPLOAD_ROOT } from "./lib/media.js";
 
 export function createApp() {
@@ -80,6 +82,7 @@ export function createApp() {
   v1.use("/account", accountRouter);
   v1.use(returnsRouter);
   v1.use(invoicesRouter);
+  v1.use(blogRouter);
 
   // ── Admin API (CMS) ── everything past /auth requires a session, and a
   // password of the admin's own choosing (see requireCurrentPassword).
@@ -101,6 +104,7 @@ export function createApp() {
   admin.use("/activity", adminActivityRouter);
   admin.use("/settings", adminSettingsRouter);
   admin.use("/pages", adminPagesRouter);
+  admin.use("/blog", adminBlogRouter);
   admin.use("/inbox", adminInboxRouter);
   admin.use("/subscribers", adminSubscribersRouter);
   admin.use("/users", adminUsersRouter);

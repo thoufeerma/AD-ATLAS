@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getProducts } from "@/lib/api/server";
+import { getBlogPosts, getProducts } from "@/lib/api/server";
 import { absoluteUrl, SITE_URL } from "@/lib/site";
 
 /** Pages worth finding in a search engine. Cart, checkout and account pages are left out. */
@@ -22,7 +22,7 @@ const PAGES: { path: string; priority: number }[] = [
 // Products come from the API (cached for a minute), so a product added in the
 // admin joins the sitemap without a rebuild.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const products = await getProducts();
+  const [products, posts] = await Promise.all([getProducts(), getBlogPosts(50)]);
   return [
     ...PAGES.map(({ path, priority }) => ({
       url: `${SITE_URL}${path}`,
@@ -34,6 +34,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.8,
       images: p.images.map((i) => absoluteUrl(i.url)),
+    })),
+    // The Journal, and each post. Only live posts come back from the API.
+    ...(posts.length
+      ? [{ url: `${SITE_URL}/blog`, changeFrequency: "weekly" as const, priority: 0.6 }]
+      : []),
+    ...posts.map((p) => ({
+      url: `${SITE_URL}/blog/${p.slug}`,
+      lastModified: new Date(p.publishedAt),
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+      ...(p.coverUrl ? { images: [absoluteUrl(p.coverUrl)] } : {}),
     })),
   ];
 }

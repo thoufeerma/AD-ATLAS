@@ -80,7 +80,7 @@ Most of the panel reads the live database through the API: the dashboard,
 orders, customers, inbox, products, categories, inventory, reviews, coupons,
 offers, pages, media, banners, testimonials, FAQs, subscribers, users, settings,
 shipping, email log, activity, returns, tax settings with each order's GST
-invoice and credit notes, SEO settings — and the reports (Sales, Products, Customers, and the GST Summary for
+invoice and credit notes, SEO settings, the blog — and the reports (Sales, Products, Customers, and the GST Summary for
 filing returns), which count the same orders as the dashboard.
 
 These screens still show sample figures from [`lib/mock.ts`](lib/mock.ts) and
@@ -90,7 +90,7 @@ numbers:
 | Screen | Why it isn't real yet |
 | --- | --- |
 | Traffic Analytics | Needs an analytics provider; the store collects no visitor data |
-| Blog Posts, Email Campaigns | Tables and routes not built |
+| Email Campaigns | The table exists; the routes don't |
 | Payment Methods | Waiting on Razorpay |
 | Backup & Restore | Backups belong to the database host |
 

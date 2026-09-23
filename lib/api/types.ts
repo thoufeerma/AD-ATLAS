@@ -69,7 +69,8 @@ export type SeoPage =
   | "faqs"
   | "ingredients"
   | "contact"
-  | "track-order";
+  | "track-order"
+  | "blog";
 
 export type Settings = {
   store: {
@@ -154,6 +155,22 @@ export type HomeContent = {
 export type Offer = { id: string; name: string; scope: string; startsAt: string; endsAt: string };
 
 export type Faq = { id: string; question: string; answer: string; category: string };
+
+/** A post on the Journal, as listed. */
+export type BlogCard = {
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  coverUrl: string | null;
+  author: string;
+  publishedAt: string;
+  readingMinutes: number;
+};
+
+export type BlogPost = BlogCard & {
+  /** Plain paragraphs, "## " headings and "- " bullets. */
+  body: string;
+};
 
 /* ── Cart & orders ── */
 

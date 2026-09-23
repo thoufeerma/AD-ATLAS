@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Mail, Phone, Clock, MapPin } from "lucide-react";
 import { socialProfiles } from "@/components/ui/SocialIcons";
-import { getSettings } from "@/lib/api/server";
+import { getBlogPosts, getSettings } from "@/lib/api/server";
 import { telHref } from "@/lib/utils";
 import Logo from "./Logo";
 import NewsletterForm from "./NewsletterForm";
@@ -42,8 +42,14 @@ const COLUMNS = [
 ];
 
 export default async function Footer() {
-  const { store } = await getSettings();
+  const [{ store }, posts] = await Promise.all([getSettings(), getBlogPosts(1)]);
   const socials = socialProfiles(store.social);
+  // The Journal is only linked once something is published in the admin.
+  const columns = COLUMNS.map((col) =>
+    col.title === "About" && posts.length > 0
+      ? { ...col, links: [...col.links, { label: "Journal", href: "/blog" }] }
+      : col,
+  );
 
   return (
     <footer className="mt-20 bg-plum-800 text-cream-100">
@@ -73,7 +79,7 @@ export default async function Footer() {
           )}
         </div>
 
-        {COLUMNS.map((col) => (
+        {columns.map((col) => (
           <div key={col.title} className="lg:col-span-2">
             <h3 className="label-caps mb-4 text-gold-300">{col.title}</h3>
             <ul className="space-y-2.5">

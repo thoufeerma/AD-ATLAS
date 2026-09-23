@@ -233,6 +233,7 @@ const PAGE_LABEL: Record<SeoPage, string> = {
   ingredients: "Ingredients",
   contact: "Contact",
   "track-order": "Track Order",
+  blog: "Journal",
 };
 
 /** Roughly what a search result looks like, to judge length by eye. */

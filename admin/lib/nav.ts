@@ -77,7 +77,7 @@ export const NAV: NavGroup[] = [
     title: "Content Management",
     items: [
       { href: "/pages", label: "Pages", Icon: FileText },
-      { href: "/blog", label: "Blog Posts", Icon: Newspaper, sample: true },
+      { href: "/blog", label: "Blog Posts", Icon: Newspaper },
       { href: "/media", label: "Media Library", Icon: Images },
       { href: "/banners", label: "Banners", Icon: GalleryHorizontal },
       { href: "/testimonials", label: "Testimonials", Icon: MessageSquareQuote },

@@ -190,6 +190,7 @@ export const SEO_PAGES = [
   "ingredients",
   "contact",
   "track-order",
+  "blog",
 ] as const;
 
 export type SeoPage = (typeof SEO_PAGES)[number];
@@ -255,6 +256,7 @@ export const DEFAULT_SEO: SeoSettings = {
     ),
     contact: page("Contact Us", "Questions, feedback or collaboration ideas — we'd love to hear from you."),
     "track-order": page("Track Your Order", "Stay updated with every step. We're getting your Velastia beauty to you."),
+    blog: page("The Journal", "Notes on ingredients, routines and the making of our products."),
   },
 };
 

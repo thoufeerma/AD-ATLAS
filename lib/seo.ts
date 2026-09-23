@@ -14,11 +14,15 @@ import type { SeoPage } from "./api/types";
  * metadata, written on the product and page editors.
  */
 
-/** Whether search engines may index the site at all. */
+/**
+ * Whether search engines may index the site at all. During a deploy the API
+ * may briefly be a version behind, so a missing setting means "stay hidden"
+ * rather than an error page.
+ */
 export async function indexable() {
   if (INDEXING_BLOCKED) return false;
   const { seo } = await getSettings();
-  return seo.indexable;
+  return seo?.indexable ?? false;
 }
 
 const shareImage = (url: string | null) =>
@@ -28,13 +32,14 @@ const shareImage = (url: string | null) =>
 export async function siteMetadata(): Promise<Metadata> {
   const { store, seo } = await getSettings();
   const name = store?.name ?? "Velastia";
-  const title = seo.pages.home.title || seo.defaultTitle;
-  const description = seo.pages.home.description || seo.description;
+  const home = seo?.pages?.home;
+  const title = home?.title || seo?.defaultTitle || name;
+  const description = home?.description || seo?.description || "";
 
   return {
     // Relative image and page URLs in metadata resolve against the live domain.
     metadataBase: new URL(SITE_URL),
-    title: { default: title, template: seo.titleSuffix ? `%s | ${seo.titleSuffix}` : "%s" },
+    title: { default: title, template: seo?.titleSuffix ? `%s | ${seo.titleSuffix}` : "%s" },
     description,
     // The card shown when a link is shared on WhatsApp, Instagram, X and so on.
     // Product pages replace it with the product's own photos.
@@ -44,7 +49,7 @@ export async function siteMetadata(): Promise<Metadata> {
       locale: "en_IN",
       title,
       description,
-      images: shareImage(seo.shareImageUrl),
+      images: shareImage(seo?.shareImageUrl ?? null),
     },
     twitter: { card: "summary_large_image" },
     // A test copy of the store stays out of search results until the admin
@@ -56,12 +61,13 @@ export async function siteMetadata(): Promise<Metadata> {
 /** One page's metadata, or the site defaults if the admin cleared it. */
 export async function pageMetadata(page: SeoPage): Promise<Metadata> {
   const { seo } = await getSettings();
-  const { title, description } = seo.pages[page];
+  const { title, description } = seo?.pages?.[page] ?? { title: "", description: "" };
+  const suffix = seo?.titleSuffix ? ` | ${seo.titleSuffix}` : "";
   return {
     ...(title ? { title } : {}),
     ...(description ? { description } : {}),
     openGraph: {
-      ...(title ? { title: `${title}${seo.titleSuffix ? ` | ${seo.titleSuffix}` : ""}` } : {}),
+      ...(title ? { title: `${title}${suffix}` } : {}),
       ...(description ? { description } : {}),
     },
   };

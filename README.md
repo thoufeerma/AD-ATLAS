@@ -70,6 +70,7 @@ checkout; the online methods are shown as "Coming soon".
 | Offers & Deals | Offers page (display only — discounts come from coupons) |
 | FAQs, Testimonials, Collaborators | FAQs page, homepage, cart, Collabs page |
 | Pages | Shipping, Returns, Terms and Privacy policies |
+| Blog Posts | The Journal (`/blog`): each post's cover, teaser and body, published now or scheduled for a date. The footer links to it once a post is live |
 | SEO Settings | The title, description and share image of every page, and whether search engines may list the store at all |
 | Settings | Support contacts and company name (header, footer, contact, policies), social links (header and footer icons — only the ones filled in are shown — and the homepage Instagram section, which appears once an Instagram link is set), the welcome offer, and marketing copy ("Loved by Thousands", "10K+ Happy Customers", "Why Velastia?") |
 | Shipping Methods | Delivery options at checkout (price, delivery time, free-above amount, order); the first one on is the default behind every "free shipping above…" note |
@@ -127,7 +128,7 @@ components/
   providers/            SettingsProvider — store settings for client components
   ui/                   Button, ProductCard, PageBanner, StarRating, Avatar, …
   forms/ reviews/       contact, collab and review forms
-  home/ shop/ product/ cart/ checkout/ auth/ order/
+  home/ shop/ product/ cart/ checkout/ auth/ order/ blog/
 lib/
   api/server.ts         server-side reads (cached 60s)
   api/client.ts         browser-side calls via /api/v1

@@ -1,7 +1,6 @@
 /**
  * Sample data for the admin screens that aren't wired to the API yet —
- * Traffic Analytics, Blog Posts, Email Campaigns, Payment Methods and
- * Backup & Restore. Every screen that uses this file is marked
+ * Traffic Analytics, Email Campaigns, Payment Methods and Backup & Restore. Every screen that uses this file is marked
  * "Sample" in the sidebar, so nobody mistakes these figures for the store's.
  *
  * Everything else — the dashboard, orders, products, customers, reviews,
@@ -42,14 +41,6 @@ export const TOP_LOCATIONS = [
 ];
 
 /* ── Content ──────────────────────────────────────────────────────────── */
-
-export const BLOG_POSTS = [
-  { id: "b-1", title: "How to Find Your Perfect Nude Shade", author: "Anshil Dev", date: "2025-05-26", views: 4_210, status: "Published" as const },
-  { id: "b-2", title: "The Science Behind Long-Wear Matte", author: "Dr. Rhea Nathan", date: "2025-05-19", views: 3_154, status: "Published" as const },
-  { id: "b-3", title: "Five Ingredients We Will Never Use", author: "Anshil Dev", date: "2025-05-11", views: 5_890, status: "Published" as const },
-  { id: "b-4", title: "Building a Monsoon-Proof Routine", author: "Kavya Menon", date: "2025-06-02", views: 0, status: "Scheduled" as const },
-  { id: "b-5", title: "Behind the Shade Naming", author: "Anshil Dev", date: "—", views: 0, status: "Draft" as const },
-];
 
 /* ── Marketing ────────────────────────────────────────────────────────── */
 

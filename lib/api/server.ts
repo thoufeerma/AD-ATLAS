@@ -3,6 +3,8 @@ import "server-only";
 import { cache } from "react";
 import type {
   Banner,
+  BlogCard,
+  BlogPost,
   Category,
   Faq,
   HomeContent,
@@ -82,6 +84,11 @@ export const getBanners = cache(() => get<Banner[]>("/banners"));
 export const getOffers = cache(() => get<Offer[]>("/offers"));
 
 export const getFaqs = cache(() => get<Faq[]>("/faqs"));
+
+/** Published posts, newest first. Empty until the first one goes live. */
+export const getBlogPosts = cache((take = 24) => get<BlogCard[]>(`/blog?take=${take}`));
+
+export const getBlogPost = cache((slug: string) => find<BlogPost>(`/blog/${encodeURIComponent(slug)}`));
 
 export const getRatingSummary = cache(() => get<RatingSummary>("/reviews/summary"));
 

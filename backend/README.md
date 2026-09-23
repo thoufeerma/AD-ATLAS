@@ -58,7 +58,7 @@ under **Users & Roles**.
 | `db:studio` | Prisma Studio, a GUI over the database |
 | `admin:reset` | Forgotten admin password: lists the admin emails and gives one a new one-time password (`-- email` to pick one when there are several). Uses `DATABASE_URL` — see [DEPLOY.md](../DEPLOY.md) for the online database |
 | `db:up` / `db:down` | Start / stop the Docker database |
-| `smoke` | 287 end-to-end API checks — **dev databases only**, see below |
+| `smoke` | 295 end-to-end API checks — **dev databases only**, see below |
 
 ## API
 
@@ -76,6 +76,7 @@ All routes are under `/api/v1`. Every error has the same shape:
 | POST | `/reviews` | Submit a review — held as pending until an admin publishes it |
 | GET | `/content/home` | Testimonials, collaborators, banners |
 | GET | `/banners` · `/offers` | Active banners (by placement); offers in their date window |
+| GET | `/blog` · `/blog/:slug` | The Journal. A post is public once its publish date has passed; drafts and future dates stay hidden |
 | GET | `/faqs` · `/pages/:slug` · `/settings/public` | CMS content. `welcomeOffer` is read from the live coupon and is `null` when it's off; `seo` carries every page's title and description, the share image and whether search engines are welcome |
 | POST | `/cart/quote` | Authoritative cart pricing — writes nothing. Lists every enabled shipping option priced for the cart; pass `shippingMethodId` to price with one |
 | POST | `/orders` | Place an order |
@@ -128,6 +129,7 @@ requests 10 and each form 10 per 10 minutes. Behind a proxy, make sure it sets `
 | `/admin/settings/store` · `/welcome-offer` | PUT | super admin only |
 | `/admin/settings/copy` · `/seo` | PUT | Content Manager |
 | `/admin/pages` · `/:slug` | GET · PATCH | Content Manager |
+| `/admin/blog` · `/:id` | GET · POST · PATCH · DELETE | Content Manager |
 | `/admin/inbox/counts` · `/messages` · `/applications` (+ `/:id`) | GET · PATCH · DELETE | all staff |
 | `/admin/subscribers` · `/:id` | GET · PATCH | Content Manager |
 
@@ -274,7 +276,7 @@ npm run dev      # in one terminal
 npm run smoke    # in another
 ```
 
-Runs 53 storefront and 234 admin checks, including a concurrent-purchase race,
+Runs 53 storefront and 242 admin checks, including a concurrent-purchase race,
 the admin account lifecycle and regression tests for the partial-update bug.
 Rerunnable against a used database: every fixture it creates is suffixed per
 run. It **refuses to target anything but localhost**, because it places orders
@@ -292,8 +294,7 @@ show up, turned off, on the Users & Roles screen.
   The gateway integration must also *release* that stock on payment failure or
   after an expiry window — see the `TODO(payments)` in `routes/public/checkout.ts`.
 - **SMS / WhatsApp** order updates (email only for now).
-- **Remaining CMS resources**: blog posts and campaigns. The tables
-  exist; the routes don't. (Pages, store settings, the inbox, subscribers,
+- **Email campaigns**: the table exists; the routes don't. (Pages, store settings, the inbox, subscribers,
   Users & Roles, shipping methods and the media library are done.)
 - **Login throttling and rate limits are in-memory** — correct for one instance,
   need Redis once the API runs on several.

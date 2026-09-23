@@ -390,6 +390,7 @@ export const SEO_PAGES = [
   "ingredients",
   "contact",
   "track-order",
+  "blog",
 ] as const;
 
 export type SeoPage = (typeof SEO_PAGES)[number];
@@ -455,6 +456,26 @@ export type GstReport = {
 };
 
 export type PageSection = { heading: string; body: string[] };
+
+export type PublishStatus = "DRAFT" | "SCHEDULED" | "PUBLISHED";
+
+export type BlogPostListItem = {
+  id: string;
+  slug: string;
+  title: string;
+  author: string;
+  excerpt: string | null;
+  coverUrl: string | null;
+  status: PublishStatus;
+  /** When it goes (or went) live; null on a draft that's never been dated. */
+  publishedAt: string | null;
+  updatedAt: string;
+};
+
+export type BlogPost = BlogPostListItem & {
+  /** Plain paragraphs, "## " headings and "- " bullets. */
+  body: string;
+};
 
 export type PageListItem = {
   id: string;

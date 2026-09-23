@@ -856,10 +856,46 @@ console.log("\n[GST invoices]");
   ok(offAgain.json.data.invoiceNumber === numberB, "tax settings restored; issued invoices stay");
 }
 
+console.log("\n[Blog]");
+{
+  const title = `Smoke Post ${RUN}`;
+  const draft = await call("POST", "/admin/blog", {
+    title,
+    excerpt: "A post the smoke test wrote.",
+    body: "First paragraph, written by the smoke test.\n\n## A heading\n\n- A bullet",
+    author: "Smoke Runner",
+  });
+  const post = draft.json.data;
+  ok(draft.status === 201 && post.slug === `smoke-post-${RUN}` && post.status === "DRAFT" && post.publishedAt === null,
+    "a post is created as a draft, with its web address from the title", `/blog/${post.slug}`);
+  ok((await pub("GET", `/blog/${post.slug}`)).status === 404 && !(await pub("GET", "/blog")).json.data.some((p) => p.slug === post.slug),
+    "a draft is invisible on the storefront");
+
+  const clash = await call("POST", "/admin/blog", { title, body: "Another one entirely.", author: "Smoke Runner" });
+  ok(clash.status === 409, "two posts can't share a web address", clash.json.error.message);
+
+  const past = await call("PATCH", `/admin/blog/${post.id}`, { status: "SCHEDULED", publishedAt: "2020-01-01T10:00:00.000Z" });
+  ok(past.status === 400 && past.json.error.details?.[0]?.path === "publishedAt", "scheduling needs a date in the future");
+  const later = new Date(Date.now() + 60 * 60_000).toISOString();
+  const scheduled = await call("PATCH", `/admin/blog/${post.id}`, { status: "SCHEDULED", publishedAt: later });
+  ok(scheduled.status === 200 && (await pub("GET", `/blog/${post.slug}`)).status === 404,
+    "a scheduled post waits for its date");
+
+  const live = await call("PATCH", `/admin/blog/${post.id}`, { status: "PUBLISHED" });
+  const shown = await pub("GET", `/blog/${post.slug}`);
+  ok(live.status === 200 && shown.status === 200 && shown.json.data.title === title && shown.json.data.readingMinutes >= 1,
+    "publishing puts it on the storefront, with a reading time", `${shown.json.data.readingMinutes} min`);
+  const index = (await pub("GET", "/blog")).json.data;
+  ok(index[0]?.slug === post.slug && index[0].body === undefined, "the newest post leads the Journal, without the whole body");
+
+  ok((await call("DELETE", `/admin/blog/${post.id}`)).status === 204 && (await pub("GET", `/blog/${post.slug}`)).status === 404,
+    "deleting a post takes it off the storefront");
+}
+
 console.log("\n[SEO settings]");
 {
   const before = (await call("GET", "/admin/settings")).json.data.seo;
-  ok(before.indexable === false && Object.keys(before.pages).length === 10 && before.pages.shop.title.length > 0,
+  ok(before.indexable === false && Object.keys(before.pages).length === 11 && before.pages.shop.title.length > 0,
     "SEO settings start hidden from search, with the storefront's own wording", `"${before.pages.shop.title}"`);
 
   const tooLong = await call("PUT", "/admin/settings/seo", { ...before, defaultTitle: "x".repeat(71) });
