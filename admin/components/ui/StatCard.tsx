@@ -60,13 +60,7 @@ export default function StatCard({
 
       {series && (
         <div className="mt-3">
-          <Sparkline
-            data={series}
-            color={color}
-            label={`${label} trend, ${note}`}
-            width={260}
-            height={44}
-          />
+          <Sparkline data={series} color={color} label={`${label} trend, ${note}`} />
         </div>
       )}
     </article>

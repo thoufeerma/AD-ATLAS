@@ -33,8 +33,8 @@ all sit in the admin's **Email Log** instead.
 
 ## 3. Words and details
 
-- [x] Support email → `hello@velastia.in`, phone → `+91 86066 30088` (in the
-      seed; **verify** on the live site under Settings → Store)
+- [x] Support email → `hello@velastia.in`, phone → `+91 86066 30088` — live
+      and confirmed in the footer (2026-09-24)
 - [ ] Support hours — still the placeholder "Mon - Sat | 10AM - 7PM"
 - [ ] City — still the placeholder "Mumbai, India"
 - [ ] Legal name on invoices — "AD Atlas Ventures Private Limited", confirm it
@@ -44,13 +44,14 @@ all sit in the admin's **Email Log** instead.
       by 10,000+ Beautiful Souls", "10K+ Happy Customers" — make them true or
       reword them
 - [x] Policy pages no longer promise SMS tracking or Razorpay card payments;
-      they describe cash on delivery, emailed tracking and credit notes
-      (**verify** on the live site after the seed run below). Put the payment
-      wording back when Razorpay goes live
+      they describe cash on delivery, emailed tracking and credit notes. Seeded
+      to the live database on 2026-09-24; **verify** by reading the shipping,
+      returns and privacy pages. Put the payment wording back when Razorpay
+      goes live
 - [ ] Have someone read the shipping, returns, terms and privacy pages properly
       — they were written to match the designs, not by a lawyer
-- [ ] Run `npm run db:seed` against Supabase once (collaborator photos, returns
-      wording, the perfume's HSN code, and the contact details above)
+- [x] Ran `npm run db:seed` against Supabase on 2026-09-24 (collaborator
+      photos, returns wording, the perfume's HSN code, contact details)
 
 ## 4. Tax and invoices
 
