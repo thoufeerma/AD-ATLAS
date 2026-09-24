@@ -6,7 +6,15 @@ import { prisma } from "../../db.js";
 import { gstInside, quoteCart } from "../../lib/pricing.js";
 import { findState, stateForGstin } from "../../lib/gst.js";
 import { invoiceLink, taxSettings } from "../../lib/invoices.js";
-import { badRequest, conflict, notFound, parse } from "../../lib/http.js";
+import {
+  createGatewayOrder,
+  gatewayStatus,
+  paymentSignature,
+  simulating,
+  verifyPaymentSignature,
+} from "../../lib/payments.js";
+import { readPayments } from "../../lib/settings.js";
+import { badRequest, conflict, notFound, param, parse } from "../../lib/http.js";
 import { rateLimit } from "../../middleware/rateLimit.js";
 import { AddressFields, IndianMobile } from "../../lib/validate.js";
 import { currentCustomer } from "../../lib/customerAuth.js";
@@ -48,6 +56,25 @@ const OrderBody = z.object({
   saveAddress: z.boolean().optional(),
 });
 
+/** The methods a shopper may choose right now: the admin's switches, and for
+ * the online ones a connected gateway. */
+async function payableMethods() {
+  const row = await prisma.setting.findUnique({ where: { key: "payments" } });
+  const chosen = readPayments(row?.value);
+  const online = gatewayStatus().connected;
+  const methods: OrderBodyMethod[] = [];
+  if (chosen.cod) methods.push("COD");
+  if (online) {
+    if (chosen.upi) methods.push("UPI");
+    if (chosen.card) methods.push("CARD");
+    if (chosen.netbanking) methods.push("NETBANKING");
+    if (chosen.wallet) methods.push("WALLET");
+  }
+  return methods;
+}
+
+type OrderBodyMethod = z.infer<typeof OrderBody>["paymentMethod"];
+
 /** VL + YYMMDD + 4 digits, e.g. VL2605291234. */
 function makeOrderNumber() {
   const d = new Date();
@@ -68,10 +95,21 @@ async function uniqueOrderNumber(tx: Prisma.TransactionClient) {
 }
 
 // A real shopper places one order, maybe retries a couple of times.
-const orderLimit = rateLimit({ name: "order", max: 20, windowMs: 10 * 60_000 });
+const orderLimit = rateLimit({ name: "order", max: 30, windowMs: 10 * 60_000 });
 
 checkoutRouter.post("/orders", orderLimit, async (req, res) => {
   const body = parse(OrderBody, req.body);
+
+  // A method the store doesn't offer (or can't take yet) must never quietly
+  // become something else — the shopper picked how they want to pay.
+  const offered = await payableMethods();
+  if (!offered.includes(body.paymentMethod)) {
+    const message =
+      body.paymentMethod === "COD"
+        ? "Cash on delivery isn't available at the moment"
+        : "That payment method isn't available at the moment — please choose another";
+    throw conflict(message, { offered });
+  }
 
   // Signed in: the order belongs to the account, so it uses the account's email.
   const session = await currentCustomer(req);
@@ -223,15 +261,33 @@ checkoutRouter.post("/orders", orderLimit, async (req, res) => {
     });
   });
 
+  // Online payment: the gateway needs an order of its own for the browser to
+  // pay against. Done after the transaction, so a slow gateway can't hold
+  // database locks; the order simply stays unpaid if this fails.
+  let payment: PaymentHandoff | null = null;
+  if (order.paymentMethod !== "COD") {
+    const gateway = await createGatewayOrder({
+      amountPaise: order.totalPaise,
+      receipt: order.number,
+      email: order.email,
+    });
+    await prisma.order.update({ where: { id: order.id }, data: { razorpayOrderId: gateway.id } });
+    payment = {
+      gateway: "razorpay",
+      keyId: gatewayStatus().keyId!,
+      gatewayOrderId: gateway.id,
+      amountPaise: order.totalPaise,
+      prefill: { name: order.shipName, email: order.email, contact: order.shipPhone },
+      // Development without Razorpay keys: the storefront shows its own
+      // stand-in instead of opening the gateway.
+      simulated: simulating,
+    };
+  }
+
   // Confirmation to the shopper and an alert to the team, sent after this
-  // response so a slow or failing email can never affect the order.
-  afterResponse(async () => {
-    const { store, notifications: n } = await mailContext();
-    const emails: Email[] = [];
-    if (n.orderConfirmation) emails.push(orderConfirmation(order, store));
-    if (n.alertNewOrder) emails.push(...n.alertRecipients.map((to) => alertNewOrder(order, store, to)));
-    return emails;
-  });
+  // response so a slow or failing email can never affect the order. An online
+  // order isn't confirmed yet, so its emails wait for the payment.
+  if (order.paymentMethod === "COD") afterResponse(() => orderEmails(order.id));
 
   res.status(201).json({
     data: {
@@ -256,9 +312,103 @@ checkoutRouter.post("/orders", orderLimit, async (req, res) => {
         unitPricePaise: i.unitPricePaise,
         lineTotalPaise: i.lineTotalPaise,
       })),
+      // Present for online payments: what the browser needs to open Razorpay.
+      payment,
     },
   });
 });
+
+/** What the storefront needs to open Razorpay Checkout. */
+type PaymentHandoff = {
+  gateway: "razorpay";
+  keyId: string;
+  gatewayOrderId: string;
+  amountPaise: number;
+  prefill: { name: string; email: string; contact: string };
+  simulated: boolean;
+};
+
+/** The confirmation and team alert for an order, once it counts as placed. */
+export async function orderEmails(orderId: string): Promise<Email[]> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { items: true },
+  });
+  if (!order) return [];
+  const { store, notifications: n } = await mailContext();
+  const emails: Email[] = [];
+  if (n.orderConfirmation) emails.push(orderConfirmation(order, store));
+  if (n.alertNewOrder) emails.push(...n.alertRecipients.map((to) => alertNewOrder(order, store, to)));
+  return emails;
+}
+
+const PaymentBody = z.object({
+  paymentId: z.string().trim().min(3).max(120),
+  signature: z.string().trim().min(16).max(256),
+});
+
+// A shopper pays once, and may retry a couple of times.
+const payLimit = rateLimit({ name: "payment", max: 30, windowMs: 10 * 60_000 });
+
+/**
+ * The browser reports a completed payment. The signature is Razorpay's proof:
+ * only the holder of the key secret could have produced it for this gateway
+ * order and payment, so nobody can mark their own order paid. The webhook does
+ * the same check independently, in case the tab is closed on the way back.
+ */
+checkoutRouter.post("/orders/:number/payment", payLimit, async (req, res) => {
+  const body = parse(PaymentBody, req.body);
+  const order = await prisma.order.findUnique({ where: { number: param(req, "number") } });
+  if (!order) throw notFound("Order");
+  if (order.paymentStatus === "PAID") {
+    res.json({ data: { number: order.number, status: order.status, paymentStatus: order.paymentStatus } });
+    return;
+  }
+  if (!order.razorpayOrderId) throw conflict("This order isn't waiting for an online payment");
+  if (order.status === "CANCELLED") throw conflict("This order was cancelled — please place it again");
+  if (!verifyPaymentSignature(order.razorpayOrderId, body.paymentId, body.signature)) {
+    throw badRequest("We couldn't verify that payment. If money has left your account, contact us and we'll sort it out.");
+  }
+
+  const paid = await markPaid(order.id, body.paymentId);
+  afterResponse(() => orderEmails(order.id));
+  res.json({ data: { number: paid.number, status: paid.status, paymentStatus: paid.paymentStatus } });
+});
+
+/**
+ * DEVELOPMENT ONLY. Hands back what the gateway would have handed back, so
+ * the rest of the path — the signature check, the emails, the order becoming
+ * confirmed — is the real one. Absent as soon as Razorpay keys exist, and
+ * never present in production.
+ */
+checkoutRouter.post("/orders/:number/payment/simulate", async (req, res) => {
+  if (!simulating) throw notFound("Route");
+  const order = await prisma.order.findUnique({ where: { number: param(req, "number") } });
+  if (!order?.razorpayOrderId) throw notFound("Order");
+  const paymentId = `pay_sim${randomInt(1e9, 1e10 - 1)}`;
+  res.json({
+    data: { paymentId, signature: paymentSignature(order.razorpayOrderId, paymentId) },
+  });
+});
+
+/**
+ * Records a successful payment once. Safe to call twice — the second call
+ * finds the order already paid and changes nothing.
+ */
+export async function markPaid(orderId: string, paymentId: string) {
+  return prisma.$transaction(async (tx) => {
+    const { count } = await tx.order.updateMany({
+      where: { id: orderId, paymentStatus: { not: "PAID" } },
+      data: { paymentStatus: "PAID", status: "CONFIRMED", razorpayPaymentId: paymentId },
+    });
+    if (count > 0) {
+      await tx.orderEvent.create({
+        data: { orderId, status: "CONFIRMED", note: "Payment received" },
+      });
+    }
+    return tx.order.findUniqueOrThrow({ where: { id: orderId } });
+  });
+}
 
 const TrackQuery = z.object({
   number: z.string().trim().toUpperCase(),
@@ -298,6 +448,10 @@ checkoutRouter.get("/orders/track", async (req, res) => {
       couponCode: order.couponCode,
       shippingMethod: order.shippingMethod,
       shippingEta: order.shippingEta,
+      // Filled in when the order ships; the courier's own tracking page.
+      tracking: order.trackingNumber
+        ? { courier: order.courierName, number: order.trackingNumber, url: order.trackingUrl }
+        : null,
       shipping: {
         name: order.shipName,
         city: order.shipCity,

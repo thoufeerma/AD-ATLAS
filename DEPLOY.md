@@ -184,4 +184,10 @@ After several wrong passwords, sign-in is paused for 15 minutes for that email.
   admin. (Leave `ALLOW_INDEXING` unset in production; set it to `false` only on
   a staging copy that must never be listed.)
 - Connect Resend with a verified sender domain.
+- Razorpay, when the account is ready: put `RAZORPAY_KEY_ID`,
+  `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` on the API and redeploy,
+  then add a webhook in Razorpay pointing at
+  `<your api>/api/v1/webhooks/razorpay` for the payment events. The online
+  methods appear at checkout by themselves; choose which under Settings →
+  Payment Methods.
 - Move to paid plans: Render stays awake, and Supabase Pro adds daily backups.

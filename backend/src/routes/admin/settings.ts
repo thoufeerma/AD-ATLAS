@@ -10,6 +10,8 @@ import {
   NotificationSettings,
   PAGE_TOKENS,
   PageBody,
+  PaymentSettings,
+  PickupSettings,
   ReturnSettings,
   SeoSettings,
   StoreSettings,
@@ -17,12 +19,15 @@ import {
   WelcomeOfferSettings,
   readCopy,
   readNotifications,
+  readPayments,
+  readPickup,
   readReturns,
   readSeo,
   readStore,
   readTax,
 } from "../../lib/settings.js";
 import { stateForGstin } from "../../lib/gst.js";
+import { gatewayStatus } from "../../lib/payments.js";
 import { emailServiceConnected } from "../../lib/mail.js";
 import { env } from "../../env.js";
 
@@ -33,7 +38,11 @@ export const adminSettingsRouter = Router();
 const readSettings = async () => {
   const [rows, shipping] = await Promise.all([
     prisma.setting.findMany({
-      where: { key: { in: ["store", "welcomeOffer", "copy", "notifications", "returns", "tax", "seo"] } },
+      where: {
+        key: {
+          in: ["store", "welcomeOffer", "copy", "notifications", "returns", "tax", "seo", "payments", "pickup"],
+        },
+      },
     }),
     prisma.shippingMethod.findFirst({
       where: { isEnabled: true },
@@ -51,6 +60,10 @@ const readSettings = async () => {
     returns: readReturns(values.returns),
     tax: withState(readTax(values.tax)),
     seo: readSeo(values.seo),
+    // Which ways to pay are switched on, and whether the gateway behind the
+    // online ones is actually reachable. Keys live in the environment.
+    payments: { ...readPayments(values.payments), gateway: gatewayStatus() },
+    pickup: readPickup(values.pickup),
     // Read-only: whether emails really go out, and from which address.
     email: { connected: emailServiceConnected(), from: env.EMAIL_FROM },
     // Read-only here; shown so page editors can see what shipping tokens become.
@@ -114,6 +127,23 @@ adminSettingsRouter.put("/tax", allow(...ROLES.catalog), async (req, res) => {
     "Setting",
     "tax",
   );
+  res.json({ data: await readSettings() });
+});
+
+adminSettingsRouter.put("/pickup", allow(...ROLES.catalog), async (req, res) => {
+  const pickup = parse(PickupSettings, req.body);
+  await save("pickup", pickup);
+  await logActivity(req, "Updated the pickup address", "Setting", "pickup");
+  res.json({ data: await readSettings() });
+});
+
+adminSettingsRouter.put("/payments", allow(...ROLES.catalog), async (req, res) => {
+  const payments = parse(PaymentSettings, req.body);
+  await save("payments", payments);
+  const on = Object.entries(payments)
+    .filter(([, enabled]) => enabled)
+    .map(([name]) => name.toUpperCase());
+  await logActivity(req, `Updated payment methods (${on.join(", ") || "none"})`, "Setting", "payments");
   res.json({ data: await readSettings() });
 });
 

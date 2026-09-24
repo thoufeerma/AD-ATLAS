@@ -11,6 +11,8 @@ declare global {
   namespace Express {
     interface Request {
       admin?: AuthedAdmin;
+      /** The unparsed body, kept for signature checks (see app.ts). */
+      rawBody?: Buffer;
     }
   }
 }

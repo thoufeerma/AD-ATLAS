@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import PageHeader from "@/components/ui/PageHeader";
 import ShippingManager from "@/components/shipping/ShippingManager";
+import PickupForm from "@/components/shipping/PickupForm";
 import { apiGet, requireAdmin } from "@/lib/api/server";
-import { can, type ShippingMethod } from "@/lib/api/types";
+import { can, type ShippingMethod, type SiteSettings } from "@/lib/api/types";
 
 export const metadata: Metadata = { title: "Shipping Methods" };
 
@@ -19,14 +20,20 @@ export default async function ShippingPage() {
     );
   }
 
-  const methods = await apiGet<ShippingMethod[]>("/admin/shipping-methods");
+  const [methods, settings] = await Promise.all([
+    apiGet<ShippingMethod[]>("/admin/shipping-methods"),
+    apiGet<SiteSettings>("/admin/settings"),
+  ]);
   return (
     <>
       <PageHeader
         title="Shipping Methods"
-        subtitle="Delivery options, rates and free-shipping amounts offered at checkout"
+        subtitle="Delivery options at checkout, and where parcels are collected from"
       />
-      <ShippingManager methods={methods} />
+      <div className="space-y-5">
+        <ShippingManager methods={methods} />
+        <PickupForm initial={settings.pickup} />
+      </div>
     </>
   );
 }

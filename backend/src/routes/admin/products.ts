@@ -51,6 +51,8 @@ const ProductInput = z.object({
   stock: z.number().int().min(0).default(0),
   lowStockThreshold: z.number().int().min(0).default(15),
   benefits: z.array(z.string().trim().min(1).max(200)).max(20).default([]),
+  /** Packed weight in grams, for courier bookings. */
+  weightGrams: z.number().int().min(0).max(50_000).nullish(),
   metaTitle: z.string().trim().max(70).nullish(),
   metaDescription: z.string().trim().max(170).nullish(),
   shades: z.array(ShadeInput).max(40).default([]),

@@ -54,10 +54,12 @@ during a build** too. `npm run build` and `npm run lint` both pass clean.
 | 3 | Backend API — Express + TypeScript + Prisma + PostgreSQL ([`backend/`](backend/)) | **Done** |
 | 3b | Storefront connected to the API | **Done** |
 | 3c | Online test site — Supabase, Render, Vercel ([`DEPLOY.md`](DEPLOY.md)) | **Ready to deploy** |
-| 4 | Razorpay — UPI, cards, netbanking, wallets | On hold |
+| 4 | Razorpay — UPI, cards, netbanking, wallets | **Built** — waiting on an account |
 
-Until Razorpay is connected, **cash on delivery is the only payment method** at
-checkout; the online methods are shown as "Coming soon".
+Cash on delivery works on its own. UPI, cards, net banking and wallets are
+built and tested against Razorpay, and appear at checkout as soon as its keys
+are set on the API — see the payments section of
+[`backend/README.md`](backend/README.md).
 
 ## What the admin controls on the site
 
@@ -73,8 +75,9 @@ checkout; the online methods are shown as "Coming soon".
 | Blog Posts | The Journal (`/blog`): each post's cover, teaser and body, published now or scheduled for a date. The footer links to it once a post is live |
 | SEO Settings | The title, description and share image of every page, and whether search engines may list the store at all |
 | Settings | Support contacts and company name (header, footer, contact, policies), social links (header and footer icons — only the ones filled in are shown — and the homepage Instagram section, which appears once an Instagram link is set), the welcome offer, and marketing copy ("Loved by Thousands", "10K+ Happy Customers", "Why Velastia?") |
-| Shipping Methods | Delivery options at checkout (price, delivery time, free-above amount, order); the first one on is the default behind every "free shipping above…" note |
-| Orders | Track Order page; marking an order shipped, out for delivery, delivered, cancelled or refunded emails the customer |
+| Shipping Methods | Delivery options at checkout (price, delivery time, free-above amount, order); the first one on is the default behind every "free shipping above…" note. Also the pickup address couriers collect from |
+| Payment Methods | Which ways to pay checkout offers. Cash on delivery works on its own; UPI, cards, net banking and wallets appear once Razorpay's keys are in the API's environment |
+| Orders | Track Order page; marking an order shipped, out for delivery, delivered, cancelled or refunded emails the customer. Shipping one records the courier and tracking number, which the customer sees and gets emailed |
 | Tax Settings, product HSN code and GST rate | The GST tax invoice each order gets when it ships, and the credit note issued when a return is refunded or an invoiced order is cancelled or refunded: printable pages linked from Track Order and the account's order history. Checkout and saved addresses pick the state from a list, since it decides CGST + SGST or IGST |
 | Returns, Settings → Returns | The "Request a return" panel under delivered orders (account order history and Track Order), open for the return window set in the admin; the customer is emailed as the return is approved, received and refunded |
 | Media Library | Upload images and use them for products, banners, testimonials and collaborators (a picker in each form). Served at `/uploads/…` through this site |

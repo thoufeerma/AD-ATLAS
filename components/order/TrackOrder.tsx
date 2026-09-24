@@ -353,6 +353,26 @@ function OrderResult({
                 value={order.shippingEta ? `${order.shippingMethod} · ${order.shippingEta}` : order.shippingMethod}
               />
             )}
+            {order.tracking && (
+              <div className="flex justify-between gap-6">
+                <dt className="shrink-0 text-ink-soft">Tracking</dt>
+                <dd className="text-right text-plum-800">
+                  {order.tracking.courier && <span className="block">{order.tracking.courier}</span>}
+                  {order.tracking.url ? (
+                    <a
+                      href={order.tracking.url}
+                      target="_blank"
+                      rel="noopener"
+                      className="inline-flex items-center gap-1.5 text-plum-600 hover:text-gold-600"
+                    >
+                      <Truck className="size-3.5" /> {order.tracking.number}
+                    </a>
+                  ) : (
+                    <span>{order.tracking.number}</span>
+                  )}
+                </dd>
+              </div>
+            )}
             <Row label="Payment Method" value={METHOD_LABEL[order.paymentMethod] ?? order.paymentMethod} />
             <div className="flex items-center justify-between">
               <dt className="text-ink-soft">Payment Status</dt>

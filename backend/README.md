@@ -58,7 +58,7 @@ under **Users & Roles**.
 | `db:studio` | Prisma Studio, a GUI over the database |
 | `admin:reset` | Forgotten admin password: lists the admin emails and gives one a new one-time password (`-- email` to pick one when there are several). Uses `DATABASE_URL` — see [DEPLOY.md](../DEPLOY.md) for the online database |
 | `db:up` / `db:down` | Start / stop the Docker database |
-| `smoke` | 295 end-to-end API checks — **dev databases only**, see below |
+| `smoke` | 318 end-to-end API checks — **dev databases only**, see below |
 
 ## API
 
@@ -79,7 +79,9 @@ All routes are under `/api/v1`. Every error has the same shape:
 | GET | `/blog` · `/blog/:slug` | The Journal. A post is public once its publish date has passed; drafts and future dates stay hidden |
 | GET | `/faqs` · `/pages/:slug` · `/settings/public` | CMS content. `welcomeOffer` is read from the live coupon and is `null` when it's off; `seo` carries every page's title and description, the share image and whether search engines are welcome |
 | POST | `/cart/quote` | Authoritative cart pricing — writes nothing. Lists every enabled shipping option priced for the cart; pass `shippingMethodId` to price with one |
-| POST | `/orders` | Place an order |
+| POST | `/orders` | Place an order. Online methods come back with a `payment` handoff for Razorpay Checkout |
+| POST | `/orders/:number/payment` | Reports a completed payment; the signature is verified before the order is confirmed |
+| POST | `/webhooks/razorpay` | Razorpay's own word on a payment, signed with the webhook secret |
 | GET | `/orders/track?number=&email=` | Needs **both** — see Security |
 | POST | `/account/register` · `/login` · `/logout` | Customer accounts (cookie `vel_customer`) |
 | GET · PATCH | `/account/me` | Profile |
@@ -112,12 +114,13 @@ requests 10 and each form 10 per 10 minutes. Behind a proxy, make sure it sets `
 | `/admin/reports/customers` | GET | Order Manager, Support |
 | `/admin/returns` · `/counts` · `/:number` | GET | Order Manager, Support |
 | `/admin/returns/:number` | PATCH `{ status, staffNote?, refundPaise? }` | Order Manager |
-| `/admin/settings/returns` · `/tax` | PUT | super admin only |
+| `/admin/settings/returns` · `/tax` · `/payments` · `/pickup` | PUT | super admin only |
 | `/admin/reports/gst?month=YYYY-MM` | GET (invoices, and totals by state and HSN) | Order Manager, Support |
 | `/admin/products` · `/:id` | GET · POST · PATCH · DELETE (archives) | read: Order Manager, Support |
 | `/admin/products/:id/stock` | PATCH `{ set }` or `{ adjust }` | Order Manager |
 | `/admin/orders` · `/:number` | GET | Order Manager, Support |
-| `/admin/orders/:number/status` | PATCH (marking it `SHIPPED` issues the invoice) | Order Manager |
+| `/admin/orders/:number/status` | PATCH (marking it `SHIPPED` issues the invoice, and takes the tracking details) | Order Manager |
+| `/admin/orders/:number/tracking` | PATCH `{ courierName, trackingNumber, trackingUrl }` | Order Manager |
 | `/admin/orders/:number/invoice` | GET (printable page) · POST (issue it now) | read: Support |
 | `/admin/orders/:number/credit-notes/:id` | GET (printable page) | Order Manager, Support |
 | `/admin/customers` · `/:id` | GET | Order Manager, Support |
@@ -172,6 +175,45 @@ HTML-escaped in the templates (`src/lib/emails.ts`).
 - **States are stored by their proper name.** Addresses must name a real state
   or union territory (`IndianState` in `src/lib/validate.ts` accepts "tamilnadu"
   or "TN" and stores "Tamil Nadu"): the invoice's tax depends on it.
+
+## Payments
+
+Razorpay, switched on by putting `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET`
+in the environment (and `RAZORPAY_WEBHOOK_SECRET` for the webhook). Which
+methods are offered is the admin's choice under Settings → Payment Methods;
+the online ones stay hidden until the keys exist.
+
+- **Placing an online order** creates a Razorpay order and hands the browser
+  the key id, the gateway order id and the amount — never the key secret.
+  The order holds its stock but is `PENDING` and sends no email yet.
+- **A payment counts once its signature checks out** (`lib/payments.ts`):
+  Razorpay signs `orderId|paymentId` with the key secret, so nobody can mark
+  their own order paid. Then the order is `CONFIRMED`, `PAID`, and the
+  confirmation and team alert go out.
+- **The webhook repeats that check independently**, over the exact bytes
+  received, so a shopper who closes the tab still gets their order.
+- **Unpaid online orders are cancelled after 30 minutes** and their stock goes
+  back (`lib/abandoned.ts`), swept every five minutes.
+- **Refunds go back the way they came.** Marking a return refunded, or an
+  order refunded, sends the money through Razorpay first and records the
+  refund id; if the gateway refuses, nothing is written down. Cash on delivery
+  is still paid back by hand.
+- **In development without keys**, a simulator issues fake ids and signs them
+  with a fixed local secret, so the whole path — including the smoke tests —
+  runs before there's a Razorpay account. It is off whenever keys exist and
+  in production, always.
+
+## Shipping
+
+Courier-agnostic by design, so any partner can be plugged in later without
+changing what reads these:
+
+- **`courierName`, `trackingNumber` and `trackingUrl` on the order**, filled
+  in when it's marked shipped (or corrected afterwards). They go into the
+  shipping email and onto Track Order.
+- **`weightGrams` on products**, added up per order for booking a courier.
+- **A pickup address** (Settings → Shipping Methods) for collections and the
+  sender half of a label.
 
 ## GST invoices
 
@@ -276,7 +318,7 @@ npm run dev      # in one terminal
 npm run smoke    # in another
 ```
 
-Runs 53 storefront and 242 admin checks, including a concurrent-purchase race,
+Runs 53 storefront and 265 admin checks, including a concurrent-purchase race,
 the admin account lifecycle and regression tests for the partial-update bug.
 Rerunnable against a used database: every fixture it creates is suffixed per
 run. It **refuses to target anything but localhost**, because it places orders

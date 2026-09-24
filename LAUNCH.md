@@ -93,9 +93,24 @@ founder's photo (851px) and the share image (1200px).
 - [ ] Change the admin password set during deployment, and give each person
       their own account with the right role instead of sharing one login
 
-## 7. After launch
+## 7. Razorpay and the courier
 
-- [ ] Razorpay: online payments, and refunds sent back automatically
-- [ ] A courier: shipping labels, tracking that updates itself, return pickups
-- [ ] Credit notes and invoices to a business customer's GSTIN, if salons or
-      resellers start buying
+Both are built and tested; what's left is the accounts.
+
+- [ ] Open the Razorpay account and finish its checks
+- [ ] Put `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and
+      `RAZORPAY_WEBHOOK_SECRET` on the API (Render), and redeploy
+- [ ] Add the webhook in Razorpay: `<your api>/api/v1/webhooks/razorpay`, for
+      the payment events. Settings → Payment Methods shows when it's connected
+- [ ] Try it with Razorpay's test keys first, then switch to live ones
+- [ ] Choose which methods to offer under Settings → Payment Methods
+- [ ] Choose a courier. Tracking, package weights and the pickup address are
+      already in the admin, so you can ship by hand from day one and connect a
+      courier's API later
+- [ ] Fill in the pickup address under Settings → Shipping Methods
+- [ ] Weigh the products and record it on each one
+
+## 8. Later
+
+- [ ] Invoices carrying a business customer's GSTIN, if salons or resellers
+      start buying

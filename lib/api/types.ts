@@ -93,6 +93,8 @@ export type Settings = {
     firstOrderOnly: boolean;
     minOrderPaise: number;
   } | null;
+  /** Which ways to pay checkout should offer — online ones need a connected gateway. */
+  payments: Record<"cod" | "upi" | "card" | "netbanking" | "wallet", boolean>;
   /** Returns policy (Settings → Returns). */
   returns: { accepted: boolean; windowDays: number; instructions: string };
   /** Titles, descriptions and the share image (SEO Settings). */
@@ -209,6 +211,18 @@ export type Quote = {
 
 export type PaymentMethod = "UPI" | "CARD" | "NETBANKING" | "WALLET" | "COD";
 
+/** What the browser needs to open Razorpay for an order that's awaiting payment. */
+export type PaymentHandoff = {
+  gateway: "razorpay";
+  /** Razorpay's public key id — safe in the browser. */
+  keyId: string;
+  gatewayOrderId: string;
+  amountPaise: number;
+  prefill: { name: string; email: string; contact: string };
+  /** Development without Razorpay keys: the API stands in for the gateway. */
+  simulated: boolean;
+};
+
 export type OrderStatus =
   | "PENDING"
   | "CONFIRMED"
@@ -241,6 +255,8 @@ export type PlacedOrder = {
     unitPricePaise: number;
     lineTotalPaise: number;
   }[];
+  /** Set when the order is waiting to be paid online; null for cash on delivery. */
+  payment: PaymentHandoff | null;
 };
 
 /**
@@ -264,5 +280,7 @@ export type TrackedOrder = Omit<PlacedOrder, "taxPaise" | "items"> & {
     lineTotalPaise: number;
   }[];
   events: { status: OrderStatus; note: string | null; at: string }[];
+  /** Who's carrying it and under what number, once it has shipped. */
+  tracking: { courier: string | null; number: string; url: string | null } | null;
   invoice: InvoiceLink;
 };

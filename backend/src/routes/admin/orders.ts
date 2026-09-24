@@ -5,10 +5,12 @@ import { prisma } from "../../db.js";
 import { badRequest, notFound, param, parse } from "../../lib/http.js";
 import { allow, ROLES } from "../../middleware/auth.js";
 import { logActivity } from "../../lib/activity.js";
+import { formatInr } from "../../lib/money.js";
 import { afterResponse } from "../../lib/mail.js";
 import { customerHearsAbout, mailContext, orderStatusUpdate } from "../../lib/emails.js";
 import { invoiceOnShipping, invoiceView, issueInvoice, taxSettings } from "../../lib/invoices.js";
 import { creditNoteView, issueCreditNote } from "../../lib/creditNotes.js";
+import { refundableOnline, refundPayment } from "../../lib/payments.js";
 import { renderCreditNote, renderInvoice, sendInvoiceHtml, invoiceProblemPage } from "../../lib/invoiceHtml.js";
 
 export const adminOrdersRouter = Router();
@@ -96,7 +98,7 @@ adminOrdersRouter.get("/:number", allow(...ROLES.ordersRead), async (req, res) =
   const order = await prisma.order.findUnique({
     where: { number: param(req, "number") },
     include: {
-      items: true,
+      items: { include: { product: { select: { weightGrams: true } } } },
       events: { orderBy: { createdAt: "asc" } },
       customer: { select: { id: true, name: true, email: true, phone: true } },
       creditNotes: {
@@ -108,7 +110,11 @@ adminOrdersRouter.get("/:number", allow(...ROLES.ordersRead), async (req, res) =
   if (!order) throw notFound("Order");
   // Whether invoices can be issued at all yet (a GSTIN is saved).
   const { gstin } = await taxSettings();
-  res.json({ data: { ...order, invoicing: { configured: Boolean(gstin) } } });
+  // What the parcel weighs, from the products in it — for booking a courier.
+  // Null when nothing has been weighed, rather than a misleading zero.
+  const weights = order.items.map((i) => (i.product?.weightGrams ?? 0) * i.quantity);
+  const weightGrams = weights.some((w) => w > 0) ? weights.reduce((a, b) => a + b, 0) : null;
+  res.json({ data: { ...order, weightGrams, invoicing: { configured: Boolean(gstin) } } });
 });
 
 /** The printable GST invoice. Opened in a new tab, so errors are pages too. */
@@ -160,13 +166,67 @@ adminOrdersRouter.post("/:number/invoice", allow(...ROLES.ordersWrite), async (r
   });
 });
 
+/** Who's carrying the parcel, and under what number. */
+const TrackingBody = z.object({
+  courierName: z.string().trim().max(80).nullish(),
+  trackingNumber: z.string().trim().max(60).nullish(),
+  trackingUrl: z
+    .union([z.literal("").transform(() => null), z.null(), z.url({ protocol: /^https?$/ }).max(500)])
+    .optional(),
+});
+
 const StatusBody = z.object({
   status: z.enum(STATUSES),
   note: z.string().trim().max(300).optional(),
+  /** Usually sent with "shipped", so the customer's email carries it. */
+  tracking: TrackingBody.optional(),
+});
+
+/** Only the tracking details, for correcting them after the order shipped. */
+adminOrdersRouter.patch("/:number/tracking", allow(...ROLES.ordersWrite), async (req, res) => {
+  const body = parse(TrackingBody, req.body);
+  const order = await prisma.order.findUnique({ where: { number: param(req, "number") }, select: { id: true, number: true } });
+  if (!order) throw notFound("Order");
+  const updated = await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      courierName: body.courierName?.trim() || null,
+      trackingNumber: body.trackingNumber?.trim() || null,
+      trackingUrl: body.trackingUrl ?? null,
+    },
+  });
+  await logActivity(
+    req,
+    updated.trackingNumber
+      ? `Tracking for ${updated.number}: ${updated.courierName ?? "courier"} ${updated.trackingNumber}`
+      : `Cleared tracking for ${updated.number}`,
+    "Order",
+    updated.id,
+  );
+  res.json({ data: updated });
 });
 
 adminOrdersRouter.patch("/:number/status", allow(...ROLES.ordersWrite), async (req, res) => {
   const body = parse(StatusBody, req.body);
+
+  // Refunding an online order sends the money back through Razorpay first,
+  // outside the transaction: a gateway that refuses leaves everything as it
+  // was. Whatever earlier returns already refunded is left out of the amount.
+  let refundedNow: { id: string; amountPaise: number } | null = null;
+  if (body.status === "REFUNDED") {
+    const order = await prisma.order.findUnique({
+      where: { number: param(req, "number") },
+      include: { returns: { where: { status: "REFUNDED" }, select: { refundPaise: true } } },
+    });
+    if (order && refundableOnline(order)) {
+      const already = order.returns.reduce((n, r) => n + (r.refundPaise ?? 0), 0);
+      const outstanding = order.totalPaise - already;
+      if (outstanding > 0) {
+        const refund = await refundPayment(order.razorpayPaymentId!, outstanding, { order: order.number });
+        refundedNow = { id: refund.id, amountPaise: outstanding };
+      }
+    }
+  }
 
   const updated = await prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
@@ -208,12 +268,25 @@ adminOrdersRouter.patch("/:number/status", allow(...ROLES.ordersWrite), async (r
       where: { id: order.id },
       data: {
         status: body.status,
+        // Tracking usually arrives with "shipped"; blank fields leave what's there.
+        ...(body.tracking?.courierName ? { courierName: body.tracking.courierName.trim() } : {}),
+        ...(body.tracking?.trackingNumber ? { trackingNumber: body.tracking.trackingNumber.trim() } : {}),
+        ...(body.tracking?.trackingUrl ? { trackingUrl: body.tracking.trackingUrl } : {}),
         ...(body.status === "REFUNDED" ? { paymentStatus: "REFUNDED" } : {}),
         // COD is collected on delivery.
         ...(body.status === "DELIVERED" && order.paymentMethod === "COD"
           ? { paymentStatus: "PAID" }
           : {}),
-        events: { create: { status: body.status, note: body.note } },
+        events: {
+          create: {
+            status: body.status,
+            note: refundedNow
+              ? [body.note, `Refunded ${formatInr(refundedNow.amountPaise)} through Razorpay (${refundedNow.id})`]
+                  .filter(Boolean)
+                  .join(" — ")
+              : body.note,
+          },
+        },
       },
       include: { items: true, events: { orderBy: { createdAt: "asc" } } },
     });

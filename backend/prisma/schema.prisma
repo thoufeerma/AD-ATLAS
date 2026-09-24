@@ -62,6 +62,8 @@ model Product {
   stock             Int            @default(0)
   lowStockThreshold Int            @default(15)
   benefits          String[]
+  /// Packed weight, for courier bookings and labels. Null until someone weighs it.
+  weightGrams       Int?
   metaTitle         String?
   metaDescription   String?
 
@@ -210,6 +212,14 @@ model Order {
   shippingMethod String?
   shippingEta    String?
 
+  /// Who is carrying it and under what number, filled in when the order ships.
+  /// Courier-agnostic on purpose: typed in by hand today, written by a
+  /// courier's API later without changing anything that reads them.
+  courierName    String?
+  trackingNumber String?
+  /// Where the customer can follow it; built from the courier's own page.
+  trackingUrl    String?
+
   // Shipping address snapshot — deliberately not a relation to Address.
   shipName    String
   shipPhone   String
@@ -284,6 +294,9 @@ model ReturnRequest {
   staffNote String?
   /// What was actually refunded, set when the request is settled.
   refundPaise Int?
+  /// Razorpay's refund id, when the money went back through the gateway.
+  /// Null for cash on delivery, which is refunded by hand.
+  gatewayRefundId String?
 
   orderId String
   order   Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)

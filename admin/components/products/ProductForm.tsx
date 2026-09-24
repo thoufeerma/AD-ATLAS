@@ -56,6 +56,7 @@ export default function ProductForm({ mode, categories, product }: Props) {
   const [price, setPrice] = useState(fromPaise(product?.pricePaise));
   const [compareAt, setCompareAt] = useState(fromPaise(product?.compareAtPaise));
   const [hsnCode, setHsnCode] = useState(product?.hsnCode ?? "3304");
+  const [weight, setWeight] = useState(product?.weightGrams == null ? "" : String(product.weightGrams));
   const [gstRateBps, setGstRateBps] = useState(product?.gstRateBps ?? 1800);
   const [stock, setStock] = useState("0");
   const [lowStock, setLowStock] = useState(String(product?.lowStockThreshold ?? 15));
@@ -111,6 +112,7 @@ export default function ProductForm({ mode, categories, product }: Props) {
       compareAtPaise,
       hsnCode: hsnCode.trim(),
       gstRateBps,
+      weightGrams: weight.trim() === "" ? null : Number(weight),
       status,
       isBestseller: bestseller,
       lowStockThreshold: Number(lowStock),
@@ -266,6 +268,9 @@ export default function ProductForm({ mode, categories, product }: Props) {
               </Field>
               <Field label="HSN Code *" error={fe("hsnCode")} hint="Printed on invoices. 3304 = make-up and skin care">
                 <input inputMode="numeric" value={hsnCode} onChange={(e) => setHsnCode(e.target.value)} placeholder="3304" className={inputCls(fe("hsnCode"))} />
+              </Field>
+              <Field label="Packed Weight (g)" error={fe("weightGrams")} hint="For courier bookings — leave empty if unweighed">
+                <input inputMode="numeric" value={weight} onChange={(e) => setWeight(e.target.value.replace(/[^0-9]/g, ""))} placeholder="120" className={inputCls(fe("weightGrams"))} />
               </Field>
               <Field label="GST Rate *" error={fe("gstRateBps")} hint="Already inside the price above">
                 <select value={gstRateBps} onChange={(e) => setGstRateBps(Number(e.target.value))} className={inputCls(fe("gstRateBps"))}>

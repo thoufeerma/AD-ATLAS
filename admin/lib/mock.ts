@@ -1,6 +1,6 @@
 /**
  * Sample data for the admin screens that aren't wired to the API yet —
- * Traffic Analytics, Email Campaigns, Payment Methods and Backup & Restore. Every screen that uses this file is marked
+ * Traffic Analytics, Email Campaigns and Backup & Restore. Every screen that uses this file is marked
  * "Sample" in the sidebar, so nobody mistakes these figures for the store's.
  *
  * Everything else — the dashboard, orders, products, customers, reviews,
@@ -53,14 +53,6 @@ export const CAMPAIGNS = [
 ];
 
 /* ── System ───────────────────────────────────────────────────────────── */
-
-export const PAYMENT_METHODS = [
-  { id: "pm-1", name: "Razorpay — UPI", note: "Google Pay, PhonePe, Paytm", enabled: true, fee: "0%" },
-  { id: "pm-2", name: "Razorpay — Cards", note: "Visa, Mastercard, RuPay, Amex", enabled: true, fee: "2%" },
-  { id: "pm-3", name: "Razorpay — Net Banking", note: "All major Indian banks", enabled: true, fee: "1.9%" },
-  { id: "pm-4", name: "Razorpay — Wallets", note: "Paytm, Amazon Pay, Mobikwik", enabled: true, fee: "2%" },
-  { id: "pm-5", name: "Cash on Delivery", note: "Pay when the order arrives", enabled: true, fee: "₹40 handling" },
-];
 
 export const BACKUPS = [
   { id: "bk-1", name: "Nightly automated", date: "2025-05-29 02:00", size: "412 MB", type: "Automatic" as const },

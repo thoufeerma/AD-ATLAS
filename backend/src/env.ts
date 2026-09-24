@@ -23,6 +23,12 @@ const schema = z
     JWT_SECRET: z.string().min(1),
     SEED_ADMIN_EMAIL: z.email().optional(),
     SEED_ADMIN_PASSWORD: z.string().optional(),
+    // ── Razorpay ── without these, checkout offers cash on delivery only.
+    // The key id is public (the browser needs it); the other two are secrets.
+    RAZORPAY_KEY_ID: z.string().trim().min(1).optional(),
+    RAZORPAY_KEY_SECRET: z.string().trim().min(1).optional(),
+    /** From the webhook you add in the Razorpay dashboard. */
+    RAZORPAY_WEBHOOK_SECRET: z.string().trim().min(1).optional(),
     // ── Email ── without a key, emails are kept in the admin's Email Log
     // instead of being sent.
     RESEND_API_KEY: z.string().trim().min(1).optional(),
@@ -57,6 +63,21 @@ const schema = z
         code: "custom",
         path: ["JWT_SECRET"],
         message: "must be a random value of at least 32 characters in production",
+      });
+    }
+    // Half-configured payments would take orders it can't charge for.
+    if (Boolean(e.RAZORPAY_KEY_ID) !== Boolean(e.RAZORPAY_KEY_SECRET)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["RAZORPAY_KEY_SECRET"],
+        message: "RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET must be set together",
+      });
+    }
+    if (e.RAZORPAY_KEY_ID && !/^rzp_(test|live)_/.test(e.RAZORPAY_KEY_ID)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["RAZORPAY_KEY_ID"],
+        message: "should start with rzp_test_ or rzp_live_",
       });
     }
     if (e.SUPABASE_URL && !e.SUPABASE_SERVICE_ROLE_KEY) {

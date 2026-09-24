@@ -3,12 +3,21 @@ import { env } from "./env.js";
 import { prisma } from "./db.js";
 import { storageName } from "./lib/media.js";
 import { emailServiceConnected } from "./lib/mail.js";
+import { gatewayStatus } from "./lib/payments.js";
+import { startAbandonedSweep } from "./lib/abandoned.js";
 
 const app = createApp();
 
+// Puts back the stock held by online orders whose payment never arrived.
+startAbandonedSweep();
+
 const server = app.listen(env.PORT, () => {
   console.log(`Velastia API listening on http://localhost:${env.PORT} (${env.NODE_ENV})`);
+  const pay = gatewayStatus();
   console.log(`  images: ${storageName} · email: ${emailServiceConnected() ? "Resend" : "Email Log only (no RESEND_API_KEY)"}`);
+  console.log(
+    `  payments: ${pay.mode === "simulated" ? "SIMULATED (development only — no Razorpay keys)" : pay.connected ? `Razorpay ${pay.mode}${pay.webhookReady ? "" : ", no webhook secret"}` : "cash on delivery only"}`,
+  );
 });
 
 /** Finish in-flight requests and release database connections before exiting. */

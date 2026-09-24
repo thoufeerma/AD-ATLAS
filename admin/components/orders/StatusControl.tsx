@@ -30,14 +30,20 @@ const CONFIRM: Partial<Record<OrderStatus, string>> = {
 export default function StatusControl({
   number,
   status,
+  tracking,
 }: {
   number: string;
   status: OrderStatus;
+  /** What's already on the order, so shipping it twice doesn't lose it. */
+  tracking: { courierName: string | null; trackingNumber: string | null; trackingUrl: string | null };
 }) {
   const router = useRouter();
   const options = NEXT[status];
   const [next, setNext] = useState<OrderStatus | "">(options[0] ?? "");
   const [note, setNote] = useState("");
+  const [courier, setCourier] = useState(tracking.courierName ?? "");
+  const [awb, setAwb] = useState(tracking.trackingNumber ?? "");
+  const [url, setUrl] = useState(tracking.trackingUrl ?? "");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,6 +68,10 @@ export default function StatusControl({
       await api("PATCH", `/admin/orders/${encodeURIComponent(number)}/status`, {
         status: next,
         ...(note.trim() ? { note: note.trim() } : {}),
+        // Sent with "shipped" so the customer's email carries it.
+        ...(next === "SHIPPED"
+          ? { tracking: { courierName: courier.trim(), trackingNumber: awb.trim(), trackingUrl: url.trim() } }
+          : {}),
       });
       setNote("");
       router.refresh();
@@ -101,11 +111,23 @@ export default function StatusControl({
             value={note}
             maxLength={300}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="e.g. Shipped via Delhivery, AWB 1234567890"
+            placeholder="e.g. Packed a sample in with it"
             className="w-full rounded-lg border border-hairline bg-card px-3 py-2.5 text-[0.8rem] text-ink placeholder:text-muted focus:border-series-1 focus:outline-none"
           />
         </div>
       </div>
+
+      {next === "SHIPPED" && (
+        <div className="grid gap-3 rounded-lg bg-plane p-3.5 sm:grid-cols-3">
+          <Field label="Courier" value={courier} onChange={setCourier} placeholder="Delhivery" />
+          <Field label="Tracking number" value={awb} onChange={setAwb} placeholder="1234567890" />
+          <Field label="Tracking link" value={url} onChange={setUrl} placeholder="https://…" />
+          <p className="text-[0.68rem] leading-relaxed text-muted sm:col-span-3">
+            Goes into the customer&apos;s email and onto the Track Order page. You can fill it in or correct
+            it later from the Tracking card.
+          </p>
+        </div>
+      )}
 
       {error && (
         <p role="alert" className="flex items-center gap-2 text-[0.76rem] text-critical">
@@ -126,5 +148,29 @@ export default function StatusControl({
         {pending ? "Updating…" : `Mark as ${next ? humanize(next) : "…"}`}
       </button>
     </form>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-[0.7rem] font-medium text-ink-2">{label}</span>
+      <input
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-lg border border-hairline bg-card px-3 py-2 text-[0.78rem] text-ink placeholder:text-muted focus:border-series-1 focus:outline-none"
+      />
+    </label>
   );
 }

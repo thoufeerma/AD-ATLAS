@@ -10,7 +10,9 @@ import QuoteSummary from "@/components/cart/QuoteSummary";
 import { useStore, useHydrated } from "@/lib/store";
 import { resolveCart, quoteItems, useQuote } from "@/lib/cart";
 import { api } from "@/lib/api/client";
-import type { PaymentMethod, PlacedOrder, Product } from "@/lib/api/types";
+import { payForOrder } from "@/lib/razorpay";
+import { useSettings } from "@/components/providers/SettingsProvider";
+import type { PaymentHandoff, PaymentMethod, PlacedOrder, Product } from "@/lib/api/types";
 import { inrPaise, cn, looksLikeEmail, productImage } from "@/lib/utils";
 import { LAST_ORDER_KEY, type LastOrder } from "./lastOrder";
 import { INDIAN_STATES, listedState } from "@/lib/states";
@@ -29,12 +31,13 @@ import type { SavedAddress } from "@/components/account/AccountView";
 const STEPS = ["Shipping", "Payment", "Review"] as const;
 type Step = (typeof STEPS)[number];
 
-const PAY_METHODS: { id: PaymentMethod; label: string; note: string; available: boolean }[] = [
-  { id: "UPI", label: "UPI", note: "Google Pay, PhonePe, Paytm & more", available: false },
-  { id: "CARD", label: "Credit / Debit Card", note: "Visa, Mastercard, RuPay, Amex", available: false },
-  { id: "NETBANKING", label: "Net Banking", note: "All major Indian banks", available: false },
-  { id: "WALLET", label: "Wallets", note: "Paytm, Amazon Pay, Mobikwik", available: false },
-  { id: "COD", label: "Cash on Delivery", note: "Pay when your order arrives", available: true },
+/** Which ways to pay exist at all; whether each is offered comes from settings. */
+const PAY_METHODS: { id: PaymentMethod; key: "upi" | "card" | "netbanking" | "wallet" | "cod"; label: string; note: string }[] = [
+  { id: "UPI", key: "upi", label: "UPI", note: "Google Pay, PhonePe, Paytm & more" },
+  { id: "CARD", key: "card", label: "Credit / Debit Card", note: "Visa, Mastercard, RuPay, Amex" },
+  { id: "NETBANKING", key: "netbanking", label: "Net Banking", note: "All major Indian banks" },
+  { id: "WALLET", key: "wallet", label: "Wallets", note: "Paytm, Amazon Pay, Mobikwik" },
+  { id: "COD", key: "cod", label: "Cash on Delivery", note: "Pay when your order arrives" },
 ];
 
 type Address = {
@@ -109,10 +112,17 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
     (a) => a.line1.toLowerCase() === addr.line1.trim().toLowerCase() && a.pincode === addr.pincode.trim(),
   );
   const [showErrors, setShowErrors] = useState(false);
-  const [method, setMethod] = useState<PaymentMethod>("COD");
+  const { store, payments } = useSettings();
+  // What the store offers right now: cash on delivery on its own, plus any
+  // online channels once Razorpay is connected.
+  const offered = PAY_METHODS.filter((m) => payments[m.key]);
+  const [method, setMethod] = useState<PaymentMethod>(() => (payments.cod ? "COD" : (offered[0]?.id ?? "COD")));
   const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState("");
   const [placed, setPlaced] = useState(false);
+  // An online order that exists but hasn't been paid for yet, so the shopper
+  // can try the payment window again without placing it a second time.
+  const [awaitingPayment, setAwaitingPayment] = useState<{ order: PlacedOrder; payment: PaymentHandoff } | null>(null);
   // The delivery option the shopper picked; null = the store's default.
   const [shippingMethodId, setShippingMethodId] = useState<string | null>(null);
 
@@ -235,13 +245,37 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
       } catch {
         // Storage can throw in private modes; the success page copes without it.
       }
-      setPlaced(true);
-      clear();
-      router.push(`/order-success?order=${order.number}`);
+      // Cash on delivery is done; an online order still has to be paid for.
+      if (!order.payment) {
+        finishOrder(order.number);
+        return;
+      }
+      setAwaitingPayment({ order, payment: order.payment });
+      await collectPayment(order, order.payment);
     } catch (err) {
       setPlaceError((err as Error).message);
       setPlacing(false);
     }
+  }
+
+  /** Cart emptied, order remembered for the success page. */
+  function finishOrder(number: string) {
+    setPlaced(true);
+    clear();
+    router.push(`/order-success?order=${number}`);
+  }
+
+  /** Opens the payment window, and keeps the order waiting if it's closed. */
+  async function collectPayment(order: PlacedOrder, payment: PaymentHandoff) {
+    setPlaceError("");
+    setPlacing(true);
+    const outcome = await payForOrder(order.number, payment, store);
+    if (outcome.status === "paid") {
+      finishOrder(order.number);
+      return;
+    }
+    setPlaceError(outcome.message);
+    setPlacing(false);
   }
 
   const stepIndex = STEPS.indexOf(step);
@@ -489,17 +523,20 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
             <>
               <h2 className="font-display text-xl text-plum-800">Payment Method</h2>
               <p className="mt-1 text-[0.72rem] text-ink-soft">
-                Online payment through Razorpay is coming soon. For now, pay in cash when
-                your order arrives.
+                {offered.some((m) => m.id !== "COD")
+                  ? "Pay securely through Razorpay, or in cash when your order arrives."
+                  : "Pay in cash when your order arrives."}
               </p>
 
               <ul className="mt-6 space-y-3">
-                {PAY_METHODS.map((m) => (
+                {PAY_METHODS.map((m) => {
+                  const available = payments[m.key];
+                  return (
                   <li key={m.id}>
                     <label
                       className={cn(
                         "flex items-center gap-3.5 rounded-sm border px-4 py-3.5 transition-colors",
-                        !m.available
+                        !available
                           ? "cursor-not-allowed border-gold-200/60 opacity-55"
                           : method === m.id
                             ? "cursor-pointer border-gold-500 bg-cream-50"
@@ -510,7 +547,7 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
                         type="radio"
                         name="pay"
                         checked={method === m.id}
-                        disabled={!m.available}
+                        disabled={!available}
                         onChange={() => setMethod(m.id)}
                         className="size-4 accent-plum-800"
                       />
@@ -518,14 +555,15 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
                         <span className="block text-sm text-plum-800">{m.label}</span>
                         <span className="block text-[0.68rem] text-ink-soft">{m.note}</span>
                       </span>
-                      {!m.available && (
+                      {!available && (
                         <span className="label-caps rounded-sm bg-cream-300 px-2 py-0.5 text-[0.52rem] text-ink-soft">
-                          Coming Soon
+                          Unavailable
                         </span>
                       )}
                     </label>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
 
               <div className="mt-7 flex flex-wrap gap-3">
@@ -610,15 +648,33 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
                 <Button variant="outline" onClick={() => setStep("Payment")} disabled={placing}>
                   <ChevronLeft className="size-3.5" /> Back
                 </Button>
-                <Button size="lg" onClick={placeOrder} disabled={placing || !ready}>
-                  <Lock className="size-3.5" />
-                  {placing
-                    ? "Placing Order…"
-                    : quote && ready
-                      ? `Place Order · ${inrPaise(quote.totalPaise)}`
-                      : "Updating total…"}
-                </Button>
+                {awaitingPayment ? (
+                  /* The order exists and holds its stock; it only needs paying. */
+                  <Button
+                    size="lg"
+                    onClick={() => collectPayment(awaitingPayment.order, awaitingPayment.payment)}
+                    disabled={placing}
+                  >
+                    <Lock className="size-3.5" />
+                    {placing ? "Opening payment…" : `Pay ${inrPaise(awaitingPayment.order.totalPaise)}`}
+                  </Button>
+                ) : (
+                  <Button size="lg" onClick={placeOrder} disabled={placing || !ready}>
+                    <Lock className="size-3.5" />
+                    {placing
+                      ? "Placing Order…"
+                      : quote && ready
+                        ? `Place Order · ${inrPaise(quote.totalPaise)}`
+                        : "Updating total…"}
+                  </Button>
+                )}
               </div>
+              {awaitingPayment && (
+                <p className="mt-3 text-[0.7rem] text-ink-soft">
+                  Order {awaitingPayment.order.number} is waiting for payment. We hold your items for 30
+                  minutes; after that it&apos;s cancelled and the stock goes back.
+                </p>
+              )}
             </>
           )}
         </div>

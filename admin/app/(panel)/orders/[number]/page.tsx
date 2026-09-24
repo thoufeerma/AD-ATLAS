@@ -7,6 +7,7 @@ import Card from "@/components/ui/Card";
 import Badge, { toneFor } from "@/components/ui/Badge";
 import StatusControl from "@/components/orders/StatusControl";
 import InvoiceCard from "@/components/orders/InvoiceCard";
+import TrackingCard from "@/components/orders/TrackingCard";
 import { ApiError, apiGet } from "@/lib/api/server";
 import {
   EMAIL_KIND_LABEL,
@@ -66,7 +67,15 @@ export default async function OrderDetailPage({ params }: PageProps<"/orders/[nu
       <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="space-y-5">
           <Card title="Update Status">
-            <StatusControl number={order.number} status={order.status} />
+            <StatusControl
+              number={order.number}
+              status={order.status}
+              tracking={{
+                courierName: order.courierName,
+                trackingNumber: order.trackingNumber,
+                trackingUrl: order.trackingUrl,
+              }}
+            />
           </Card>
 
           <Card title="Timeline">
@@ -198,9 +207,22 @@ export default async function OrderDetailPage({ params }: PageProps<"/orders/[nu
                 Coupon {order.couponCode}
               </p>
             )}
+            {order.razorpayPaymentId && (
+              <p className="tnum mt-2.5 text-[0.72rem] text-muted">Razorpay payment {order.razorpayPaymentId}</p>
+            )}
             <div className="mt-3">
               <Badge tone={toneFor(order.paymentStatus)}>{humanize(order.paymentStatus)}</Badge>
             </div>
+          </Card>
+
+          <Card title="Tracking">
+            <TrackingCard
+              number={order.number}
+              courierName={order.courierName}
+              trackingNumber={order.trackingNumber}
+              trackingUrl={order.trackingUrl}
+              weightGrams={order.weightGrams}
+            />
           </Card>
 
           <Card title="GST Invoice">

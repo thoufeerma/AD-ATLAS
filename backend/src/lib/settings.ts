@@ -271,6 +271,75 @@ export function readSeo(stored: unknown): SeoSettings {
   };
 }
 
+/**
+ * The address parcels are collected from. Couriers need it to book a pickup
+ * and to print the "from" half of a label, and it's what a customer's return
+ * comes back to.
+ */
+export const PickupSettings = z.object({
+  contactName: z.string().trim().max(100),
+  phone: z.string().trim().max(20),
+  line1: z.string().trim().max(200),
+  line2: z.string().trim().max(200),
+  city: z.string().trim().max(80),
+  state: z.string().trim().max(80),
+  pincode: z.string().trim().max(10),
+  /** What to put in each parcel's weight when nothing is known, in grams. */
+  defaultParcelGrams: z.number().int().min(0).max(50_000),
+});
+
+export type PickupSettings = z.infer<typeof PickupSettings>;
+
+export const DEFAULT_PICKUP: PickupSettings = {
+  contactName: "",
+  phone: "",
+  line1: "",
+  line2: "",
+  city: "",
+  state: "",
+  pincode: "",
+  defaultParcelGrams: 500,
+};
+
+export function readPickup(stored: unknown): PickupSettings {
+  const parsed = PickupSettings.partial().safeParse(stored ?? {});
+  return { ...DEFAULT_PICKUP, ...(parsed.success ? parsed.data : {}) };
+}
+
+/**
+ * How customers may pay. Cash on delivery works on its own; the online
+ * channels only appear once Razorpay is connected (its keys live in the
+ * environment, never here).
+ */
+export const PaymentSettings = z
+  .object({
+    cod: z.boolean(),
+    upi: z.boolean(),
+    card: z.boolean(),
+    netbanking: z.boolean(),
+    wallet: z.boolean(),
+  })
+  .refine((p) => p.cod || p.upi || p.card || p.netbanking || p.wallet, {
+    error: "Leave at least one way to pay switched on",
+  });
+
+export type PaymentSettings = z.infer<typeof PaymentSettings>;
+
+export const DEFAULT_PAYMENTS: PaymentSettings = {
+  cod: true,
+  upi: true,
+  card: true,
+  netbanking: true,
+  wallet: true,
+};
+
+export function readPayments(stored: unknown): PaymentSettings {
+  const parsed = PaymentSettings.safeParse(stored ?? {});
+  if (parsed.success) return parsed.data;
+  const partial = (stored ?? {}) as Partial<PaymentSettings>;
+  return { ...DEFAULT_PAYMENTS, ...partial };
+}
+
 /** Which emails the store sends, and who receives the store's own alerts. */
 export const NotificationSettings = z.object({
   /** To the customer when an order is placed. */

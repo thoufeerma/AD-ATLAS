@@ -10,6 +10,7 @@ import { customerHearsAboutReturn, mailContext, returnUpdate } from "../../lib/e
 import { OPEN_STATUSES } from "../../lib/returns.js";
 import { paidPerLine } from "../../lib/gst.js";
 import { issueCreditNote } from "../../lib/creditNotes.js";
+import { refundableOnline, refundPayment } from "../../lib/payments.js";
 
 /**
  * Returns, from the team's side. Money is never moved here — Velastia refunds
@@ -73,6 +74,8 @@ const shape = (r: WithDetail) => ({
   note: r.note,
   staffNote: r.staffNote,
   refundPaise: r.refundPaise,
+  /** Razorpay's refund id when the money went back automatically. */
+  gatewayRefundId: r.gatewayRefundId,
   suggestedRefundPaise: itemsValue(r),
   requestedAt: r.createdAt,
   resolvedAt: r.resolvedAt,
@@ -171,6 +174,22 @@ adminReturnsRouter.patch("/:number", allow(...ROLES.ordersWrite), async (req, re
   }
 
   const settled = body.status === "REFUNDED" || body.status === "REJECTED";
+
+  // Online orders are refunded through Razorpay, which happens before
+  // anything is written down: if the gateway refuses, nothing here changes
+  // and the team sees why. Cash on delivery is paid back by hand, as before.
+  let gatewayRefundId: string | null = null;
+  if (body.status === "REFUNDED") {
+    const order = await prisma.order.findUniqueOrThrow({ where: { number: found.order.number } });
+    const amount = body.refundPaise ?? itemsValue(found);
+    if (amount > 0 && refundableOnline(order)) {
+      const refund = await refundPayment(order.razorpayPaymentId!, amount, {
+        order: order.number,
+        return: found.number,
+      });
+      gatewayRefundId = refund.id;
+    }
+  }
   const updated = await prisma.$transaction(async (tx) => {
     const saved = await tx.returnRequest.update({
       where: { number },
@@ -178,7 +197,9 @@ adminReturnsRouter.patch("/:number", allow(...ROLES.ordersWrite), async (req, re
         status: body.status,
         staffNote: body.staffNote ?? found.staffNote,
         // Default to what the items cost the customer, which is what the team usually pays.
-        ...(body.status === "REFUNDED" ? { refundPaise: body.refundPaise ?? itemsValue(found) } : {}),
+        ...(body.status === "REFUNDED"
+          ? { refundPaise: body.refundPaise ?? itemsValue(found), gatewayRefundId }
+          : {}),
         resolvedAt: settled ? new Date() : null,
       },
       include: DETAIL,

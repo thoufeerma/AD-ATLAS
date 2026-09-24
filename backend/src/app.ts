@@ -36,6 +36,7 @@ import { adminReturnsRouter } from "./routes/admin/returns.js";
 import { returnsRouter } from "./routes/public/returns.js";
 import { invoicesRouter } from "./routes/public/invoices.js";
 import { blogRouter } from "./routes/public/blog.js";
+import { webhooksRouter } from "./routes/public/webhooks.js";
 import { adminBlogRouter } from "./routes/admin/blog.js";
 import { UPLOAD_ROOT } from "./lib/media.js";
 
@@ -59,7 +60,16 @@ export function createApp() {
       credentials: true,
     }),
   );
-  app.use(express.json({ limit: "1mb" }));
+  // The exact bytes are kept alongside the parsed body: a webhook's signature
+  // covers what was sent, not how we re-serialise it.
+  app.use(
+    express.json({
+      limit: "1mb",
+      verify: (req, _res, buf) => {
+        (req as express.Request).rawBody = Buffer.from(buf);
+      },
+    }),
+  );
   app.use(cookieParser());
 
   // Uploaded images. Names are random and never reused, so they can be
@@ -83,6 +93,7 @@ export function createApp() {
   v1.use(returnsRouter);
   v1.use(invoicesRouter);
   v1.use(blogRouter);
+  v1.use(webhooksRouter);
 
   // ── Admin API (CMS) ── everything past /auth requires a session, and a
   // password of the admin's own choosing (see requireCurrentPassword).

@@ -5,6 +5,7 @@
 // dedicated test account that `npm run smoke` switches on for the run
 // (scripts/smoke-admin-user.ts) — never a real person's login.
 import "dotenv/config";
+import { createHmac } from "node:crypto";
 import sharp from "sharp";
 
 const API = `${process.env.SMOKE_API_URL ?? "http://localhost:4000"}/api/v1`;
@@ -727,6 +728,111 @@ console.log("\n[Returns]");
   await call("PUT", "/admin/settings/returns", before);
   ok((await pub("GET", "/settings/public")).json.data.returns.accepted === before.accepted, "returns setting restored");
   await call("PATCH", `/admin/products/${serum.id}/stock`, { set: serum.stock });
+}
+
+console.log("\n[Payments]");
+{
+  const before = (await call("GET", "/admin/settings")).json.data.payments;
+  ok(before.gateway.mode === "simulated" && before.gateway.connected,
+    "no Razorpay keys on a dev machine -> the API stands in for the gateway", before.gateway.keyId);
+  const none = await call("PUT", "/admin/settings/payments", { cod: false, upi: false, card: false, netbanking: false, wallet: false });
+  ok(none.status === 400, "at least one way to pay has to stay on", none.json.error.message);
+
+  // Cash on delivery off: the storefront stops offering it, and refuses it.
+  await call("PUT", "/admin/settings/payments", { ...before, cod: false });
+  const offered = (await pub("GET", "/settings/public")).json.data.payments;
+  ok(offered.cod === false && offered.upi === true, "switches show on the storefront at once", JSON.stringify(offered));
+  const codRefused = await pub("POST", "/orders", { ...shipTo, email: `pay.cod.${RUN}@example.com`, name: "Cod Tester", items: [{ slug: "lip-liner", quantity: 1 }], paymentMethod: "COD" });
+  ok(codRefused.status === 409, "an order can't use a method the store doesn't offer", codRefused.json.error.message);
+  await call("PUT", "/admin/settings/payments", before);
+
+  // An online order: placed, unpaid, holding its stock.
+  const email = `pay.${RUN}@example.com`;
+  const placed = await pub("POST", "/orders", { ...shipTo, email, name: "Pay Tester", items: [{ slug: "lip-liner", quantity: 1 }], paymentMethod: "UPI" });
+  const order = placed.json.data;
+  ok(placed.status === 201 && order.status === "PENDING" && order.paymentStatus === "PENDING" && order.payment?.gatewayOrderId?.startsWith("order_"),
+    "an online order waits for payment and carries the gateway handoff", order.payment?.gatewayOrderId);
+  ok(order.payment.simulated === true && order.payment.keyId && order.payment.keySecret === undefined,
+    "the handoff carries the public key id only");
+  const quiet = (await call("GET", `/admin/emails?q=${encodeURIComponent(email)}`)).json.data;
+  ok(quiet.length === 0, "nothing is emailed before the money arrives");
+
+  const forged = await pub("POST", `/orders/${order.number}/payment`, { paymentId: "pay_forged", signature: "0".repeat(64) });
+  const stillPending = (await call("GET", `/admin/orders/${order.number}`)).json.data;
+  ok(forged.status === 400 && stillPending.paymentStatus === "PENDING",
+    "a payment without Razorpay's signature is refused, and the order stays unpaid");
+
+  const proof = (await pub("POST", `/orders/${order.number}/payment/simulate`)).json.data;
+  const paid = await pub("POST", `/orders/${order.number}/payment`, proof);
+  ok(paid.status === 200 && paid.json.data.paymentStatus === "PAID" && paid.json.data.status === "CONFIRMED",
+    "a signed payment confirms the order", proof.paymentId);
+  const again = await pub("POST", `/orders/${order.number}/payment`, proof);
+  ok(again.status === 200 && again.json.data.paymentStatus === "PAID", "reporting the same payment twice changes nothing");
+  const mails = (await call("GET", `/admin/emails?q=${encodeURIComponent(email)}`)).json.data;
+  ok(mails.some((m) => m.kind === "order.confirmation"), "the confirmation goes out once it's paid", mails.map((m) => m.kind).join(", "));
+
+  // Shipping it carries the courier and tracking number with it.
+  await call("PATCH", `/admin/orders/${order.number}/status`, { status: "PROCESSING" });
+  const shipped = await call("PATCH", `/admin/orders/${order.number}/status`, {
+    status: "SHIPPED",
+    tracking: { courierName: "Test Courier", trackingNumber: `AWB${RUN}`, trackingUrl: "https://example.com/track" },
+  });
+  ok(shipped.status === 200 && shipped.json.data.trackingNumber === `AWB${RUN}` && shipped.json.data.courierName === "Test Courier",
+    "shipping an order records who is carrying it", `${shipped.json.data.courierName} ${shipped.json.data.trackingNumber}`);
+  const tracked = (await pub("GET", `/orders/track?number=${order.number}&email=${encodeURIComponent(email)}`)).json.data;
+  ok(tracked.tracking?.number === `AWB${RUN}` && tracked.tracking.url === "https://example.com/track",
+    "the customer can follow it from Track Order");
+  // The list carries no bodies, so the email itself is fetched by id.
+  const shipRow = (await call("GET", `/admin/emails?q=${encodeURIComponent(email)}`)).json.data.find((m) => m.kind === "order.status");
+  const shipMail = shipRow ? (await call("GET", `/admin/emails/${shipRow.id}`)).json.data : null;
+  ok(Boolean(shipMail?.html.includes(`AWB${RUN}`) && shipMail.html.includes("Test Courier")),
+    "and the shipping email carries the tracking number", shipRow?.subject);
+  const corrected = await call("PATCH", `/admin/orders/${order.number}/tracking`, { courierName: "Other Courier", trackingNumber: `AWB${RUN}X`, trackingUrl: "" });
+  ok(corrected.status === 200 && corrected.json.data.trackingNumber === `AWB${RUN}X` && corrected.json.data.trackingUrl === null,
+    "tracking can be corrected afterwards");
+  const badUrl = await call("PATCH", `/admin/orders/${order.number}/tracking`, { trackingNumber: "1", trackingUrl: "not-a-link" });
+  ok(badUrl.status === 400, "a tracking link has to be a real address");
+
+  // What the parcel weighs, added up from the products in it.
+  const liner = (await call("GET", "/admin/products?q=lip%20liner")).json.data[0];
+  const unweighed = (await call("GET", `/admin/orders/${order.number}`)).json.data.weightGrams;
+  await call("PATCH", `/admin/products/${liner.id}`, { weightGrams: 60 });
+  const weighed = (await call("GET", `/admin/orders/${order.number}`)).json.data;
+  const units = weighed.items.reduce((n, i) => n + (i.sku === liner.sku ? i.quantity : 0), 0);
+  ok(unweighed === null && units > 0 && weighed.weightGrams === units * 60,
+    "an order's parcel weight adds up from its products", `${units} x 60g = ${weighed.weightGrams}g`);
+  await call("PATCH", `/admin/products/${liner.id}`, { weightGrams: null });
+  await call("PATCH", `/admin/orders/${order.number}/status`, { status: "DELIVERED" });
+  const refunded = await call("PATCH", `/admin/orders/${order.number}/status`, { status: "REFUNDED" });
+  const refundNote = refunded.json.data.events.at(-1)?.note ?? "";
+  ok(refunded.status === 200 && refunded.json.data.paymentStatus === "REFUNDED" && /Razorpay \(rfnd_/.test(refundNote),
+    "refunding an online order sends the money back through Razorpay", refundNote);
+
+  // The webhook says the same thing independently, for a shopper who closed the tab.
+  const second = (await pub("POST", "/orders", { ...shipTo, email: `pay.hook.${RUN}@example.com`, name: "Hook Tester", items: [{ slug: "lip-liner", quantity: 1 }], paymentMethod: "CARD" })).json.data;
+  const event = JSON.stringify({ event: "payment.captured", payload: { payment: { entity: { id: `pay_hook${RUN}`, order_id: second.payment.gatewayOrderId } } } });
+  const sign = (body) => createHmac("sha256", "razorpay-simulator-not-a-real-key").update(body).digest("hex");
+  const hookRes = await fetch(`${API}/webhooks/razorpay`, { method: "POST", headers: { "content-type": "application/json", "x-razorpay-signature": sign(event) }, body: event });
+  const hookOrder = (await call("GET", `/admin/orders/${second.number}`)).json.data;
+  ok(hookRes.status === 200 && hookOrder.paymentStatus === "PAID" && hookOrder.status === "CONFIRMED",
+    "a signed webhook records the payment on its own");
+  const unsigned = await fetch(`${API}/webhooks/razorpay`, { method: "POST", headers: { "content-type": "application/json", "x-razorpay-signature": sign("something else") }, body: event });
+  ok(unsigned.status === 400, "an unsigned webhook is refused");
+}
+
+console.log("\n[Pickup address and weights]");
+{
+  const before = (await call("GET", "/admin/settings")).json.data.pickup;
+  ok(before.defaultParcelGrams > 0 && before.line1 === "", "a pickup address starts empty, with a default parcel weight", `${before.defaultParcelGrams}g`);
+  const saved = await call("PUT", "/admin/settings/pickup", {
+    contactName: "Packing Desk", phone: "8606630088", line1: "Unit 4, Lotus Business Park",
+    line2: "Andheri West", city: "Mumbai", state: "Maharashtra", pincode: "400053", defaultParcelGrams: 400,
+  });
+  ok(saved.status === 200 && saved.json.data.pickup.city === "Mumbai" && saved.json.data.pickup.defaultParcelGrams === 400,
+    "where couriers collect from is saved");
+  ok((await pub("GET", "/settings/public")).json.data.pickup === undefined, "…and never shown on the storefront");
+
+  await call("PUT", "/admin/settings/pickup", before);
 }
 
 console.log("\n[GST invoices]");

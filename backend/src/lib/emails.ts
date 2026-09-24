@@ -208,14 +208,27 @@ export function orderStatusUpdate(o: Order, status: OrderStatus, note: string | 
   const noteHtml = note
     ? `<p style="margin:0 0 14px;padding:12px 14px;background:#fcf6f2;border-left:3px solid #c1883e">${escLines(note)}</p>`
     : "";
+  // Who has the parcel and under what number, once that's been filled in.
+  const courier = o.courierName ? esc(o.courierName) : "the courier";
+  const trackingHtml = o.trackingNumber
+    ? p(
+        `Carried by <strong>${courier}</strong>, tracking number <strong>${esc(o.trackingNumber)}</strong>.${
+          o.trackingUrl ? ` <a href="${esc(o.trackingUrl)}" style="color:#8a5a26">Follow it on their site</a>.` : ""
+        }`,
+      )
+    : "";
+  const trackingText = o.trackingNumber
+    ? `\n${o.courierName ?? "Courier"} tracking number: ${o.trackingNumber}${o.trackingUrl ? `\n${o.trackingUrl}` : ""}`
+    : "";
   const html = layout(
     store,
     `Order #${o.number} ${m.subject}.`,
-    [h1(esc(m.title)), p(m.line(o)), noteHtml, button(trackUrl(o), "Track your order")].join(""),
+    [h1(esc(m.title)), p(m.line(o)), trackingHtml, noteHtml, button(trackUrl(o), "Track your order")].join(""),
   );
   const text = [
     m.title,
     m.line(o).replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&#39;/g, "'"),
+    trackingText,
     note ? `\nNote from our team: ${note}` : "",
     "",
     `Track your order: ${trackUrl(o)}`,

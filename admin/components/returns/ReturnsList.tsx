@@ -112,6 +112,11 @@ function ReturnCard({ request: r }: { request: ReturnRequest }) {
           <span className="block text-[0.66rem] font-normal text-muted">
             {r.refundPaise != null ? "refunded" : "if refunded in full"}
           </span>
+          {r.gatewayRefundId && (
+            <span className="mt-0.5 block text-[0.66rem] font-normal text-muted">
+              Sent back via Razorpay
+            </span>
+          )}
           {r.creditNote && (
             <a
               href={`/api/v1/admin/orders/${encodeURIComponent(r.order.number)}/credit-notes/${r.creditNote.id}`}

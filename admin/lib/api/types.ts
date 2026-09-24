@@ -127,6 +127,15 @@ export type OrderDetail = {
   shipPincode: string;
   shipCountry: string;
   placedAt: string;
+  /** Who's carrying the parcel, once it has shipped. */
+  courierName: string | null;
+  trackingNumber: string | null;
+  trackingUrl: string | null;
+  /** The parcel's weight from the products in it, in grams; null if unweighed. */
+  weightGrams: number | null;
+  /** Razorpay's ids, when the order was paid online. */
+  razorpayOrderId: string | null;
+  razorpayPaymentId: string | null;
   /** GST invoice, e.g. VL/2627/00001 — null until issued. */
   invoiceNumber: string | null;
   invoicedAt: string | null;
@@ -197,6 +206,8 @@ export type ProductDetail = {
   stock: number;
   lowStockThreshold: number;
   benefits: string[];
+  /** Packed weight in grams, for courier bookings; null until it's weighed. */
+  weightGrams: number | null;
   metaTitle: string | null;
   metaDescription: string | null;
   categoryId: string;
@@ -354,6 +365,8 @@ export type SiteSettings = {
   copy: SiteCopy;
   notifications: NotificationSettings;
   returns: ReturnPolicy;
+  payments: PaymentSettings;
+  pickup: PickupAddress;
   tax: TaxDetails;
   seo: SeoSettings;
   /** Whether an email service is connected; if not, emails are only logged. */
@@ -376,6 +389,47 @@ export type CreditNoteSummary = {
   totalPaise: number;
   issuedAt: string;
   returnRequest: { number: string } | null;
+};
+
+/** India's states and union territories, as the API stores them. */
+export const INDIAN_STATES = [
+  "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh",
+  "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", "Gujarat", "Haryana",
+  "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep",
+  "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry",
+  "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand",
+  "West Bengal",
+] as const;
+
+/** Where couriers collect parcels from (Settings → Shipping Methods). */
+export type PickupAddress = {
+  contactName: string;
+  phone: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  pincode: string;
+  /** Used when the products in an order have no weight recorded, in grams. */
+  defaultParcelGrams: number;
+};
+
+/** Whether online payment can be taken, read from the API's environment. */
+export type GatewayStatus = {
+  connected: boolean;
+  mode: "test" | "live" | "simulated" | null;
+  keyId: string | null;
+  webhookReady: boolean;
+};
+
+/** Which ways to pay are switched on, plus the gateway behind the online ones. */
+export type PaymentSettings = {
+  cod: boolean;
+  upi: boolean;
+  card: boolean;
+  netbanking: boolean;
+  wallet: boolean;
+  gateway: GatewayStatus;
 };
 
 /** The pages whose title and description the admin owns (SEO Settings). */
@@ -700,6 +754,8 @@ export type ReturnRequest = {
   /** What the team replied; it goes into the customer's email. */
   staffNote: string | null;
   refundPaise: number | null;
+  /** Razorpay's refund id when the money went back automatically; null for cash on delivery. */
+  gatewayRefundId: string | null;
   /** What the customer paid for the listed items (after any coupon) — what a full refund would be. */
   suggestedRefundPaise: number;
   /** Issued with the refund when the order had a GST invoice. */
