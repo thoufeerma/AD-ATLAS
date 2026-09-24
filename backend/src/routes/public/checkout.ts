@@ -15,11 +15,11 @@ import {
 } from "../../lib/payments.js";
 import { readPayments } from "../../lib/settings.js";
 import { badRequest, conflict, notFound, param, parse } from "../../lib/http.js";
-import { rateLimit } from "../../middleware/rateLimit.js";
+import { lookupLimit, rateLimit } from "../../middleware/rateLimit.js";
 import { AddressFields, IndianMobile } from "../../lib/validate.js";
 import { currentCustomer } from "../../lib/customerAuth.js";
 import { afterResponse, type Email } from "../../lib/mail.js";
-import { alertNewOrder, mailContext, orderConfirmation } from "../../lib/emails.js";
+import { alertLatePayment, alertNewOrder, mailContext, orderConfirmation } from "../../lib/emails.js";
 
 export const checkoutRouter = Router();
 
@@ -365,13 +365,18 @@ checkoutRouter.post("/orders/:number/payment", payLimit, async (req, res) => {
     return;
   }
   if (!order.razorpayOrderId) throw conflict("This order isn't waiting for an online payment");
-  if (order.status === "CANCELLED") throw conflict("This order was cancelled — please place it again");
+  if (order.status === "CANCELLED" || order.paymentStatus === "REFUNDED") {
+    throw conflict(
+      "This order can no longer be paid for — if money has left your account, contact us and we'll return it",
+    );
+  }
   if (!verifyPaymentSignature(order.razorpayOrderId, body.paymentId, body.signature)) {
     throw badRequest("We couldn't verify that payment. If money has left your account, contact us and we'll sort it out.");
   }
 
-  const paid = await markPaid(order.id, body.paymentId);
-  afterResponse(() => orderEmails(order.id));
+  const { order: paid, applied, late } = await markPaid(order.id, body.paymentId);
+  if (applied) afterResponse(() => orderEmails(order.id));
+  if (late) await recordLatePayment(order.id, body.paymentId);
   res.json({ data: { number: paid.number, status: paid.status, paymentStatus: paid.paymentStatus } });
 });
 
@@ -392,13 +397,21 @@ checkoutRouter.post("/orders/:number/payment/simulate", async (req, res) => {
 });
 
 /**
- * Records a successful payment once. Safe to call twice — the second call
- * finds the order already paid and changes nothing.
+ * Records a successful payment, but only against an order that is still
+ * waiting for one.
+ *
+ * Money can arrive late — after the unpaid-order sweep has cancelled the
+ * order and put its stock back, or (on a replayed webhook) after a refund.
+ * Confirming it then would promise goods that are no longer held, or undo a
+ * refund, so the order is left exactly as it is and the payment is recorded
+ * on its timeline for someone to refund by hand.
+ *
+ * `applied` is false in that case, and when the payment was already recorded.
  */
 export async function markPaid(orderId: string, paymentId: string) {
   return prisma.$transaction(async (tx) => {
     const { count } = await tx.order.updateMany({
-      where: { id: orderId, paymentStatus: { not: "PAID" } },
+      where: { id: orderId, status: "PENDING", paymentStatus: "PENDING" },
       data: { paymentStatus: "PAID", status: "CONFIRMED", razorpayPaymentId: paymentId },
     });
     if (count > 0) {
@@ -406,7 +419,36 @@ export async function markPaid(orderId: string, paymentId: string) {
         data: { orderId, status: "CONFIRMED", note: "Payment received" },
       });
     }
-    return tx.order.findUniqueOrThrow({ where: { id: orderId } });
+    const order = await tx.order.findUniqueOrThrow({ where: { id: orderId } });
+    const alreadyPaid = count === 0 && order.razorpayPaymentId === paymentId && order.paymentStatus === "PAID";
+    return { order, applied: count > 0, late: count === 0 && !alreadyPaid };
+  });
+}
+
+/**
+ * A payment that arrived for an order that can no longer take it. Noted on
+ * the order and sent to the team, because the money has to go back.
+ */
+export async function recordLatePayment(orderId: string, paymentId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) return;
+  const already = await prisma.orderEvent.findFirst({
+    where: { orderId, note: { contains: paymentId } },
+    select: { id: true },
+  });
+  if (already) return;
+
+  await prisma.orderEvent.create({
+    data: {
+      orderId,
+      status: order.status,
+      note: `Payment ${paymentId} arrived after the order was ${order.status.toLowerCase()} — it needs refunding`,
+    },
+  });
+  afterResponse(async () => {
+    const { store, notifications: n } = await mailContext();
+    if (!n.alertNewOrder) return [];
+    return n.alertRecipients.map((to) => alertLatePayment(order, paymentId, store, to));
   });
 }
 
@@ -418,9 +460,11 @@ const TrackQuery = z.object({
 /**
  * Requires BOTH the order number and the email on it. Order numbers are short
  * and guessable; pairing them with the email stops anyone enumerating other
- * customers' orders and addresses.
+ * customers' orders and addresses, and the limiter below stops them working
+ * through the numbers — only the misses are counted, so a shopper refreshing
+ * their own order is never turned away.
  */
-checkoutRouter.get("/orders/track", async (req, res) => {
+checkoutRouter.get("/orders/track", lookupLimit, async (req, res) => {
   const q = parse(TrackQuery, req.query);
   const order = await prisma.order.findFirst({
     where: { number: q.number, email: q.email },

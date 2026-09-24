@@ -55,10 +55,25 @@ export async function releaseAbandonedOrders(now = new Date()) {
   return released;
 }
 
-/** Runs the sweep every few minutes for as long as the server is up. */
+/**
+ * How long a copy of each email is kept for the admin's Email Log. Long
+ * enough to answer "did they get it?" about an old order, short enough that
+ * the store isn't holding customers' names and addresses for ever.
+ */
+const EMAIL_LOG_DAYS = 180;
+
+export async function purgeOldEmails(now = new Date()) {
+  const { count } = await prisma.emailLog.deleteMany({
+    where: { createdAt: { lt: new Date(now.getTime() - EMAIL_LOG_DAYS * 24 * 60 * 60_000) } },
+  });
+  return count;
+}
+
+/** Runs the housekeeping every few minutes for as long as the server is up. */
 export function startAbandonedSweep() {
   const run = () => {
     releaseAbandonedOrders().catch((err) => console.error("Abandoned-order sweep failed:", err));
+    purgeOldEmails().catch((err) => console.error("Email log purge failed:", err));
   };
   run();
   return setInterval(run, 5 * 60_000).unref();

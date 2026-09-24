@@ -2,11 +2,12 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../db.js";
 import { badRequest, conflict, notFound, param, parse } from "../../lib/http.js";
-import { rateLimit } from "../../middleware/rateLimit.js";
+import { lookupLimit, rateLimit } from "../../middleware/rateLimit.js";
 import { currentCustomer } from "../../lib/customerAuth.js";
 import { afterResponse } from "../../lib/mail.js";
 import { alertReturnRequest, mailContext } from "../../lib/emails.js";
 import { returnability, returnSettings, uniqueReturnNumber } from "../../lib/returns.js";
+
 
 /**
  * Returns, from the shopper's side: what may be sent back, and asking to send
@@ -61,7 +62,7 @@ const summarise = (r: { number: string; status: string; reason: string; createdA
 });
 
 /** What this order can still do about returns, for the button and the form. */
-returnsRouter.get("/orders/:number/returns", async (req, res) => {
+returnsRouter.get("/orders/:number/returns", lookupLimit, async (req, res) => {
   const { email } = parse(Lookup, req.query);
   const order = await findOrder(req, param(req, "number"), email);
   const settings = await returnSettings();

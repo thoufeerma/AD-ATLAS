@@ -29,6 +29,15 @@ const schema = z
     RAZORPAY_KEY_SECRET: z.string().trim().min(1).optional(),
     /** From the webhook you add in the Razorpay dashboard. */
     RAZORPAY_WEBHOOK_SECRET: z.string().trim().min(1).optional(),
+    /**
+     * Development only: lets the API stand in for Razorpay so the payment
+     * path can be exercised without an account. Refused outright against any
+     * database that isn't on this machine — see lib/payments.ts.
+     */
+    ALLOW_PAYMENT_SIMULATOR: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((v) => v === "true"),
     // ── Email ── without a key, emails are kept in the admin's Email Log
     // instead of being sent.
     RESEND_API_KEY: z.string().trim().min(1).optional(),
@@ -64,6 +73,26 @@ const schema = z
         path: ["JWT_SECRET"],
         message: "must be a random value of at least 32 characters in production",
       });
+    }
+    // A simulator that ever ran against a real store would let anyone mark
+    // their own order paid. Two locks: never in production, and never against
+    // a database that isn't local.
+    if (e.ALLOW_PAYMENT_SIMULATOR) {
+      const localDb = /@(localhost|127\.0\.0\.1)(:\d+)?\//.test(e.DATABASE_URL);
+      if (e.NODE_ENV === "production" || !localDb) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["ALLOW_PAYMENT_SIMULATOR"],
+          message: "can only be used in development against a local database",
+        });
+      }
+      if (e.RAZORPAY_KEY_ID) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["ALLOW_PAYMENT_SIMULATOR"],
+          message: "can't be used together with real Razorpay keys — remove one",
+        });
+      }
     }
     // Half-configured payments would take orders it can't charge for.
     if (Boolean(e.RAZORPAY_KEY_ID) !== Boolean(e.RAZORPAY_KEY_SECRET)) {

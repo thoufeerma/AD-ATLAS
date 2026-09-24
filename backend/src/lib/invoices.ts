@@ -132,11 +132,17 @@ export function invoiceView(order: Order & { items: OrderItem[] }) {
  * Guests prove an order is theirs with its number and email, which can't go
  * in a link that ends up in browser history. So the pages that have already
  * checked (Track Order, the account) hand out signed links to that order's
- * invoice and credit notes, good for a day.
+ * invoice and credit notes.
+ *
+ * The link itself is the key, and a URL is a leaky place to keep one: it
+ * lands in browser history and in the hosting logs. So it is short-lived —
+ * long enough to open, print and save the PDF, not long enough to be worth
+ * finding later — and the page tells the browser to send no referrer, so the
+ * address never travels to another site.
  */
 
 const secret = new TextEncoder().encode(env.JWT_SECRET);
-const LINK_HOURS = 24;
+const LINK_MINUTES = 30;
 
 type LinkedOrder = Pick<Order, "id" | "number" | "invoiceNumber" | "invoicedAt"> & {
   creditNotes?: { id: string; number: string; issuedAt: Date; totalPaise: number }[];
@@ -149,7 +155,7 @@ export async function invoiceLink(order: LinkedOrder) {
     .setAudience("invoice")
     .setSubject(order.id)
     .setIssuedAt()
-    .setExpirationTime(`${LINK_HOURS}h`)
+    .setExpirationTime(`${LINK_MINUTES}m`)
     .sign(secret);
   const base = `/api/v1/orders/${encodeURIComponent(order.number)}`;
   return {

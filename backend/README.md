@@ -58,7 +58,7 @@ under **Users & Roles**.
 | `db:studio` | Prisma Studio, a GUI over the database |
 | `admin:reset` | Forgotten admin password: lists the admin emails and gives one a new one-time password (`-- email` to pick one when there are several). Uses `DATABASE_URL` — see [DEPLOY.md](../DEPLOY.md) for the online database |
 | `db:up` / `db:down` | Start / stop the Docker database |
-| `smoke` | 318 end-to-end API checks — **dev databases only**, see below |
+| `smoke` | 330 end-to-end API checks — **dev databases only**, see below |
 
 ## API
 
@@ -92,10 +92,13 @@ All routes are under `/api/v1`. Every error has the same shape:
 | GET · POST · DELETE | `/account/wishlist` (`/:slug`) · `/merge` | The account's wishlist (up to 100), as product slugs. `merge` folds in what the shopper's browser had saved when they sign in |
 | POST | `/contact` · `/newsletter` · `/collab-applications` | Forms |
 | GET · POST | `/orders/:number/returns` (`?email=`) | Whether a return is possible and what's left to return; ask for one. Identified like order tracking — number plus email — or by the signed-in customer's own orders |
-| GET | `/orders/:number/invoice?t=` · `/credit-notes/:id?t=` | The GST invoice and credit notes as printable pages. `t` is the signed link that `/orders/track` and `/account/orders` return (`invoice.url`, `invoice.creditNotes[].url`), good for 24 hours |
+| GET | `/orders/:number/invoice?t=` · `/credit-notes/:id?t=` | The GST invoice and credit notes as printable pages. `t` is the signed link that `/orders/track` and `/account/orders` return (`invoice.url`, `invoice.creditNotes[].url`), good for 30 minutes — the address is the key, so it's short-lived and the page sends no referrer |
 
-Public POSTs are rate-limited per IP (in memory): orders 20, reviews 5, return
-requests 10 and each form 10 per 10 minutes. Behind a proxy, make sure it sets `X-Forwarded-For`.
+Public POSTs are rate-limited per IP (in memory): orders 30, reviews 5, return
+requests 10 and each form 10 per 10 minutes. Order lookups — Track Order, the
+returns panel, the invoice pages — allow 20 *misses* per 10 minutes, so
+guessing order numbers runs out while a customer opening their own order never
+does. Behind a proxy, make sure it sets `X-Forwarded-For`.
 
 ### Admin — session cookie required (except `/auth/login`)
 
@@ -259,6 +262,20 @@ then on:
 
 Each of these is exercised by `npm run smoke`.
 
+- **A payment only ever confirms an order that is still waiting for one.**
+  Money arriving after the unpaid-order sweep cancelled it, or after a refund
+  (a replayed webhook), leaves the order untouched, is written on its
+  timeline, and the team is emailed to refund it.
+- **One-time links are never stored.** The Email Log keeps a copy of every
+  email, with the token stripped out of email-confirmation and password-reset
+  links — so admin access can't become customer account access. Copies are
+  deleted after 180 days.
+- **The payment simulator can't reach a real store.** It needs
+  `ALLOW_PAYMENT_SIMULATOR=true`, and the API refuses to boot with it in
+  production, against a non-local database, or alongside real Razorpay keys.
+- **Sign-up doesn't say whether an address has an account**; the answer goes
+  to the address itself.
+
 - **Server-authoritative pricing.** Totals are always recomputed from the
   database; prices sent by a client are ignored.
 - **No overselling.** Stock is decremented with a conditional update inside the
@@ -318,7 +335,7 @@ npm run dev      # in one terminal
 npm run smoke    # in another
 ```
 
-Runs 53 storefront and 265 admin checks, including a concurrent-purchase race,
+Runs 53 storefront and 277 admin checks, including a concurrent-purchase race,
 the admin account lifecycle and regression tests for the partial-update bug.
 Rerunnable against a used database: every fixture it creates is suffixed per
 run. It **refuses to target anything but localhost**, because it places orders

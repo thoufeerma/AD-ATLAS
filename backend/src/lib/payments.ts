@@ -23,8 +23,13 @@ import { conflict, HttpError } from "./http.js";
 const SIMULATOR_SECRET = "razorpay-simulator-not-a-real-key";
 const API = "https://api.razorpay.com/v1";
 
-/** True when no gateway is configured and we're allowed to pretend. */
-export const simulating = !env.RAZORPAY_KEY_ID && !isProd;
+/**
+ * True when the API stands in for the gateway. Switched on deliberately with
+ * ALLOW_PAYMENT_SIMULATOR=true, which the environment refuses to accept in
+ * production or against a database that isn't local (see env.ts), so it can't
+ * be reached by a misconfigured deploy.
+ */
+export const simulating = env.ALLOW_PAYMENT_SIMULATOR && !env.RAZORPAY_KEY_ID && !isProd;
 
 export type GatewayStatus = {
   /** Whether online payment can be taken at all. */

@@ -499,7 +499,8 @@ console.log("\n[Emails]");
     await pub("POST", "/orders", { email: quiet, name: "Quiet Buyer", ...shipTo, items: [{ slug: "lip-liner", quantity: 1 }], paymentMethod: "COD" });
     ok(!(await waitFor((e) => e.to === quiet, 1500)), "no confirmation when that email is switched off");
 
-    const test = await call("POST", "/admin/emails/test", { to: `test.${RUN}@example.com` });
+    // Only to an address the team already owns — here, the signed-in admin's.
+    const test = await call("POST", "/admin/emails/test", { to: ADMIN_EMAIL });
     ok(test.status === 201 && test.json.data.status === "CAPTURED", "test email recorded (test addresses are never really emailed)");
   } finally {
     await call("PUT", "/admin/settings/notifications", before);
@@ -532,7 +533,11 @@ console.log("\n[Customer accounts]");
   const reg = await shop(null, "POST", "/account/register", { name: "Asha Shopper", email, password: `rose-velvet-${RUN}` });
   let cookie = reg.cookie;
   ok(reg.status === 201 && reg.json.data.emailVerified === false && cookie?.startsWith("vel_customer="), "sign up -> signed in, email not yet verified");
-  ok((await shop(null, "POST", "/account/register", { name: "Again", email, password: `another-${RUN}-pass` })).status === 409, "same email can't sign up twice");
+  const reRegister = await shop(null, "POST", "/account/register", { name: "Again", email, password: `another-${RUN}-pass` });
+  ok(reRegister.status === 409 && !/already have an account|already an account with this email/i.test(reRegister.json.error.message),
+    "signing up twice fails without confirming the address has an account", reRegister.json.error.message);
+  const toldOwner = (await call("GET", `/admin/emails?q=${encodeURIComponent(email)}`)).json.data;
+  ok(toldOwner.some((m) => m.kind === "account.exists"), "…and the address itself is told someone tried");
   const weak = await shop(null, "POST", "/account/register", { name: "Weak", email: `weak.${RUN}@example.com`, password: "short" });
   ok(weak.status === 400 && weak.json.error.details?.[0]?.path === "password", "too-short password refused");
   ok((await shop(cookie, "GET", "/account/me")).json.data.email === email, "session reads the account");
@@ -540,8 +545,23 @@ console.log("\n[Customer accounts]");
   const orders0 = await shop(cookie, "GET", "/account/orders");
   ok(orders0.status === 403 && orders0.json.error.code === "EMAIL_NOT_VERIFIED", "order history hidden until the email is verified");
 
+  // The Email Log keeps a copy of every email. For a real address, the
+  // one-time links in it are taken out first, so nobody with admin access can
+  // use a customer's reset link. (Test addresses keep theirs — see below.)
+  const outsider = `redact.${RUN}@velastia-not-a-real-domain.co`;
+  await shop(null, "POST", "/account/register", { name: "Outside Shopper", email: outsider, password: `plum-${RUN}-silk` });
+  await shop(null, "POST", "/account/password/forgot", { email: outsider });
+  let stored = null;
+  for (let i = 0; i < 20 && !stored; i++) {
+    const row = (await call("GET", "/admin/emails?take=100")).json.data.find((e) => e.to === outsider && e.kind === "account.reset");
+    if (row) stored = (await call("GET", `/admin/emails/${row.id}`)).json.data;
+    else await new Promise((r) => setTimeout(r, 250));
+  }
+  ok(Boolean(stored) && stored.html.includes("token=removed") && !/token=[A-Za-z0-9_-]{20,}/.test(stored.html),
+    "a customer's reset link is stripped out of the stored copy");
+
   const vtoken = await linkToken(email, "account.verify");
-  ok(!!vtoken, "verification email sent with a one-time link");
+  ok(!!vtoken, "verification email to a test address keeps its link, so the suite can follow it");
   ok((await shop(null, "POST", "/account/verify", { token: vtoken })).status === 200, "link verifies the email (no sign-in needed)");
   ok((await shop(null, "POST", "/account/verify", { token: vtoken })).status === 400, "…and only works once");
 
@@ -818,6 +838,33 @@ console.log("\n[Payments]");
     "a signed webhook records the payment on its own");
   const unsigned = await fetch(`${API}/webhooks/razorpay`, { method: "POST", headers: { "content-type": "application/json", "x-razorpay-signature": sign("something else") }, body: event });
   ok(unsigned.status === 400, "an unsigned webhook is refused");
+
+  // Money that arrives for an order that can no longer take it — a replayed
+  // capture after a refund, or a payment after the unpaid sweep cancelled it —
+  // must not put the order back to paid.
+  // The team only hears about it if someone is listed to hear about it.
+  const notifyBefore = (await call("GET", "/admin/settings")).json.data.notifications;
+  await call("PUT", "/admin/settings/notifications", { ...notifyBefore, alertNewOrder: true, alertRecipients: [`alerts.${RUN}@example.com`] });
+  const replay = JSON.stringify({ event: "payment.captured", payload: { payment: { entity: { id: `pay_replay${RUN}`, order_id: order.payment.gatewayOrderId } } } });
+  const replayed = await fetch(`${API}/webhooks/razorpay`, { method: "POST", headers: { "content-type": "application/json", "x-razorpay-signature": sign(replay) }, body: replay });
+  const afterReplay = (await call("GET", `/admin/orders/${order.number}`)).json.data;
+  ok(replayed.status === 200 && afterReplay.paymentStatus === "REFUNDED" && afterReplay.status === "REFUNDED",
+    "a replayed payment can't undo a refund", `${afterReplay.status}/${afterReplay.paymentStatus}`);
+  ok(afterReplay.events.some((e) => e.note?.includes(`pay_replay${RUN}`) && e.note.includes("refunding")),
+    "…and it's noted on the order for someone to refund");
+  const lateAlert = (await call("GET", `/admin/emails?q=${encodeURIComponent(`alerts.${RUN}@example.com`)}`)).json.data;
+  ok(lateAlert.some((m) => m.kind === "alert.payment"), "…with the team told to refund it", lateAlert[0]?.subject);
+
+  const cancelledOrder = (await pub("POST", "/orders", { ...shipTo, email: `pay.late.${RUN}@example.com`, name: "Late Tester", items: [{ slug: "lip-liner", quantity: 1 }], paymentMethod: "UPI" })).json.data;
+  await call("PATCH", `/admin/orders/${cancelledOrder.number}/status`, { status: "CANCELLED" });
+  const lateBody = JSON.stringify({ event: "payment.captured", payload: { payment: { entity: { id: `pay_late${RUN}`, order_id: cancelledOrder.payment.gatewayOrderId } } } });
+  await fetch(`${API}/webhooks/razorpay`, { method: "POST", headers: { "content-type": "application/json", "x-razorpay-signature": sign(lateBody) }, body: lateBody });
+  const afterLate = (await call("GET", `/admin/orders/${cancelledOrder.number}`)).json.data;
+  ok(afterLate.status === "CANCELLED" && afterLate.paymentStatus !== "PAID",
+    "paying after an order was cancelled doesn't revive it (its stock is gone)", `${afterLate.status}/${afterLate.paymentStatus}`);
+  const lateVerify = await pub("POST", `/orders/${cancelledOrder.number}/payment`, { paymentId: `pay_late${RUN}`, signature: "0".repeat(64) });
+  ok(lateVerify.status === 409, "and the browser is told so too", lateVerify.json.error.message);
+  await call("PUT", "/admin/settings/notifications", notifyBefore);
 }
 
 console.log("\n[Pickup address and weights]");
@@ -1053,6 +1100,40 @@ console.log("\n[Logout]");
 {
   const out = await call("POST", "/admin/auth/logout");
   ok(out.status === 204 && /vel_admin=;/.test(out.headers.get("set-cookie") ?? ""), "logout clears the cookie");
+}
+
+console.log("\n[Sending mail from the shop]");
+{
+  // The test email is for checking the service works, not for sending mail
+  // from the shop's domain to whoever you like.
+  const stranger = await call("POST", "/admin/emails/test", { to: `stranger.${RUN}@example.com` });
+  ok(stranger.status === 400, "a test email can't be sent to any address you name", stranger.json.error.message);
+  const self = await call("POST", "/admin/emails/test", { to: ADMIN_EMAIL });
+  ok(self.status === 201, "…but it goes to your own address", self.json.data?.status);
+}
+
+console.log("\n[Order-number guessing]");
+{
+  // Someone working through order numbers with a known email runs out of
+  // attempts; the customer's own order keeps opening.
+  const mine = ORDER;
+  const owner = (await call("GET", `/admin/orders/${mine}`)).json.data.email;
+  const wrong = async (n) => pub("GET", `/orders/track?number=VL26092${String(n).padStart(5, "0")}&email=${encodeURIComponent(owner)}`);
+
+  const lookUp = () => pub("GET", `/orders/track?number=${mine}&email=${encodeURIComponent(owner)}`);
+  const before = await lookUp();
+  ok(before.status === 200 && before.json.data.number === mine, "an order opens for whoever knows its number and email");
+
+  let blockedAt = 0;
+  for (let i = 1; i <= 25 && !blockedAt; i++) {
+    const r = await wrong(i);
+    if (r.status === 429) blockedAt = i;
+  }
+  ok(blockedAt > 0 && blockedAt <= 25, "guessing order numbers is cut off", `stopped after ${blockedAt} misses`);
+  // Successful lookups are never counted, so ordinary use doesn't fill the
+  // bucket — but once someone has filled it, that address is shut out for the
+  // window, including from looking up an order it does know.
+  ok((await lookUp()).status === 429, "…and that address is then shut out for a while");
 }
 
 console.log("\n[Brute-force throttle]");

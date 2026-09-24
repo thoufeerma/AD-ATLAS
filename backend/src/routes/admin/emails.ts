@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../db.js";
-import { notFound, param, parse } from "../../lib/http.js";
+import { badRequest, notFound, param, parse } from "../../lib/http.js";
 import { logActivity } from "../../lib/activity.js";
 import { allow, ROLES } from "../../middleware/auth.js";
 import { sendEmail } from "../../lib/mail.js";
@@ -52,10 +52,20 @@ adminEmailsRouter.get("/:id", allow(...ROLES.ordersRead), async (req, res) => {
   res.json({ data: email });
 });
 
-/** Sends a sample email, to check the email service is set up. */
+/**
+ * Sends a sample email, to check the email service is set up. Only to the
+ * admin's own address or one the team already receives alerts on — this isn't
+ * a way to send mail from the shop's domain to anyone.
+ */
 adminEmailsRouter.post("/test", allow(...ROLES.catalog), async (req, res) => {
-  const { to } = parse(z.object({ to: z.email() }), req.body);
-  const { store } = await mailContext();
+  const { to } = parse(z.object({ to: z.email().transform((e) => e.toLowerCase()) }), req.body);
+  const { store, notifications } = await mailContext();
+  const allowed = [req.admin!.email.toLowerCase(), ...notifications.alertRecipients.map((a) => a.toLowerCase())];
+  if (!allowed.includes(to)) {
+    throw badRequest("Send the test to your own address, or to one of the alert addresses under Notifications", [
+      { path: "to", message: "Use your own address or a team alert address" },
+    ]);
+  }
   const status = await sendEmail(testEmail(store, to));
   await logActivity(req, `Sent a test email to ${to} (${status.toLowerCase()})`, "EmailLog");
   res.status(201).json({ data: { status } });

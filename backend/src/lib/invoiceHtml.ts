@@ -357,6 +357,8 @@ export function sendInvoiceHtml(res: Response, status: number, html: string) {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "private, no-store",
       "X-Robots-Tag": "noindex",
+      // The address carries the key: never hand it to another site.
+      "Referrer-Policy": "no-referrer",
       "Content-Security-Policy": [
         "default-src 'none'",
         "style-src 'unsafe-inline'",

@@ -24,7 +24,7 @@ import {
   signCustomerSession,
 } from "../../lib/customerAuth.js";
 import { afterResponse } from "../../lib/mail.js";
-import { mailContext, passwordResetEmail, verifyEmail } from "../../lib/emails.js";
+import { alreadyRegistered, mailContext, passwordResetEmail, verifyEmail } from "../../lib/emails.js";
 import { rateLimit } from "../../middleware/rateLimit.js";
 import { AddressFields, IndianMobile } from "../../lib/validate.js";
 
@@ -86,7 +86,16 @@ accountRouter.post("/register", registerLimit, async (req, res) => {
 
   const existing = await prisma.customer.findUnique({ where: { email: body.email } });
   if (existing?.passwordHash) {
-    throw conflict("There's already an account with this email — sign in, or reset your password");
+    // Deliberately says nothing about whether that address has an account:
+    // the answer goes to the inbox, which only its owner reads. Someone
+    // working through addresses learns no more than "that didn't work".
+    afterResponse(async () => {
+      const { store } = await mailContext();
+      return [alreadyRegistered(existing, store)];
+    });
+    throw conflict(
+      "We couldn't sign you up with those details. If an account already exists for that address, we've emailed it with what to do next.",
+    );
   }
 
   const passwordHash = await hashPassword(body.password);

@@ -272,6 +272,36 @@ export function alertNewOrder(o: OrderWithItems, store: Store, to: string): Emai
   };
 }
 
+/**
+ * Money arrived for an order that can't take it — cancelled when the payment
+ * window ran out, or already refunded. Nothing is changed automatically; the
+ * team refunds it in Razorpay.
+ */
+export function alertLatePayment(o: Order, paymentId: string, store: Store, to: string): Email {
+  const link = `${env.ADMIN_URL}/orders/${encodeURIComponent(o.number)}`;
+  const line = `A payment (<strong>${esc(paymentId)}</strong>) came in for order <strong>#${esc(o.number)}</strong>, which is ${esc(o.status.toLowerCase())}. The order has been left as it is — refund the payment in Razorpay, and tell the customer.`;
+  const html = layout(
+    store,
+    `Late payment on #${o.number}.`,
+    [h1("A payment needs refunding"), p(line), p(`Amount: <strong>${formatInr(o.totalPaise)}</strong>`), button(link, "Open in admin")].join(""),
+  );
+  const text = [
+    "A payment needs refunding",
+    line.replace(/<[^>]+>/g, ""),
+    `Amount: ${formatInr(o.totalPaise)}`,
+    "",
+    link,
+  ].join("\n");
+  return {
+    to,
+    subject: `Payment received for ${o.status.toLowerCase()} order #${o.number} — refund needed`,
+    html,
+    text,
+    kind: "alert.payment",
+    orderId: o.id,
+  };
+}
+
 export function alertContactMessage(
   m: { name: string; email: string; phone?: string | null; subject: string; message: string },
   store: Store,
@@ -358,6 +388,31 @@ export function verifyEmail(c: { name: string; email: string }, token: string, s
     `This link works once and expires in 48 hours. If you didn't create a ${store.name} account, ignore this email.`,
   ].join("\n");
   return { to: c.email, subject: `Confirm your email for ${store.name}`, html, text, kind: "account.verify", replyTo: store.supportEmail || undefined };
+}
+
+/**
+ * Someone tried to sign up with an address that already has an account. The
+ * reply to the browser gives nothing away, so this is what tells the real
+ * owner — and points them at signing in or resetting, rather than at a link
+ * that would let a stranger in.
+ */
+export function alreadyRegistered(c: { name: string; email: string }, store: Store): Email {
+  const link = `${env.STORE_URL}/login`;
+  const line = `Someone just tried to create an account with this email address, and one already exists. If that was you, sign in instead — and use "Forgot password" if you don't remember it.`;
+  const html = layout(
+    store,
+    "You already have an account with us.",
+    [h1("You already have an account"), p(esc(line)), button(link, "Sign in"), p(`If it wasn't you, nothing has changed and you can ignore this.`)].join(""),
+  );
+  const text = [line, "", `Sign in: ${link}`, "", "If it wasn't you, nothing has changed and you can ignore this."].join("\n");
+  return {
+    to: c.email,
+    subject: `You already have a ${store.name} account`,
+    html,
+    text,
+    kind: "account.exists",
+    replyTo: store.supportEmail || undefined,
+  };
 }
 
 export function passwordResetEmail(c: { name: string; email: string }, token: string, store: Store): Email {

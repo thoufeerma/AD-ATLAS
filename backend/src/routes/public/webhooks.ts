@@ -2,7 +2,7 @@ import { Router } from "express";
 import { prisma } from "../../db.js";
 import { afterResponse } from "../../lib/mail.js";
 import { verifyWebhookSignature } from "../../lib/payments.js";
-import { markPaid, orderEmails } from "./checkout.js";
+import { markPaid, orderEmails, recordLatePayment } from "./checkout.js";
 
 /**
  * Razorpay's side of the conversation. The browser usually tells us about a
@@ -42,12 +42,14 @@ webhooksRouter.post("/webhooks/razorpay", async (req, res) => {
   }
 
   if (event.event === "payment.captured" || event.event === "order.paid") {
-    const before = order.paymentStatus;
-    await markPaid(order.id, payment.id);
+    const { applied, late } = await markPaid(order.id, payment.id);
     // Only the first word of a payment sends the emails; the gateway may
     // deliver the same event more than once.
-    if (before !== "PAID") afterResponse(() => orderEmails(order.id));
-    res.json({ data: { handled: true } });
+    if (applied) afterResponse(() => orderEmails(order.id));
+    // Money for an order that was cancelled or already refunded: left alone,
+    // and the team is told so it can be sent back.
+    if (late) await recordLatePayment(order.id, payment.id);
+    res.json({ data: { handled: applied } });
     return;
   }
 

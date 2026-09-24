@@ -4,6 +4,7 @@ import { param } from "../../lib/http.js";
 import { invoiceView, readInvoiceLink } from "../../lib/invoices.js";
 import { creditNoteView } from "../../lib/creditNotes.js";
 import { invoiceProblemPage, renderCreditNote, renderInvoice, sendInvoiceHtml } from "../../lib/invoiceHtml.js";
+import { lookupLimit } from "../../middleware/rateLimit.js";
 
 /**
  * A customer's GST invoice and credit notes, as printable pages. Reached
@@ -14,7 +15,7 @@ export const invoicesRouter = Router();
 
 const EXPIRED = invoiceProblemPage(
   "This link has expired",
-  "Invoice links work for a day. Open it again from Track Order or from your account's order history.",
+  "Invoice links are good for half an hour. Open it again from Track Order or from your account's order history — it's always there.",
 );
 
 /** The order id the request's signed link was made for, or null. */
@@ -23,7 +24,7 @@ async function linkedOrder(query: unknown) {
   return typeof t === "string" && t ? readInvoiceLink(t) : null;
 }
 
-invoicesRouter.get("/orders/:number/invoice", async (req, res) => {
+invoicesRouter.get("/orders/:number/invoice", lookupLimit, async (req, res) => {
   const orderId = await linkedOrder(req.query);
   if (!orderId) {
     sendInvoiceHtml(res, 403, EXPIRED);
@@ -40,7 +41,7 @@ invoicesRouter.get("/orders/:number/invoice", async (req, res) => {
   sendInvoiceHtml(res, 200, renderInvoice(view));
 });
 
-invoicesRouter.get("/orders/:number/credit-notes/:id", async (req, res) => {
+invoicesRouter.get("/orders/:number/credit-notes/:id", lookupLimit, async (req, res) => {
   const orderId = await linkedOrder(req.query);
   if (!orderId) {
     sendInvoiceHtml(res, 403, EXPIRED);

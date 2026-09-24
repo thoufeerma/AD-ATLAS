@@ -36,6 +36,11 @@ during a build** too. `npm run build` and `npm run lint` both pass clean.
   [`lib/api/server.ts`](lib/api/server.ts). Responses are cached for 60 seconds, so
   an edit in the admin shows on the live site within about a minute. If the API
   is briefly down, the last good page keeps being served.
+- **Both sites send a Content-Security-Policy** and the usual hardening
+  headers ([`next.config.ts`](next.config.ts)): scripts and styles from this
+  site only (plus Razorpay's payment window), no framing by anyone, no
+  plugins. The API pass-through is excluded, so the invoice page keeps its own
+  stricter policy.
 - **The browser** (cart pricing, checkout, forms, order tracking) calls this site's
   own `/api/v1/*`, which [`proxy.ts`](proxy.ts) forwards to the API — same
   origin, so no CORS setup is needed for the store. Online it also passes on

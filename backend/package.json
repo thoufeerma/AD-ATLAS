@@ -47,5 +47,9 @@
     "prisma": "7.10.0",
     "tsx": "4.23.13",
     "typescript": "7.0.2"
+  },
+  "overrides": {
+    "mysql2": "^3.24.4",
+    "deepmerge-ts": "^8.0.2"
   }
 }

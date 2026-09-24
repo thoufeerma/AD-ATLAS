@@ -22,6 +22,27 @@ const RESERVED = /@(?:[^@]+\.)?(?:example\.(?:com|net|org)|[^@.]+\.(?:test|examp
 export const emailServiceConnected = () => Boolean(env.RESEND_API_KEY);
 
 /**
+ * Emails whose body carries a one-time link that signs someone in: confirming
+ * an email address, and resetting a password.
+ */
+const ONE_TIME_LINK = new Set(["account.verify", "account.reset"]);
+
+/**
+ * The copy kept in the admin's Email Log has those links taken out. Anyone
+ * who can read the log — a Support Agent, say — would otherwise be able to
+ * open a customer's reset link and take over their account.
+ *
+ * Addresses reserved for tests keep theirs: nothing is ever delivered to
+ * them, so the suite has no other way to follow the link, and the account is
+ * the tester's own.
+ */
+function forTheLog(email: Email) {
+  if (!ONE_TIME_LINK.has(email.kind) || RESERVED.test(email.to)) return email;
+  const strip = (text: string) => text.replace(/([?&]token=)[A-Za-z0-9_-]+/g, "$1removed");
+  return { ...email, html: strip(email.html), text: strip(email.text) };
+}
+
+/**
  * Sends one email and records it in the Email Log, whatever happens. Without
  * RESEND_API_KEY (or for a test address) the email is only recorded, as
  * "captured", so the admin can still read exactly what would have gone out.
@@ -68,16 +89,17 @@ export async function sendEmail(email: Email) {
   }
 
   try {
+    const logged = forTheLog(email);
     await prisma.emailLog.create({
       data: {
-        to: email.to,
-        subject: email.subject,
-        kind: email.kind,
+        to: logged.to,
+        subject: logged.subject,
+        kind: logged.kind,
         status,
         detail,
         providerId,
-        html: email.html,
-        orderId: email.orderId,
+        html: logged.html,
+        orderId: logged.orderId,
       },
     });
   } catch (err) {
