@@ -9,7 +9,8 @@ import Button from "@/components/ui/Button";
 import Avatar from "@/components/ui/Avatar";
 import RatingBars from "@/components/ui/RatingBars";
 import type { Product, RatingSummary, Testimonial } from "@/lib/api/types";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 export default function BestsellersBlock({
   products,
@@ -23,22 +24,9 @@ export default function BestsellersBlock({
   /** Editable in the admin: Settings → Site Copy. */
   ratingHeadline: string;
 }) {
-  const productsRef = useRef<HTMLDivElement>(null);
   const reviewsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Auto scroll logic for products
-    const pInterval = setInterval(() => {
-      if (productsRef.current) {
-        const { scrollLeft, scrollWidth, clientWidth } = productsRef.current;
-        if (scrollLeft + clientWidth >= scrollWidth - 10) {
-          productsRef.current.scrollTo({ left: 0, behavior: "smooth" });
-        } else {
-          productsRef.current.scrollBy({ left: clientWidth / 3, behavior: "smooth" });
-        }
-      }
-    }, 4000);
-
     // Auto scroll logic for reviews
     const rInterval = setInterval(() => {
       if (reviewsRef.current) {
@@ -51,18 +39,8 @@ export default function BestsellersBlock({
       }
     }, 5000);
 
-    return () => {
-      clearInterval(pInterval);
-      clearInterval(rInterval);
-    };
+    return () => clearInterval(rInterval);
   }, []);
-
-  const scrollProducts = (dir: "left" | "right") => {
-    if (productsRef.current) {
-      const clientWidth = productsRef.current.clientWidth;
-      productsRef.current.scrollBy({ left: dir === "left" ? -clientWidth / 3 : clientWidth / 3, behavior: "smooth" });
-    }
-  };
 
   const scrollReviews = (dir: "left" | "right") => {
     if (reviewsRef.current) {
@@ -90,25 +68,7 @@ export default function BestsellersBlock({
             </Link>
           </div>
 
-          <div className="relative px-2">
-            <div
-              ref={productsRef}
-              className="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-4"
-            >
-              {products.map((p) => (
-                <div key={p.slug} className="min-w-[calc(33.333%-11px)] shrink-0 snap-start">
-                  <ProductCard product={p} className="h-full" />
-                </div>
-              ))}
-            </div>
-            {/* Arrows for bestsellers */}
-            <button onClick={() => scrollProducts("left")} className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 grid size-9 place-items-center rounded-full bg-white border border-gold-200 shadow-[0_4px_12px_rgba(0,0,0,0.08)] text-gold-600 hover:text-gold-500">
-              <ChevronLeft className="size-5" />
-            </button>
-            <button onClick={() => scrollProducts("right")} className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 grid size-9 place-items-center rounded-full bg-white border border-gold-200 shadow-[0_4px_12px_rgba(0,0,0,0.08)] text-gold-600 hover:text-gold-500">
-              <ChevronRight className="size-5" />
-            </button>
-          </div>
+          <BestsellerCarousel products={products} />
         </div>
 
         {/* Right side: Promo + Ratings + Testimonials */}
@@ -218,5 +178,115 @@ export default function BestsellersBlock({
         </div>
       </div>
     </section>
+  );
+}
+
+/** Cards in view at once; the gap between them matches `gap-4`. */
+const VISIBLE = 3;
+const GAP = "1rem";
+/** How long each position is held, and how long the slide across takes. */
+const STEP_MS = 4000;
+const GLIDE_MS = 700;
+
+const ARROW =
+  "absolute top-1/2 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-gold-200 bg-white text-gold-600 shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:text-gold-500";
+
+/**
+ * The bestsellers, one card at a time, round and round.
+ *
+ * The track carries the list three times and starts on the middle copy. A
+ * move that lands in the first or last copy is followed, once the glide has
+ * finished, by a silent jump of one whole list back to the same card in the
+ * middle — so it never visibly rewinds, in either direction. Moved with a
+ * transform rather than native scrolling: smooth `scrollBy` fought the scroll
+ * snapping and left the arrows doing nothing.
+ */
+function BestsellerCarousel({ products }: { products: Product[] }) {
+  const n = products.length;
+  const loops = n > VISIBLE;
+  const [i, setI] = useState(n);
+  const [silent, setSilent] = useState(false); // the jump back, with no animation
+  const [paused, setPaused] = useState(false);
+  const touchX = useRef<number | null>(null);
+
+  // Advance on a timer, restarted whenever the position changes — so an
+  // arrow click buys a full interval rather than a leftover moment.
+  useEffect(() => {
+    if (!loops || paused) return;
+    const t = setTimeout(() => {
+      setSilent(false);
+      setI((x) => x + 1);
+    }, STEP_MS);
+    return () => clearTimeout(t);
+  }, [i, loops, paused]);
+
+  // Out in the first or last copy: back to the middle once the glide is done.
+  // A timer rather than transitionend, which never fires for visitors who
+  // have asked for reduced motion.
+  useEffect(() => {
+    if (!loops || (i >= n && i < 2 * n)) return;
+    const t = setTimeout(() => {
+      setSilent(true);
+      setI((x) => (x < n ? x + n : x - n));
+    }, GLIDE_MS + 50);
+    return () => clearTimeout(t);
+  }, [i, n, loops]);
+
+  function go(direction: 1 | -1) {
+    setSilent(false);
+    // Clicks faster than the glide can't run off either end of the track.
+    setI((x) => Math.min(3 * n - VISIBLE, Math.max(0, x + direction)));
+  }
+
+  const card = (p: Product, key: string | number) => (
+    <div key={key} className="w-[calc((100%-2rem)/3)] shrink-0">
+      <ProductCard product={p} className="h-full" />
+    </div>
+  );
+
+  // Nothing to slide through: the cards simply sit side by side.
+  if (!loops) {
+    return <div className="flex gap-4 px-2 pb-4">{products.map((p) => card(p, p.slug))}</div>;
+  }
+
+  return (
+    <div
+      className="relative px-2"
+      // Hold still while someone is reading or about to click a card. Mouse
+      // only: a tap on a phone would otherwise leave it paused for good.
+      onPointerEnter={(e) => e.pointerType === "mouse" && setPaused(true)}
+      onPointerLeave={(e) => e.pointerType === "mouse" && setPaused(false)}
+    >
+      <div
+        className="overflow-hidden pb-4"
+        onTouchStart={(e) => {
+          touchX.current = e.touches[0]?.clientX ?? null;
+        }}
+        onTouchEnd={(e) => {
+          const start = touchX.current;
+          const end = e.changedTouches[0]?.clientX;
+          touchX.current = null;
+          if (start == null || end == null || Math.abs(end - start) < 40) return;
+          go(end < start ? 1 : -1);
+        }}
+      >
+        <div
+          className={cn(
+            "flex gap-4",
+            silent ? "transition-none" : "transition-transform duration-700 ease-out motion-reduce:transition-none",
+          )}
+          style={{ transform: `translateX(calc(${-i} * (100% + ${GAP}) / ${VISIBLE}))` }}
+        >
+          {[...products, ...products, ...products].map((p, k) => card(p, k))}
+        </div>
+      </div>
+
+      <button type="button" aria-label="Previous bestsellers" onClick={() => go(-1)} className={cn(ARROW, "-left-3")}>
+        <ChevronLeft className="size-5" />
+      </button>
+      <button type="button" aria-label="Next bestsellers" onClick={() => go(1)} className={cn(ARROW, "-right-3")}>
+        <ChevronRight className="size-5" />
+      </button>
+    </div>
   );
 }
