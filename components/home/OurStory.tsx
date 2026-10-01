@@ -16,8 +16,8 @@ export default async function OurStory() {
       <div className="container-vel grid items-center gap-12 lg:grid-cols-[1.2fr_0.85fr_auto] lg:gap-14">
         <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[20px]">
           <Image
-            src="/brand/our-story.png"
-            alt="Velastia lipstick beside laboratory glassware and dried flowers"
+            src="/images/our story image.png"
+            alt="Velastia lipstick and its box beside laboratory glassware and pink flowers"
             fill
             sizes="(min-width: 1024px) 40vw, 92vw"
             className="object-cover"

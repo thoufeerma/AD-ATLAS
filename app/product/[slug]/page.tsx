@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PageBanner from "@/components/ui/PageBanner";
 import ProductDetail from "@/components/product/ProductDetail";
-import TrustStrip from "@/components/ui/TrustStrip";
 import { getProduct, getProducts, getSettings } from "@/lib/api/server";
 import type { ProductDetail as Detail } from "@/lib/api/types";
 import { absoluteUrl, SITE_URL } from "@/lib/site";
@@ -102,7 +101,6 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
         ]}
       />
       <ProductDetail product={product} catalog={catalog} />
-      <TrustStrip />
     </>
   );
 }

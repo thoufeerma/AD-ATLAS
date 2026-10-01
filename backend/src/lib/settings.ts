@@ -19,6 +19,8 @@ const SocialLinks = z.object({
   instagram: SocialUrl,
   youtube: SocialUrl,
   facebook: SocialUrl,
+  // Added later than the others: optional, so a form from before it existed still saves.
+  threads: SocialUrl.default(null),
   x: SocialUrl,
   pinterest: SocialUrl,
 });
@@ -32,8 +34,8 @@ export const StoreSettings = z.object({
   supportHours: z.string().trim().min(2).max(60),
   city: z.string().trim().min(2).max(60),
   /** Profiles shown as icons in the header and footer; empty ones are hidden. */
-  social: SocialLinks.default({ instagram: null, youtube: null, facebook: null, x: null, pinterest: null }),
-  /** Shown above the Instagram strip on the homepage, e.g. "@velastia.beauty". */
+  social: SocialLinks.default({ instagram: null, youtube: null, facebook: null, threads: null, x: null, pinterest: null }),
+  /** Shown above the Instagram strip on the homepage, e.g. "@velastiaofficial". */
   instagramHandle: z
     .string()
     .trim()
@@ -52,7 +54,7 @@ export function readStore(stored: unknown) {
   const s = (stored ?? {}) as Partial<StoreSettings>;
   return {
     ...s,
-    social: { instagram: null, youtube: null, facebook: null, x: null, pinterest: null, ...(s.social ?? {}) },
+    social: { instagram: null, youtube: null, facebook: null, threads: null, x: null, pinterest: null, ...(s.social ?? {}) },
     instagramHandle: s.instagramHandle ?? null,
   };
 }

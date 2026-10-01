@@ -31,6 +31,14 @@ export function Facebook({ className }: Props) {
   );
 }
 
+export function Threads({ className }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18.6 7.6C17.3 4.7 15 3 12 3 7.1 3 4 6.6 4 12s3.1 9 8 9c3.9 0 6.8-2.2 6.8-5.3 0-2.7-2.1-4.4-5.2-4.4-2.6 0-4.4 1.3-4.4 3.1 0 1.6 1.3 2.6 3 2.6 2.8 0 4-2.1 4-5.6V9.2" />
+    </svg>
+  );
+}
+
 export function XIcon({ className }: Props) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
@@ -49,12 +57,13 @@ export function Pinterest({ className }: Props) {
   );
 }
 
-export type SocialLinks = Record<"instagram" | "youtube" | "facebook" | "x" | "pinterest", string | null>;
+export type SocialLinks = Record<"instagram" | "youtube" | "facebook" | "threads" | "x" | "pinterest", string | null>;
 
 const NETWORKS = [
   { key: "instagram", label: "Instagram", Icon: Instagram },
   { key: "youtube", label: "YouTube", Icon: Youtube },
   { key: "facebook", label: "Facebook", Icon: Facebook },
+  { key: "threads", label: "Threads", Icon: Threads },
   { key: "x", label: "X", Icon: XIcon },
   { key: "pinterest", label: "Pinterest", Icon: Pinterest },
 ] as const;

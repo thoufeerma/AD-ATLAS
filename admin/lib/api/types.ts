@@ -338,6 +338,7 @@ export type SocialLinks = {
   instagram: string | null;
   youtube: string | null;
   facebook: string | null;
+  threads: string | null;
   x: string | null;
   pinterest: string | null;
 };

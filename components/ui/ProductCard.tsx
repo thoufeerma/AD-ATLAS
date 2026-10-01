@@ -32,7 +32,7 @@ export default function ProductCard({
       )}
     >
       {product.isBestseller && (
-        <span className="label-caps absolute left-0 top-3 z-10 bg-plum-800 px-2.5 py-1 text-[0.55rem] text-gold-300">
+        <span className="label-caps pointer-events-none absolute left-0 top-3 z-10 bg-plum-800 px-2.5 py-1 text-[0.55rem] text-gold-300">
           Best Seller
         </span>
       )}
@@ -48,24 +48,25 @@ export default function ProductCard({
         />
       </button>
 
-      <Link href={`/product/${product.slug}`} className="block">
-        <div className="relative aspect-4/3 overflow-hidden bg-cream-200/50">
-          <Image
-            src={productImage(product)}
-            alt={product.name}
-            fill
-            sizes="(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 90vw"
-            className="object-contain p-2 transition-transform duration-500 group-hover:scale-[1.04]"
-          />
-        </div>
-      </Link>
+      <div className="relative aspect-4/3 overflow-hidden bg-cream-200/50">
+        <Image
+          src={productImage(product)}
+          alt={product.name}
+          fill
+          sizes="(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 90vw"
+          className="object-contain p-2 transition-transform duration-500 group-hover:scale-[1.04]"
+        />
+      </div>
 
       <div className="flex flex-1 flex-col items-center px-3 pb-3.5 pt-3 text-center">
         <Link
           href={`/product/${product.slug}`}
           // Names run to three lines in the narrow home-page cards; the button
           // below is pushed down by mt-auto, so the cards still line up.
-          className="text-balance text-[0.82rem] font-medium leading-snug text-ink transition-colors hover:text-gold-600"
+          // The after: overlay stretches this link over the whole card, so a
+          // click anywhere opens the product; the heart and Add to Cart sit
+          // above it (z-10) and keep doing their own job.
+          className="text-balance text-[0.82rem] font-medium leading-snug text-ink transition-colors group-hover:text-gold-600 after:absolute after:inset-0"
         >
           {product.name}
         </Link>
@@ -91,7 +92,7 @@ export default function ProductCard({
           ) : (
             <button
               onClick={() => add(product.slug, 1, product.shades[0]?.name)}
-              className="label-caps block w-full rounded-sm bg-plum-800 py-2.5 text-[0.6rem] text-cream-50 transition-colors hover:bg-gold-600"
+              className="label-caps relative z-10 block w-full rounded-sm bg-plum-800 py-2.5 text-[0.6rem] text-cream-50 transition-colors hover:bg-gold-600"
             >
               Add to Cart
             </button>

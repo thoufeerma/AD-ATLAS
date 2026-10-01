@@ -82,8 +82,8 @@ export type Settings = {
     supportHours: string;
     city: string;
     /** Profile URLs; null means the admin hasn't set that network (hide its icon). */
-    social: Record<"instagram" | "youtube" | "facebook" | "x" | "pinterest", string | null>;
-    /** e.g. "@velastia.beauty", shown on the homepage Instagram section. */
+    social: Record<"instagram" | "youtube" | "facebook" | "threads" | "x" | "pinterest", string | null>;
+    /** e.g. "@velastiaofficial", shown on the homepage Instagram section. */
     instagramHandle: string | null;
   };
   /** Null when the welcome coupon is switched off, expired or used up. */

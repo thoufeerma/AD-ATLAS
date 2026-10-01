@@ -10,11 +10,12 @@ import type { Coupon, ReturnPolicy, SiteCopy, SiteSettings, SocialLinks, StoreDe
 import { cn, same } from "@/lib/utils";
 
 const SOCIAL_FIELDS: { name: keyof SocialLinks; label: string; placeholder: string }[] = [
-  { name: "instagram", label: "Instagram", placeholder: "https://instagram.com/velastia" },
-  { name: "youtube", label: "YouTube", placeholder: "https://youtube.com/@velastia" },
-  { name: "facebook", label: "Facebook", placeholder: "https://facebook.com/velastia" },
-  { name: "x", label: "X (Twitter)", placeholder: "https://x.com/velastia" },
-  { name: "pinterest", label: "Pinterest", placeholder: "https://pinterest.com/velastia" },
+  { name: "instagram", label: "Instagram", placeholder: "https://instagram.com/velastiaofficial" },
+  { name: "youtube", label: "YouTube", placeholder: "https://youtube.com/@velastiaofficial" },
+  { name: "facebook", label: "Facebook", placeholder: "https://facebook.com/velastiaofficial" },
+  { name: "threads", label: "Threads", placeholder: "https://www.threads.com/@velastiaofficial" },
+  { name: "x", label: "X (Twitter)", placeholder: "https://x.com/velastiaofficial" },
+  { name: "pinterest", label: "Pinterest", placeholder: "https://pinterest.com/velastiaofficial" },
 ];
 
 const STORE_FIELDS: { name: Exclude<keyof StoreDetails, "social" | "instagramHandle">; label: string; hint?: string }[] = [
@@ -35,7 +36,7 @@ const EMPTY_STORE: StoreDetails = {
   supportPhone: "",
   supportHours: "",
   city: "",
-  social: { instagram: null, youtube: null, facebook: null, x: null, pinterest: null },
+  social: { instagram: null, youtube: null, facebook: null, threads: null, x: null, pinterest: null },
   instagramHandle: null,
 };
 
@@ -115,11 +116,11 @@ function StoreCard({ initial, editable }: { initial: StoreDetails; editable: boo
             ))}
             <Field
               label="Instagram handle"
-              hint="Shown above the Instagram photos on the homepage, e.g. @velastia.beauty. That section appears once an Instagram link is set."
+              hint="Shown above the Instagram photos on the homepage, e.g. @velastiaofficial. That section appears once an Instagram link is set."
               value={values.instagramHandle ?? ""}
               error={save.fields.instagramHandle}
               disabled={!editable}
-              placeholder="@velastia.beauty"
+              placeholder="@velastiaofficial"
               onChange={(v) => setValues((s) => ({ ...s, instagramHandle: v || null }))}
             />
           </div>

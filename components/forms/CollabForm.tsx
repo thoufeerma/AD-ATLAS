@@ -8,7 +8,7 @@ import { cn, looksLikeEmail } from "@/lib/utils";
 
 type Fields = { name: string; email: string; handle: string; audienceSize: string; about: string };
 
-/** "@velastia.beauty", "velastia.beauty" or a link to the profile. */
+/** "@velastiaofficial", "velastiaofficial" or a link to the profile. */
 const HANDLE = /^@?[A-Za-z0-9._-]{2,30}$/;
 const PROFILE_URL = /^(https?:\/\/)?(www\.)?(instagram\.com|youtube\.com|youtu\.be)\/[A-Za-z0-9@._\-/]+$/i;
 
@@ -17,7 +17,7 @@ export function handleProblem(raw: string) {
   // Applications are reviewed on the creator's profile, so this one can't be skipped.
   if (!handle) return "Enter your Instagram or YouTube handle.";
   if (!HANDLE.test(handle) && !PROFILE_URL.test(handle)) {
-    return "Use your handle (e.g. @velastia.beauty) or a link to your profile.";
+    return "Use your handle (e.g. @velastiaofficial) or a link to your profile.";
   }
   return null;
 }

@@ -210,7 +210,7 @@ contentRouter.post("/newsletter", formLimit("newsletter"), async (req, res) => {
   res.status(201).json({ data: { subscribed: true } });
 });
 
-/** "@velastia.beauty", "velastia.beauty" or a link to the profile. */
+/** "@velastiaofficial", "velastiaofficial" or a link to the profile. */
 const HANDLE = /^@?[A-Za-z0-9._-]{2,30}$/;
 const PROFILE_URL = /^(https?:\/\/)?(www\.)?(instagram\.com|youtube\.com|youtu\.be)\/[A-Za-z0-9@._\-/]+$/i;
 
@@ -224,7 +224,7 @@ const CollabBody = z.object({
     .min(2)
     .max(100)
     .refine((h) => HANDLE.test(h) || PROFILE_URL.test(h), {
-      error: "Use your handle (e.g. @velastia.beauty) or a link to your profile.",
+      error: "Use your handle (e.g. @velastiaofficial) or a link to your profile.",
     }),
   audienceSize: z.string().trim().max(40).nullish(),
   about: z.string().trim().min(10).max(5000),

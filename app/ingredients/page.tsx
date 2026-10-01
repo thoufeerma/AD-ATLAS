@@ -3,7 +3,6 @@ import { pageMetadata } from "@/lib/seo";
 import Image from "next/image";
 import { Ban, Leaf, FlaskConical, ShieldCheck } from "lucide-react";
 import PageBanner from "@/components/ui/PageBanner";
-import TrustStrip from "@/components/ui/TrustStrip";
 import Button from "@/components/ui/Button";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -180,7 +179,6 @@ export default function IngredientsPage() {
         </div>
       </section>
 
-      <TrustStrip />
     </>
   );
 }

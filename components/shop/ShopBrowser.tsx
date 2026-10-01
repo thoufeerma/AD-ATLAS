@@ -119,9 +119,9 @@ export default function ShopBrowser({
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
 
   return (
-    <div className="container-vel py-10">
+    <div className="container-vel pt-6 pb-10">
       {/* Category chips */}
-      <div className="no-scrollbar -mx-4 mb-10 flex gap-3 overflow-x-auto px-4 sm:justify-center">
+      <div className="no-scrollbar -mx-4 mb-8 flex gap-6 overflow-x-auto px-4 sm:justify-center lg:gap-14">
         {[{ id: "all", label: "All" }, ...categories.map((c) => ({ id: c.slug, label: c.name }))].map((c) => {
           const active = category === c.id;
           const ChipIcon = CHIP_ICONS[c.id] ?? Sparkles;
@@ -129,22 +129,22 @@ export default function ShopBrowser({
             <button
               key={c.id}
               onClick={() => setCategory(c.id)}
-              className="flex shrink-0 flex-col items-center gap-2"
+              className="flex shrink-0 flex-col items-center gap-3"
             >
               <span
                 className={cn(
-                  "grid size-14 place-items-center rounded-full border transition-colors",
+                  "grid size-15 place-items-center rounded-full border transition-colors sm:size-18",
                   active
-                    ? "border-plum-800 bg-plum-800 text-gold-300"
+                    ? "border-plum-800 bg-plum-800 text-cream-50"
                     : "border-gold-300/70 bg-cream-100 text-gold-600 hover:border-gold-500",
                 )}
               >
-                <ChipIcon className="size-5" />
+                <ChipIcon strokeWidth={1.25} className="size-6 sm:size-7" />
               </span>
               <span
                 className={cn(
-                  "label-caps text-[0.58rem]",
-                  active ? "text-plum-800" : "text-ink-soft",
+                  "text-[0.8rem] uppercase tracking-wide sm:text-[0.85rem]",
+                  active ? "font-semibold text-plum-800" : "font-medium text-ink",
                 )}
               >
                 {c.label}

@@ -4,7 +4,6 @@ import { Sparkles } from "lucide-react";
 import PageBanner from "@/components/ui/PageBanner";
 import Button from "@/components/ui/Button";
 import ProductCard from "@/components/ui/ProductCard";
-import TrustStrip from "@/components/ui/TrustStrip";
 import CopyCode from "@/components/ui/CopyCode";
 import { getBestsellers, getOffers, getSettings } from "@/lib/api/server";
 import { inrPaise } from "@/lib/utils";
@@ -106,7 +105,6 @@ export default async function OffersPage() {
         </section>
       )}
 
-      <TrustStrip />
     </>
   );
 }

@@ -4,7 +4,6 @@ import Link from "next/link";
 import PageBanner from "@/components/ui/PageBanner";
 import StarRating from "@/components/ui/StarRating";
 import RatingBars from "@/components/ui/RatingBars";
-import TrustStrip from "@/components/ui/TrustStrip";
 import WriteReview from "@/components/reviews/WriteReview";
 import { getProducts, getRatingSummary, getReviews } from "@/lib/api/server";
 
@@ -95,7 +94,6 @@ export default async function ReviewsPage() {
         )}
       </div>
 
-      <TrustStrip />
     </>
   );
 }

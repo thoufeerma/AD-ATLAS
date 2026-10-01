@@ -3,6 +3,8 @@ import { Cormorant_Garamond, Jost, Dancing_Script, Montserrat } from "next/font/
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import ShopFooter from "@/components/layout/ShopFooter";
+import FooterSwitch from "@/components/layout/FooterSwitch";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
 import AccountLoader from "@/components/providers/AccountLoader";
 import { bannerHeadlines, getSettings } from "@/lib/api/server";
@@ -53,7 +55,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <AccountLoader />
           <Header announcements={announcements} />
           <main className="flex-1">{children}</main>
-          <Footer />
+          <FooterSwitch standard={<Footer />} shop={<ShopFooter />} />
         </SettingsProvider>
       </body>
     </html>

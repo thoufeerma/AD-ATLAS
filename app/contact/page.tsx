@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { Mail, Phone, Clock, MapPin, MessageCircle } from "lucide-react";
 import PageBanner from "@/components/ui/PageBanner";
-import TrustStrip from "@/components/ui/TrustStrip";
 import ContactForm from "@/components/forms/ContactForm";
 import { getSettings } from "@/lib/api/server";
 import { telHref, whatsappHref } from "@/lib/utils";
@@ -66,7 +65,6 @@ export default async function ContactPage() {
         </aside>
       </div>
 
-      <TrustStrip />
     </>
   );
 }

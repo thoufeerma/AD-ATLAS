@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import PageBanner from "@/components/ui/PageBanner";
 import ShopBrowser, { type ShopFilter } from "@/components/shop/ShopBrowser";
-import TrustStrip from "@/components/ui/TrustStrip";
 import { bannerHeadlines, getCategories, getProducts } from "@/lib/api/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -38,7 +37,6 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
         initialCategory={category}
         initialFilter={filter}
       />
-      <TrustStrip />
     </>
   );
 }
