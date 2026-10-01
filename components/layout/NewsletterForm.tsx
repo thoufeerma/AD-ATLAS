@@ -37,33 +37,35 @@ export default function NewsletterForm() {
   }
 
   return (
-    <form onSubmit={submit} noValidate className="space-y-3">
+    <form onSubmit={submit} noValidate className="w-full max-w-sm">
       <label htmlFor="footer-email" className="sr-only">
         Email address
       </label>
-      <input
-        id="footer-email"
-        type="email"
-        autoComplete="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        aria-invalid={!!error}
-        aria-describedby={error ? "footer-email-error" : undefined}
-        placeholder="Enter your email address"
-        className="w-full rounded-sm border border-gold-500/35 bg-plum-900/60 px-3.5 py-2.5 text-sm text-cream-100 placeholder:text-cream-200/40 focus:border-gold-400 focus:outline-none"
-      />
+      <div className="flex">
+        <input
+          id="footer-email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          aria-invalid={!!error}
+          aria-describedby={error ? "footer-email-error" : undefined}
+          placeholder="Enter your email"
+          className="w-full min-w-0 rounded-l-sm border border-r-0 border-gold-500/35 bg-plum-900/60 px-3.5 py-2 text-sm text-cream-100 placeholder:text-cream-200/40 focus:border-gold-400 focus:outline-none"
+        />
+        <button
+          type="submit"
+          disabled={state === "sending"}
+          className="label-caps shrink-0 rounded-r-sm bg-gold-600 px-4 py-2 text-white transition-colors hover:bg-gold-500 disabled:opacity-60"
+        >
+          {state === "sending" ? "..." : "SUBSCRIBE"}
+        </button>
+      </div>
       {error && (
-        <p id="footer-email-error" className="text-[0.72rem] text-blush-200">
+        <p id="footer-email-error" className="mt-2 text-[0.72rem] text-blush-200">
           {error}
         </p>
       )}
-      <button
-        type="submit"
-        disabled={state === "sending"}
-        className="label-caps flex w-full items-center justify-center gap-2 rounded-sm bg-gold-600 py-2.5 text-white transition-colors hover:bg-gold-500 disabled:opacity-60"
-      >
-        {state === "sending" ? "Subscribing…" : "Subscribe"} <ArrowRight className="size-3.5" />
-      </button>
     </form>
   );
 }

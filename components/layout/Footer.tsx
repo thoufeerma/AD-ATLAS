@@ -1,66 +1,24 @@
 import Link from "next/link";
-import { Mail, Phone, Clock, MapPin } from "lucide-react";
 import { socialProfiles } from "@/components/ui/SocialIcons";
-import { getBlogPosts, getSettings } from "@/lib/api/server";
-import { telHref } from "@/lib/utils";
-import Logo from "./Logo";
+import { getSettings } from "@/lib/api/server";
 import NewsletterForm from "./NewsletterForm";
 
-/**
- * Gen B (2025) footer: five link columns with a contact block, matching
- * M-Cart / Q-Wishlist / N-Order-Success.
- */
-const COLUMNS = [
-  {
-    title: "Shop",
-    links: [
-      { label: "All Products", href: "/shop" },
-      { label: "Best Sellers", href: "/shop?filter=bestsellers" },
-      { label: "Coming Soon", href: "/shop?filter=coming-soon" },
-      { label: "Offers", href: "/offers" },
-    ],
-  },
-  {
-    title: "Help",
-    links: [
-      { label: "FAQ", href: "/faqs" },
-      { label: "Shipping & Delivery", href: "/shipping" },
-      { label: "Return & Refunds", href: "/returns" },
-      { label: "Track Order", href: "/track-order" },
-      { label: "Contact Us", href: "/contact" },
-    ],
-  },
-  {
-    title: "About",
-    links: [
-      { label: "Our Story", href: "/about" },
-      { label: "Ingredients", href: "/ingredients" },
-      { label: "Reviews", href: "/reviews" },
-      { label: "Collabs", href: "/collabs" },
-    ],
-  },
-];
-
 export default async function Footer() {
-  const [{ store }, posts] = await Promise.all([getSettings(), getBlogPosts(1)]);
+  const { store } = await getSettings();
   const socials = socialProfiles(store.social);
-  // The Journal is only linked once something is published in the admin.
-  const columns = COLUMNS.map((col) =>
-    col.title === "About" && posts.length > 0
-      ? { ...col, links: [...col.links, { label: "Journal", href: "/blog" }] }
-      : col,
-  );
 
   return (
-    <footer className="mt-20 bg-plum-800 text-cream-100">
-      <div className="container-vel grid grid-cols-2 gap-x-8 gap-y-10 py-14 md:grid-cols-3 lg:grid-cols-12">
-        {/* Brand */}
-        <div className="col-span-2 md:col-span-3 lg:col-span-3">
-          <Logo tone="light" />
-          <p className="mt-5 max-w-[15rem] text-sm leading-relaxed text-cream-200/70">
-            Clean beauty backed by science and made to make you feel beautiful,
-            every day.
+    <footer className="mt-20 bg-plum-900 text-cream-100">
+      <div className="container-vel grid grid-cols-1 gap-12 py-14 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr] lg:gap-8">
+        {/* Newsletter & Socials */}
+        <div>
+          <h2 className="font-display text-xl uppercase tracking-[0.05em] text-gold-300">
+            SUBSCRIBE & GET 10% OFF
+          </h2>
+          <p className="mt-3 mb-5 text-[0.8rem] leading-relaxed text-cream-200/80">
+            Join our community and get exclusive offers, beauty tips & new product updates.
           </p>
+          <NewsletterForm />
           {socials.length > 0 && (
             <div className="mt-6 flex items-center gap-3">
               {socials.map(({ Icon, href, label }) => (
@@ -79,72 +37,97 @@ export default async function Footer() {
           )}
         </div>
 
-        {columns.map((col) => (
-          <div key={col.title} className="lg:col-span-2">
-            <h3 className="label-caps mb-4 text-gold-300">{col.title}</h3>
-            <ul className="space-y-2.5">
-              {col.links.map((l) => (
-                <li key={l.label}>
-                  <Link
-                    href={l.href}
-                    className="text-sm text-cream-200/70 transition-colors hover:text-gold-300"
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-
-        {/* Contact */}
-        <div className="lg:col-span-2">
-          <h3 className="label-caps mb-4 text-gold-300">Contact</h3>
-          <ul className="space-y-3 text-sm text-cream-200/70">
-            <li className="flex items-start gap-2.5">
-              <Mail className="mt-0.5 size-4 shrink-0 text-gold-400" />
-              <a href={`mailto:${store.supportEmail}`} className="hover:text-gold-300">
-                {store.supportEmail}
-              </a>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <Phone className="mt-0.5 size-4 shrink-0 text-gold-400" />
-              <a href={telHref(store.supportPhone)} className="hover:text-gold-300">
-                {store.supportPhone}
-              </a>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <Clock className="mt-0.5 size-4 shrink-0 text-gold-400" />
-              <span>{store.supportHours}</span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <MapPin className="mt-0.5 size-4 shrink-0 text-gold-400" />
-              <span>{store.city}</span>
-            </li>
+        {/* Shop */}
+        <div>
+          <h3 className="font-display text-[0.85rem] tracking-wider uppercase text-cream-50 mb-5">SHOP</h3>
+          <ul className="space-y-3">
+            {[
+              { label: "All Products", href: "/shop" },
+              { label: "Lipstick", href: "/shop?category=lipstick" },
+              { label: "Liquid Lipstick", href: "/shop?category=liquid-lipstick" },
+              { label: "Face", href: "/shop?category=face" },
+              { label: "Skincare", href: "/shop?category=skincare" },
+              { label: "Accessories", href: "/shop?category=accessories" },
+            ].map((l) => (
+              <li key={l.label}>
+                <Link
+                  href={l.href}
+                  className="text-[0.75rem] text-cream-200/70 transition-colors hover:text-gold-300"
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 
-        {/* Newsletter */}
-        <div className="col-span-2 md:col-span-3 lg:col-span-3">
-          <h3 className="label-caps mb-4 text-gold-300">Newsletter</h3>
-          <p className="mb-4 text-sm leading-relaxed text-cream-200/70">
-            Be the first to know about new launches &amp; exclusive offers.
-          </p>
-          <NewsletterForm />
+        {/* Customer Care */}
+        <div>
+          <h3 className="font-display text-[0.85rem] tracking-wider uppercase text-cream-50 mb-5">CUSTOMER CARE</h3>
+          <ul className="space-y-3">
+            {[
+              { label: "FAQs", href: "/faqs" },
+              { label: "Shipping & Delivery", href: "/shipping" },
+              { label: "Returns & Refunds", href: "/returns" },
+              { label: "Terms & Conditions", href: "/terms" },
+              { label: "Privacy Policy", href: "/privacy" },
+            ].map((l) => (
+              <li key={l.label}>
+                <Link
+                  href={l.href}
+                  className="text-[0.75rem] text-cream-200/70 transition-colors hover:text-gold-300"
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* About */}
+        <div>
+          <h3 className="font-display text-[0.85rem] tracking-wider uppercase text-cream-50 mb-5">ABOUT</h3>
+          <ul className="space-y-3">
+            {[
+              { label: "About Velastia", href: "/about" },
+              { label: "Our Ingredients", href: "/ingredients" },
+              { label: "Reviews", href: "/reviews" },
+              { label: "Collaborations", href: "/collabs" },
+              { label: "Contact Us", href: "/contact" },
+            ].map((l) => (
+              <li key={l.label}>
+                <Link
+                  href={l.href}
+                  className="text-[0.75rem] text-cream-200/70 transition-colors hover:text-gold-300"
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* We Accept */}
+        <div>
+          <h3 className="label-caps mb-5 text-[0.7rem] text-cream-50">WE ACCEPT</h3>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-bold italic text-blue-500 text-xs bg-white/10 px-1.5 py-0.5 rounded">VISA</span>
+            <span className="font-bold text-red-500 text-xs bg-white/10 px-1.5 py-0.5 rounded flex items-center">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 -mr-1 opacity-90 relative z-10" />
+              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 opacity-90" />
+            </span>
+            <span className="font-bold italic text-green-500 text-xs bg-white/10 px-1.5 py-0.5 rounded">UPI</span>
+            <span className="font-bold text-sky-400 text-xs bg-white/10 px-1.5 py-0.5 rounded">AMEX</span>
+          </div>
         </div>
       </div>
 
-      <div className="border-t border-white/10">
-        <div className="container-vel flex flex-col items-center justify-between gap-3 py-5 text-xs text-cream-200/55 sm:flex-row">
+      <div className="border-t border-white/5 bg-plum-950">
+        <div className="container-vel flex flex-col items-center justify-between gap-3 py-5 text-[0.7rem] text-cream-200/55 sm:flex-row">
           <p>© {new Date().getFullYear()} {store.name}. All Rights Reserved.</p>
-          <div className="flex items-center gap-6">
-            <Link href="/privacy" className="hover:text-gold-300">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="hover:text-gold-300">
-              Terms &amp; Conditions
-            </Link>
-          </div>
+          <p>
+            Made with <span className="text-gold-500 px-1">💛</span> in India
+          </p>
         </div>
       </div>
     </footer>

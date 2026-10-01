@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Jost, Dancing_Script } from "next/font/google";
+import { Cormorant_Garamond, Jost, Dancing_Script, Montserrat } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -26,6 +26,12 @@ const script = Dancing_Script({
   weight: ["400", "600"],
 });
 
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 /** Titles, descriptions and the share card, from SEO Settings in the admin. */
 export async function generateMetadata(): Promise<Metadata> {
   return siteMetadata();
@@ -40,7 +46,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${jost.variable} ${script.variable} h-full antialiased`}
+      className={`${cormorant.variable} ${jost.variable} ${script.variable} ${montserrat.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-cream-50 text-ink">
         <SettingsProvider settings={settings}>

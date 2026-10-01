@@ -165,7 +165,7 @@ export default function Hero() {
           <div key={shown} className="hero-copy">
             <h1
               className={cn(
-                "font-display text-[2.9rem] leading-[1.05] text-plum-800 sm:text-[3.6rem]",
+                "font-display text-[2.9rem] font-semibold leading-[1.05] text-plum-800 sm:text-[3.6rem]",
                 dark && "lg:text-cream-50",
               )}
             >
@@ -184,7 +184,7 @@ export default function Hero() {
 
             <p
               className={cn(
-                "mt-5 max-w-sm text-[0.95rem] leading-relaxed text-ink-soft",
+                "mt-5 max-w-sm text-[0.95rem] font-medium leading-relaxed text-ink-soft",
                 dark && "lg:text-cream-200/85",
               )}
             >

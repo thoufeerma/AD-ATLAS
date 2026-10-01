@@ -12,9 +12,9 @@ export default async function OurStory() {
   ];
 
   return (
-    <section className="bg-cream-50">
-      <div className="container-vel grid items-center gap-10 py-16 lg:grid-cols-[1.05fr_1fr_auto] lg:gap-14">
-        <div className="relative aspect-16/10 overflow-hidden rounded-[var(--radius-card)]">
+    <section className="bg-cream-50 pt-0">
+      <div className="container-vel grid items-center gap-12 lg:grid-cols-[1.2fr_0.85fr_auto] lg:gap-14">
+        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[20px]">
           <Image
             src="/brand/our-story.png"
             alt="Velastia lipstick beside laboratory glassware and dried flowers"
@@ -24,32 +24,36 @@ export default async function OurStory() {
           />
         </div>
 
-        <div>
-          <h2 className="label-caps text-[0.78rem] text-plum-800">Our Story</h2>
-          <p className="mt-5 text-[0.95rem] leading-relaxed text-ink-soft">
+        <div className="pr-2 lg:pr-8">
+          <h2 className="font-display text-[2.4rem] font-semibold tracking-[0.05em] uppercase text-plum-800">Our Story</h2>
+          <p className="mt-6 text-[1.15rem] font-medium leading-[1.7] text-ink-soft">
             Velastia was born from a belief — that beauty is not just about
             appearance, but about confidence, self-expression and self-love.
           </p>
-          <p className="mt-4 text-[0.95rem] leading-relaxed text-ink-soft">
+          <p className="mt-6 text-[1.15rem] font-medium leading-[1.7] text-ink-soft">
             We combine the best of science and nature to create high-performance
-            products that are <strong className="font-medium text-plum-800">safe, effective and luxurious</strong>.
+            products that are <strong className="font-semibold text-plum-800">safe, effective and luxurious</strong>.
           </p>
-          <Button href="/about" className="mt-7">
-            Know More About Us
+          <Button href="/about" className="mt-8 px-8 py-3.5 text-[0.8rem] rounded-md uppercase tracking-widest font-semibold">
+            KNOW MORE ABOUT US
           </Button>
         </div>
 
-        <ul className="grid grid-cols-3 gap-6 lg:grid-cols-1 lg:border-l lg:border-gold-200 lg:pl-12">
-          {stats.map((s) => (
-            <li key={s.label} className="text-center lg:text-left">
-              <p className="font-display text-[2.1rem] font-semibold leading-none text-plum-800">
+        <ul className="flex flex-col lg:border-l lg:border-gold-200/50 lg:pl-12 lg:pr-16 w-full lg:w-[17rem]">
+          {stats.map((s, i) => (
+            <li key={s.label} className={`flex flex-col items-center justify-center py-6 ${i !== stats.length - 1 ? 'border-b border-gold-200/50' : ''} ${i === 0 ? 'pt-0' : ''} ${i === stats.length - 1 ? 'pb-0' : ''}`}>
+              <p className="font-display text-[3.8rem] font-semibold leading-none text-plum-800 text-center">
                 {s.value}
               </p>
-              <p className="mt-1.5 text-[0.7rem] text-ink-soft">{s.label}</p>
+              <p className="mt-3 text-[0.9rem] font-medium text-ink-soft text-center">{s.label}</p>
             </li>
           ))}
         </ul>
       </div>
+      {/* Full-width gold line completely flush with the container's contents */}
+      <div className="w-full border-b border-gold-200/60" />
+      {/* Very small gap for the next section */}
+      <div className="h-3" />
     </section>
   );
 }

@@ -7,7 +7,7 @@ export default function InstagramStrip({ href, handle }: { href: string; handle:
     <section className="bg-cream-50 pb-16">
       <div className="container-vel">
         <div className="mb-7 text-center">
-          <h2 className="font-display text-2xl tracking-[0.05em] text-plum-800">
+          <h2 className="font-display text-[1.75rem] font-semibold tracking-[0.03em] uppercase text-plum-800">
             FOLLOW US ON INSTAGRAM
           </h2>
           {handle && (

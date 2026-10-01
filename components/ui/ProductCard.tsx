@@ -65,7 +65,7 @@ export default function ProductCard({
           href={`/product/${product.slug}`}
           // Names run to three lines in the narrow home-page cards; the button
           // below is pushed down by mt-auto, so the cards still line up.
-          className="text-balance text-[0.82rem] leading-snug text-ink transition-colors hover:text-gold-600"
+          className="text-balance text-[0.82rem] font-medium leading-snug text-ink transition-colors hover:text-gold-600"
         >
           {product.name}
         </Link>
@@ -74,10 +74,10 @@ export default function ProductCard({
           <StarRating value={product.rating.average} size={12} className="mt-1.5" />
         )}
 
-        <p className="mt-1.5 font-display text-[1.05rem] font-semibold text-plum-800">
+        <p className="mt-1.5 font-price text-[0.95rem] font-semibold text-plum-800">
           {inrPaise(product.pricePaise)}
           {product.compareAtPaise != null && product.compareAtPaise > product.pricePaise && (
-            <span className="ml-1.5 font-sans text-[0.72rem] font-normal text-ink-soft line-through">
+            <span className="ml-1.5 text-[0.72rem] font-normal text-ink-soft line-through">
               {inrPaise(product.compareAtPaise)}
             </span>
           )}

@@ -5,7 +5,7 @@ export default function RatingBars({ rating, className }: { rating: RatingSummar
   return (
     <ul className={className ?? "mt-5 space-y-1.5"}>
       {rating.breakdown.map((b) => (
-        <li key={b.stars} className="flex items-center gap-2 text-[0.65rem] text-ink-soft">
+        <li key={b.stars} className="flex items-center gap-2 text-[0.75rem] font-medium text-ink-soft">
           <span className="w-2 text-right">{b.stars}</span>
           <span className="text-gold-500" aria-hidden>★</span>
           <span

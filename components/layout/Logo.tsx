@@ -22,12 +22,12 @@ export default function Logo({
   return (
     <Link href="/" className={cn("block shrink-0", className)}>
       <Image
-        src={tone === "light" ? "/brand/logo-light.png" : "/brand/logo.png"}
+        src={tone === "light" ? "/brand/logo-light.png" : "/images/nav logo.png"}
         alt="Velastia"
-        width={154}
-        height={52}
+        width={300}
+        height={100}
         priority={priority}
-        className="h-10 w-auto sm:h-[52px]"
+        className="w-32 h-auto sm:w-[220px]"
       />
     </Link>
   );
