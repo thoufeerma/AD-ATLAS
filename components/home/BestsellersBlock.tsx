@@ -116,7 +116,7 @@ export default function BestsellersBlock({
 
               {rating.total > 0 ? (
                 <>
-                  <p className="mt-2 text-center font-display text-[3.25rem] font-bold leading-none text-plum-800">
+                  <p className="mt-2 text-center font-display text-[3.25rem] font-medium leading-none text-plum-800">
                     {rating.average.toFixed(1)}
                   </p>
                   <StarRating value={rating.average} size={15} className="mt-2 justify-center w-full" />

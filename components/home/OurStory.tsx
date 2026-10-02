@@ -42,7 +42,7 @@ export default async function OurStory() {
         <ul className="flex flex-col lg:border-l lg:border-gold-200/50 lg:pl-12 lg:pr-16 w-full lg:w-[17rem]">
           {stats.map((s, i) => (
             <li key={s.label} className={`flex flex-col items-center justify-center py-6 ${i !== stats.length - 1 ? 'border-b border-gold-200/50' : ''} ${i === 0 ? 'pt-0' : ''} ${i === stats.length - 1 ? 'pb-0' : ''}`}>
-              <p className="font-display text-[3.8rem] font-semibold leading-none text-plum-800 text-center">
+              <p className="font-display text-[3.8rem] font-medium leading-none text-plum-800 text-center">
                 {s.value}
               </p>
               <p className="mt-3 text-[0.9rem] font-medium text-ink-soft text-center">{s.label}</p>
