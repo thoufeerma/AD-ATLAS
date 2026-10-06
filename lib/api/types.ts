@@ -35,11 +35,19 @@ export type RatingSummary = {
   breakdown: { stars: number; count: number; pct: number }[];
 };
 
+/** The store-wide summary, plus published reviews per category. */
+export type StoreRatingSummary = RatingSummary & {
+  categories: { slug: string; name: string; count: number }[];
+};
+
 export type ProductReview = {
   id: string;
   authorName: string;
   rating: number;
+  title: string | null;
   body: string;
+  /** Customer photos, up to three. */
+  images: string[];
   isVerified: boolean;
   createdAt: string;
 };
@@ -49,7 +57,10 @@ export type ProductDetail = Product & {
   reviews: ProductReview[];
 };
 
-export type Review = ProductReview & { product: { slug: string; name: string } };
+export type Review = ProductReview & {
+  /** category is missing from an API older than the Reviews page redesign. */
+  product: { slug: string; name: string; category?: { slug: string; name: string } };
+};
 
 export type Category = {
   slug: string;
@@ -137,7 +148,14 @@ export type Testimonial = {
   avatarUrl: string | null;
 };
 
-export type Collaborator = { id: string; name: string; role: string; avatarUrl: string | null };
+export type Collaborator = {
+  id: string;
+  name: string;
+  role: string;
+  avatarUrl: string | null;
+  /** Missing from an API older than the Collabs page redesign. */
+  quote?: string | null;
+};
 
 export type Banner = {
   id: string;

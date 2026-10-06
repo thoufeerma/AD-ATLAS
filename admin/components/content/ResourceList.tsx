@@ -29,7 +29,8 @@ export default function ResourceList<T extends Row>({
   items: T[];
   fields: FieldSpec[];
   basePath: string;
-  toggle: { field: keyof T & string; label: string };
+  /** An on/off field switchable straight from the list, if the resource has one. */
+  toggle?: { field: keyof T & string; label: string };
   title: (item: T) => string;
   subtitle?: (item: T) => React.ReactNode;
   meta?: (item: T) => React.ReactNode;
@@ -77,12 +78,14 @@ export default function ResourceList<T extends Row>({
                           {subtitle && <div className="mt-0.5 text-[0.74rem] text-ink-2">{subtitle(item)}</div>}
                           {meta && <div className="mt-2 flex flex-wrap items-center gap-1.5">{meta(item)}</div>}
                         </div>
-                        <LiveToggle
-                          on={Boolean(item[toggle.field])}
-                          label={`${toggle.label}: ${title(item)}`}
-                          path={`${basePath}/${item.id}`}
-                          field={toggle.field}
-                        />
+                        {toggle && (
+                          <LiveToggle
+                            on={Boolean(item[toggle.field])}
+                            label={`${toggle.label}: ${title(item)}`}
+                            path={`${basePath}/${item.id}`}
+                            field={toggle.field}
+                          />
+                        )}
                         <RowActions path={`${basePath}/${item.id}`} label={`"${title(item)}"`} onEdit={() => setEditing(item.id)} />
                       </div>
                     )}

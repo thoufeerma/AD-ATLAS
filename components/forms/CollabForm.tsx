@@ -33,8 +33,12 @@ function validate(f: Fields) {
   return errors;
 }
 
-/** Applications land in the admin's Collab Applications list. */
-export default function CollabForm() {
+/**
+ * Applications land in the admin's Collab Applications list. `applyingAs`
+ * (e.g. "Makeup Artist", from the Collabs page cards) is noted at the top of
+ * the message.
+ */
+export default function CollabForm({ applyingAs }: { applyingAs?: string } = {}) {
   const [f, setF] = useState<Fields>({ name: "", email: "", handle: "", audienceSize: "", about: "" });
   const [showErrors, setShowErrors] = useState(false);
   const [sending, setSending] = useState(false);
@@ -60,7 +64,7 @@ export default function CollabForm() {
         email: f.email.trim(),
         handle: f.handle.trim(),
         audienceSize: f.audienceSize.trim() || null,
-        about: f.about.trim(),
+        about: applyingAs ? `Applying as: ${applyingAs}\n\n${f.about.trim()}` : f.about.trim(),
       });
       setDone(true);
     } catch (e) {

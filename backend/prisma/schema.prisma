@@ -475,7 +475,11 @@ model Review {
   id         String       @id @default(cuid())
   authorName String
   rating     Int
+  /// Optional headline, e.g. "The perfect everyday shade!"
+  title      String?
   body       String
+  /// Up to three customer photos (public URLs from lib/media storeImage).
+  images     String[]     @default([])
   status     ReviewStatus @default(PENDING)
   isVerified Boolean      @default(false)
   productId  String
@@ -563,6 +567,8 @@ model Collaborator {
   name      String
   role      String
   avatarUrl String?
+  /// Shown on the Collabs page under "What our collaborators say".
+  quote     String?
   sortOrder Int     @default(0)
 
   @@map("collaborators")

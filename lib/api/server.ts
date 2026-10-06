@@ -12,7 +12,7 @@ import type {
   Page,
   Product,
   ProductDetail,
-  RatingSummary,
+  StoreRatingSummary,
   Review,
   Settings,
 } from "./types";
@@ -90,9 +90,9 @@ export const getBlogPosts = cache((take = 24) => get<BlogCard[]>(`/blog?take=${t
 
 export const getBlogPost = cache((slug: string) => find<BlogPost>(`/blog/${encodeURIComponent(slug)}`));
 
-export const getRatingSummary = cache(() => get<RatingSummary>("/reviews/summary"));
+export const getRatingSummary = cache(() => get<StoreRatingSummary>("/reviews/summary"));
 
-export const getReviews = cache(() => get<Review[]>("/reviews?limit=48"));
+export const getReviews = cache(() => get<Review[]>("/reviews?limit=60"));
 
 export const getPages = cache(() => get<Pick<Page, "slug" | "title">[]>("/pages"));
 

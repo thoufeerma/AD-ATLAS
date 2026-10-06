@@ -4,6 +4,7 @@ import { prisma } from "../../db.js";
 import { badRequest, conflict, notFound, param, parse, parsePatch } from "../../lib/http.js";
 import { allow, ROLES } from "../../middleware/auth.js";
 import { logActivity } from "../../lib/activity.js";
+import { removeImage, storedImageKey } from "../../lib/media.js";
 import { crudRouter } from "./crud.js";
 
 /* ── Categories ───────────────────────────────────────────────────────── */
@@ -83,7 +84,14 @@ adminReviewsRouter.patch("/:id", allow(...ROLES.reviews), async (req, res) => {
 });
 
 adminReviewsRouter.delete("/:id", allow(...ROLES.reviews), async (req, res) => {
-  await prisma.review.delete({ where: { id: param(req, "id") } });
+  const review = await prisma.review.delete({ where: { id: param(req, "id") }, select: { images: true } });
+  // The customer's photos go with the review.
+  await Promise.all(
+    review.images.map((url) => {
+      const key = storedImageKey(url);
+      return key ? removeImage(key) : undefined;
+    }),
+  );
   await logActivity(req, "Deleted review", "Review", param(req, "id"));
   res.status(204).end();
 });
@@ -223,6 +231,7 @@ export const adminCollaboratorsRouter = crudRouter({
     name: z.string().trim().min(2).max(100),
     role: z.string().trim().min(2).max(100),
     avatarUrl: z.string().max(500).nullish(),
+    quote: z.string().trim().max(400).nullish(),
     sortOrder: z.number().int().default(0),
   }),
   label: (r) => r.name,

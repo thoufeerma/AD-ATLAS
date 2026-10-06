@@ -90,7 +90,23 @@ const columns: Column<Review>[] = [
     key: "body",
     header: "Review",
     sortable: false,
-    cell: (r) => <span className="line-clamp-2 max-w-[22rem] text-ink-2">{r.body}</span>,
+    value: (r) => [r.title, r.body].filter(Boolean).join(" "),
+    cell: (r) => (
+      <div className="max-w-[22rem]">
+        {r.title && <p className="font-medium text-ink">{r.title}</p>}
+        <span className="line-clamp-2 text-ink-2">{r.body}</span>
+        {r.images.length > 0 && (
+          <div className="mt-1.5 flex gap-1.5">
+            {r.images.map((url) => (
+              <a key={url} href={url} target="_blank" rel="noreferrer" title="Open the customer's photo">
+                {/* eslint-disable-next-line @next/next/no-img-element -- customer photo thumbnail */}
+                <img src={url} alt="Customer photo" className="size-10 rounded object-cover" />
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    ),
   },
   {
     key: "createdAt",

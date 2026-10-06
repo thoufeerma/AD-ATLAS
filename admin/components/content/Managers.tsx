@@ -2,7 +2,7 @@
 
 import { Star } from "lucide-react";
 import Badge from "@/components/ui/Badge";
-import type { Banner, Faq, Offer, Testimonial } from "@/lib/api/types";
+import type { Banner, Collaborator, Faq, Offer, Testimonial } from "@/lib/api/types";
 import { num } from "@/lib/utils";
 import ResourceList from "./ResourceList";
 import type { FieldSpec } from "./ResourceForm";
@@ -73,6 +73,37 @@ export function TestimonialsManager({ testimonials }: { testimonials: Testimonia
       listTitle="All Testimonials"
       createTitle="Add Testimonial"
       emptyText="No testimonials yet."
+    />
+  );
+}
+
+/* ── Collaborators ────────────────────────────────────────────────────── */
+
+const COLLABORATOR_FIELDS: FieldSpec[] = [
+  { name: "name", label: "Name", kind: "text", required: true, placeholder: "Sakshi Gupta" },
+  { name: "role", label: "Role", kind: "text", required: true, placeholder: "Makeup Artist" },
+  { name: "avatarUrl", label: "Photo", kind: "image" },
+  {
+    name: "quote",
+    label: "Quote",
+    kind: "textarea",
+    hint: "Shown on the Collabs page under What Our Collaborators Say. Leave empty to show them on the homepage only.",
+  },
+  { name: "sortOrder", label: "Order", kind: "int", defaultValue: "0" },
+];
+
+export function CollaboratorsManager({ collaborators }: { collaborators: Collaborator[] }) {
+  return (
+    <ResourceList
+      items={collaborators}
+      fields={COLLABORATOR_FIELDS}
+      basePath="/admin/collaborators"
+      title={(c) => c.name}
+      subtitle={(c) => (c.quote ? <span className="italic">“{c.quote}”</span> : <span className="text-muted">No quote</span>)}
+      meta={(c) => <span className="text-[0.7rem] text-muted">{c.role}</span>}
+      listTitle="All Collaborators"
+      createTitle="Add Collaborator"
+      emptyText="No collaborators yet."
     />
   );
 }

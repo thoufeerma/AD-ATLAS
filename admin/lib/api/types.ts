@@ -244,7 +244,10 @@ export type Review = {
   id: string;
   authorName: string;
   rating: number;
+  title: string | null;
   body: string;
+  /** Customer photos (public URLs). */
+  images: string[];
   status: ReviewStatus;
   isVerified: boolean;
   createdAt: string;
@@ -276,6 +279,16 @@ export type Faq = {
   category: string;
   sortOrder: number;
   isPublished: boolean;
+};
+
+/** A creator shown on the storefront's homepage and Collabs page. */
+export type Collaborator = {
+  id: string;
+  name: string;
+  role: string;
+  avatarUrl: string | null;
+  quote: string | null;
+  sortOrder: number;
 };
 
 export type Testimonial = {

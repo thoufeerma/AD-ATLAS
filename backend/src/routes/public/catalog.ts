@@ -1,8 +1,9 @@
-import { Router } from "express";
+import express, { Router } from "express";
 import { z } from "zod";
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../db.js";
-import { notFound, param, parse } from "../../lib/http.js";
+import { badRequest, notFound, param, parse } from "../../lib/http.js";
+import { MAX_UPLOAD_BYTES, processImage, storeImage, storedImageKey } from "../../lib/media.js";
 import { rateLimit } from "../../middleware/rateLimit.js";
 
 export const catalogRouter = Router();
@@ -159,7 +160,32 @@ async function ratingSummary(where: Prisma.ReviewWhereInput = {}) {
  * homepage's "Loved by thousands" panel.
  */
 catalogRouter.get("/reviews/summary", async (_req, res) => {
-  res.json({ data: await ratingSummary() });
+  const [summary, categories, perProduct] = await Promise.all([
+    ratingSummary(),
+    prisma.category.findMany({
+      where: { products: { some: { status: "ACTIVE" } } },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, slug: true, name: true },
+    }),
+    prisma.review.groupBy({ by: ["productId"], where: { status: "PUBLISHED" }, _count: { _all: true } }),
+  ]);
+  // Published reviews per category (for the Reviews page's tabs).
+  const products = await prisma.product.findMany({
+    where: { id: { in: perProduct.map((r) => r.productId) } },
+    select: { id: true, categoryId: true },
+  });
+  const categoryOf = new Map(products.map((p) => [p.id, p.categoryId]));
+  const counts = new Map<string, number>();
+  for (const r of perProduct) {
+    const c = categoryOf.get(r.productId);
+    if (c) counts.set(c, (counts.get(c) ?? 0) + r._count._all);
+  }
+  res.json({
+    data: {
+      ...summary,
+      categories: categories.map((c) => ({ slug: c.slug, name: c.name, count: counts.get(c.id) ?? 0 })),
+    },
+  });
 });
 
 const ReviewListQuery = z.object({
@@ -177,10 +203,12 @@ catalogRouter.get("/reviews", async (req, res) => {
       id: true,
       authorName: true,
       rating: true,
+      title: true,
       body: true,
+      images: true,
       isVerified: true,
       createdAt: true,
-      product: { select: { slug: true, name: true } },
+      product: { select: { slug: true, name: true, category: { select: { slug: true, name: true } } } },
     },
   });
   res.json({ data: reviews });
@@ -191,8 +219,37 @@ const ReviewBody = z.object({
   name: z.string().trim().min(2).max(60),
   email: z.email().transform((e) => e.toLowerCase()),
   rating: z.number().int().min(1).max(5),
+  title: z
+    .string()
+    .trim()
+    .max(80)
+    .optional()
+    .transform((t) => t || undefined),
   body: z.string().trim().min(10).max(2000),
+  /** URLs from POST /reviews/photos. */
+  images: z
+    .array(z.string().refine((u) => storedImageKey(u) !== null, "Unknown photo"))
+    .max(3)
+    .default([]),
 });
+
+/**
+ * One review photo, as the raw request body. It is checked and re-encoded
+ * like an admin upload (see lib/media) and only its URL comes back, for the
+ * review to refer to. Nothing is shown publicly until the review is published.
+ */
+catalogRouter.post(
+  "/reviews/photos",
+  rateLimit({ name: "review-photo", max: 12, windowMs: 10 * 60_000 }),
+  express.raw({ type: () => true, limit: MAX_UPLOAD_BYTES }),
+  async (req, res) => {
+    const body = req.body as unknown;
+    if (!Buffer.isBuffer(body) || body.length === 0) throw badRequest("Choose a photo to upload");
+    const image = await processImage(body);
+    const { url } = await storeImage(image.data);
+    res.status(201).json({ data: { url } });
+  },
+);
 
 /**
  * Anyone can write a review, but nothing is shown until an admin publishes it
@@ -224,7 +281,9 @@ catalogRouter.post(
         customerId: customer?.id,
         authorName: body.name,
         rating: body.rating,
+        title: body.title,
         body: body.body,
+        images: body.images,
         isVerified: delivered > 0,
       },
     });
@@ -246,7 +305,16 @@ catalogRouter.get("/products/:slug", async (req, res) => {
       where: { productId: product.id, status: "PUBLISHED" },
       orderBy: { createdAt: "desc" },
       take: 12,
-      select: { id: true, authorName: true, rating: true, body: true, isVerified: true, createdAt: true },
+      select: {
+        id: true,
+        authorName: true,
+        rating: true,
+        title: true,
+        body: true,
+        images: true,
+        isVerified: true,
+        createdAt: true,
+      },
     }),
   ]);
 

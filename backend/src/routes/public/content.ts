@@ -31,7 +31,7 @@ contentRouter.get("/content/home", async (_req, res) => {
     }),
     prisma.collaborator.findMany({
       orderBy: { sortOrder: "asc" },
-      select: { id: true, name: true, role: true, avatarUrl: true },
+      select: { id: true, name: true, role: true, avatarUrl: true, quote: true },
     }),
     prisma.banner.findMany({
       where: { isActive: true },
