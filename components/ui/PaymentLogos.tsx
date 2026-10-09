@@ -34,7 +34,7 @@ export function Mastercard({ className, named = false }: Props & { named?: boole
 export function Upi({ className }: Props) {
   return (
     <svg viewBox="0 0 62 24" className={className} role="img" aria-label="UPI">
-      <text x="0" y="19" fontFamily="Arial, Helvetica, sans-serif" fontSize="21" fontWeight="900" fontStyle="italic" letterSpacing="-0.5" fill="#ffffff">
+      <text x="0" y="19" fontFamily="Arial, Helvetica, sans-serif" fontSize="21" fontWeight="900" fontStyle="italic" letterSpacing="-0.5" fill="currentColor">
         UPI
       </text>
       {/* The two arrowheads beside the wordmark */}
@@ -63,6 +63,16 @@ export function Paytm({ className }: Props) {
       <text x="24" y="19.5" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontSize="13" fontWeight="900" letterSpacing="-0.3">
         <tspan fill="#002e6e">pay</tspan>
         <tspan fill="#00baf2">tm</tspan>
+      </text>
+    </svg>
+  );
+}
+
+export function Razorpay({ className }: Props) {
+  return (
+    <svg viewBox="0 0 85 24" className={className} role="img" aria-label="Razorpay">
+      <text x="0" y="18" fontFamily="Arial, Helvetica, sans-serif" fontSize="18" fontWeight="800" letterSpacing="-0.5" fill="#02042b">
+        Razorpay
       </text>
     </svg>
   );

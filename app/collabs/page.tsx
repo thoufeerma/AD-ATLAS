@@ -39,7 +39,7 @@ const GOLD = "text-[#c8963c]";
 /** Photographs; each shows a soft placeholder until its file is added. */
 const PHOTOS = {
   hero: "/images/collabs hero.png",
-  impact: "/images/collabs impact band.png",
+  impact: "/images/Together, We Create Impact banner.png",
   collage: "/images/collabs why collage.png",
   cta: "/images/collabs cta band.png",
 };
@@ -180,8 +180,8 @@ export default async function CollabsPage() {
 
       {/* Who can collaborate */}
       <section className="px-4 pt-10 pb-8 text-center xl:px-0 xl:pt-[1.27vw] xl:pb-[1.37vw]">
-        <p className="font-display text-[0.8rem] font-medium uppercase text-[#b07c2c] xl:text-[1.04vw]">Collaborate Your Way</p>
-        <h2 className={`mt-1 font-display text-[1.5rem] font-medium uppercase leading-none xl:mt-[0.3vw] xl:text-[1.93vw] ${INK}`}>
+        <p className="font-display text-[0.8rem] font-semibold uppercase text-[#b07c2c] xl:text-[1.04vw]">Collaborate Your Way</p>
+        <h2 className={`mt-1 font-display text-[1.5rem] font-semibold uppercase leading-none xl:mt-[0.3vw] xl:text-[1.93vw] ${INK}`}>
           Who Can Collaborate?
         </h2>
         <Ornament className="mx-auto mt-3 w-40 xl:mt-[0.78vw] xl:w-[13.57vw]" />
@@ -197,7 +197,7 @@ export default async function CollabsPage() {
                   <Icon className="size-5 text-[#d9a53f] xl:size-[1.66vw]" strokeWidth={1.4} />
                 </span>
               </div>
-              <h3 className={`mt-8 font-display text-[1rem] font-medium uppercase xl:mt-[2.69vw] xl:text-[1.21vw] xl:leading-[1.45vw] ${INK}`}>{title}</h3>
+              <h3 className={`mt-8 font-display text-[1rem] font-semibold uppercase xl:mt-[2.69vw] xl:text-[1.21vw] xl:leading-[1.45vw] ${INK}`}>{title}</h3>
               <p className="mt-1.5 whitespace-pre-line text-[0.75rem] leading-[1.6] text-[#1d052b]/80 xl:mt-[0.54vw] xl:text-[0.9vw] xl:leading-[1.4vw]">
                 {text}
               </p>
@@ -215,6 +215,7 @@ export default async function CollabsPage() {
       {/* Together, we create impact */}
       <section className="relative overflow-hidden bg-[#270e29] px-6 py-8 text-center text-cream-50 xl:h-[14.26vw] xl:p-0">
         <OptionalPhoto src={PHOTOS.impact} alt="" sizes="100vw" placeholderClassName="bg-[linear-gradient(100deg,#2a0f2c,#260d28_50%,#2e1330)]" />
+        <div className="absolute inset-0 bg-black/60" />
         <h2 className="relative font-display text-[1.15rem] font-medium uppercase xl:pt-[1.27vw] xl:text-[1.55vw] xl:leading-none">
           Together, We Create Impact
         </h2>
@@ -239,7 +240,7 @@ export default async function CollabsPage() {
       {/* Why collaborate with Velastia */}
       <section className="relative flex flex-col gap-8 px-6 py-10 xl:block xl:h-[24.9vw] xl:p-0">
         <div className="relative z-10 xl:pt-[1.56vw] xl:pl-[5.93vw]">
-          <h2 className={`font-display text-[1.5rem] font-medium uppercase leading-[1.15] xl:text-[2.03vw] xl:leading-[2.25vw] ${INK}`}>
+          <h2 className={`font-display text-[1.5rem] font-semibold uppercase leading-[1.15] xl:text-[2.03vw] xl:leading-[2.25vw] ${INK}`}>
             Why Collaborate
             <span className="block">With Velastia?</span>
           </h2>

@@ -53,7 +53,7 @@ export default function BestsellersBlock({
     <section className="bg-cream-50">
       <div className="container-vel grid gap-6 py-8 lg:grid-cols-2">
         {/* Left side: Bestsellers */}
-        <div className="flex flex-col relative pr-4">
+        <div className="flex flex-col relative pr-4 w-full min-w-0">
           <div className="mb-8 relative flex items-end justify-center">
             <div className="text-center">
               <h2 className="font-display text-[1.75rem] font-semibold tracking-[0.03em] uppercase text-plum-800">
@@ -73,10 +73,10 @@ export default function BestsellersBlock({
         </div>
 
         {/* Right side: Promo + Ratings + Testimonials */}
-        <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-stretch">
+        <div className="flex flex-col gap-4 w-full min-w-0">
+          <div className="flex flex-col lg:flex-row justify-between items-stretch gap-6 lg:gap-0">
             {/* New arrivals promo */}
-            <div className="relative w-[54%] flex flex-col justify-between overflow-hidden rounded-[var(--radius-card)] bg-plum-800 p-7">
+            <div className="relative w-full lg:w-[54%] flex flex-col justify-between overflow-hidden rounded-[var(--radius-card)] bg-plum-800 p-7">
               <div className="pointer-events-none absolute inset-y-0 right-0 w-3/5">
                 <Image
                   src="/brand/coming-soon.webp"
@@ -100,16 +100,16 @@ export default function BestsellersBlock({
                   &amp; more.
                 </p>
               </div>
-              <Button href="/shop?filter=coming-soon" variant="gold" className="relative mt-8 self-start px-6 text-[0.7rem] uppercase tracking-wider rounded-md font-semibold">
+              <Button href="/shop?filter=coming-soon" variant="gold" className="relative mt-3 self-start px-6 text-[0.7rem] uppercase tracking-wider rounded-md font-semibold">
                 EXPLORE NOW
               </Button>
             </div>
 
             {/* Vertical Divider */}
-            <div className="w-[1px] bg-gold-200/50 my-2" />
+            <div className="hidden lg:block w-[1px] bg-gold-200/50 my-2" />
 
             {/* Ratings */}
-            <div className="w-[38%] rounded-[var(--radius-card)] border border-gold-200/50 bg-cream-50 p-5 flex flex-col">
+            <div className="w-full lg:w-[38%] rounded-[var(--radius-card)] border border-gold-200/50 bg-cream-50 p-5 flex flex-col">
               <h3 className="font-display text-center text-[1.1rem] font-bold uppercase tracking-widest text-plum-800">
                 {ratingHeadline}
               </h3>
@@ -145,12 +145,12 @@ export default function BestsellersBlock({
           <div className="relative mt-2 px-2">
             <div
               ref={reviewsRef}
-              className="flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar py-2"
+              className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar py-2 divide-x divide-gold-200/40"
             >
               {testimonials.map((t) => (
                 <figure
                   key={t.id}
-                  className="min-w-[170px] flex-1 shrink-0 snap-start flex flex-col"
+                  className="min-w-[170px] flex-1 shrink-0 snap-start flex flex-col px-5 first:pl-0 last:pr-0"
                 >
                   <div className="flex items-center gap-3">
                     <Avatar src={t.avatarUrl} name={t.author} size={42} />
@@ -206,26 +206,58 @@ function BestsellerCarousel({ products }: { products: Product[] }) {
 
   // Nothing to slide through: the cards simply sit side by side.
   if (!loops) {
-    return <div className="flex gap-4 px-2 pb-4">{products.map((p) => card(p, p.slug))}</div>;
+    return (
+      <div
+        className="flex overflow-x-auto snap-x snap-mandatory gap-[var(--gap)] px-2 pb-4 no-scrollbar"
+        style={{ "--gap": "1rem", scrollPaddingLeft: "0.5rem" } as React.CSSProperties}
+      >
+        {products.map((p) => (
+          <div
+            key={p.slug}
+            className="w-[calc((100%-var(--gap))/2.15)] md:w-[calc((100%-2*var(--gap))/3.2)] lg:w-[calc((100%-2*var(--gap))/3)] shrink-0 snap-start"
+          >
+            <ProductCard product={p} className="h-full" />
+          </div>
+        ))}
+      </div>
+    );
   }
 
   return (
-    <div className="relative px-2" {...hoverProps}>
-      <div className="overflow-hidden pb-4" {...swipeProps}>
-        <div
-          className={cn(trackClass, "gap-4")}
-          style={{ transform: `translateX(calc(${-i} * (100% + ${GAP}) / ${VISIBLE}))` }}
-        >
-          {tripled.map((p, k) => card(p, k))}
-        </div>
+    <div className="relative w-full min-w-0">
+      {/* Mobile: simple scroll snap */}
+      <div
+        className="flex lg:hidden w-full overflow-x-auto snap-x snap-mandatory gap-[var(--gap)] px-2 pb-4 no-scrollbar"
+        style={{ "--gap": "1rem", scrollPaddingLeft: "0.5rem" } as React.CSSProperties}
+      >
+        {products.map((p) => (
+          <div
+            key={p.slug}
+            className="w-[calc((100%-var(--gap))/2.15)] md:w-[calc((100%-2*var(--gap))/3.2)] shrink-0 snap-start"
+          >
+            <ProductCard product={p} className="h-full" />
+          </div>
+        ))}
       </div>
 
-      <button type="button" aria-label="Previous bestsellers" onClick={() => go(-1)} className={cn(ARROW, "-left-3")}>
-        <ChevronLeft className="size-5" />
-      </button>
-      <button type="button" aria-label="Next bestsellers" onClick={() => go(1)} className={cn(ARROW, "-right-3")}>
-        <ChevronRight className="size-5" />
-      </button>
+      {/* Desktop: infinite loop carousel */}
+      <div className="hidden lg:block relative px-2" {...hoverProps}>
+        <div className="overflow-hidden pb-4" {...swipeProps}>
+          <div
+            className={cn(trackClass, "gap-4")}
+            style={{ transform: `translateX(calc(${-i} * (100% + ${GAP}) / ${VISIBLE}))` }}
+          >
+            {tripled.map((p, k) => card(p, k))}
+          </div>
+        </div>
+
+        <button type="button" aria-label="Previous bestsellers" onClick={() => go(-1)} className={cn(ARROW, "-left-3")}>
+          <ChevronLeft className="size-5" />
+        </button>
+        <button type="button" aria-label="Next bestsellers" onClick={() => go(1)} className={cn(ARROW, "-right-3")}>
+          <ChevronRight className="size-5" />
+        </button>
+      </div>
     </div>
   );
 }

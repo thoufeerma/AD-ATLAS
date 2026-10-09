@@ -17,6 +17,6 @@ export default function FooterSwitch({
   shop: React.ReactNode;
 }) {
   const pathname = usePathname();
-  if (["/about", "/ingredients", "/reviews", "/collabs"].includes(pathname)) return null;
-  return pathname === "/shop" ? shop : standard;
+  if (["/about", "/ingredients", "/reviews", "/collabs", "/contact", "/faqs", "/shipping", "/returns", "/terms", "/privacy", "/login"].includes(pathname)) return null;
+  return pathname === "/shop" || pathname === "/cart" || pathname === "/checkout" || pathname === "/order-success" || pathname === "/wishlist" ? shop : standard;
 }

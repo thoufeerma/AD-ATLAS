@@ -24,8 +24,8 @@ export default async function ServiceStrip() {
         {services.map(({ Icon, title, note }) => (
           <Fragment key={title}>
             <div className="flex items-center gap-4">
-              <span className="grid size-[3.5rem] shrink-0 place-items-center rounded-full border border-gold-400/80">
-                <Icon strokeWidth={1.25} className="size-[1.65rem] text-gold-600" />
+              <span className="grid size-10 lg:size-[3.5rem] shrink-0 place-items-center rounded-full border border-gold-400/80">
+                <Icon strokeWidth={1.25} className="size-5 lg:size-[1.65rem] text-gold-600" />
               </span>
               <span className="text-base font-bold leading-[1.3] text-plum-800">
                 <span className="block">{title}</span>
@@ -38,9 +38,9 @@ export default async function ServiceStrip() {
         ))}
 
         {/* Behind The Beauty */}
-        <div className="flex items-center gap-6">
-          <div className="group relative h-[7.5rem] w-[13rem] shrink-0 overflow-hidden rounded-[8px] bg-plum-800 shadow-sm">
-            <Image src="/brand/about-lab.png" alt="" fill sizes="220px" className="object-cover opacity-90 transition-opacity group-hover:opacity-100" />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mt-4 sm:mt-0 w-full sm:w-auto">
+          <div className="group relative h-[14rem] sm:h-[7.5rem] w-full sm:w-[13rem] shrink-0 overflow-hidden rounded-[8px] bg-plum-800 shadow-sm">
+            <Image src="/brand/about-lab.png" alt="" fill sizes="(min-width: 640px) 220px, 100vw" className="object-cover opacity-90 transition-opacity group-hover:opacity-100" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="flex size-12 items-center justify-center rounded-full border-2 border-white bg-black/20 backdrop-blur-sm">
                 <Play className="ml-1 size-6 fill-white text-white" />

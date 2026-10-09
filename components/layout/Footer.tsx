@@ -58,7 +58,7 @@ export default async function Footer() {
   const socials = socialProfiles(store.social);
 
   return (
-    <footer className="bg-[#371938] text-cream-100">
+    <footer className="bg-[#20082d] text-cream-100">
       <div className="container-vel grid grid-cols-1 gap-10 pt-8 pb-5 sm:grid-cols-3 lg:grid-cols-[2.4fr_1fr_1.3fr_1.15fr_1.6fr] lg:gap-0">
         {/* Newsletter & Socials */}
         <div className="sm:col-span-3 lg:col-span-1 lg:pr-7">
@@ -126,11 +126,13 @@ export default async function Footer() {
 export function FooterBar({ storeName }: { storeName: string }) {
   return (
     <div className="border-t border-white/15">
-      <div className="container-vel flex flex-col items-center justify-between gap-2 py-3.5 text-[0.95rem] text-cream-100/90 sm:flex-row">
+      <div className="container-vel flex flex-col items-center justify-between gap-4 py-4 text-[0.85rem] text-cream-100/80 sm:flex-row">
         <p>© {new Date().getFullYear()} {storeName}. All Rights Reserved.</p>
-        <p>
-          Made with <span className="px-1 text-gold-500">💛</span> in India
-        </p>
+        <div className="flex items-center gap-6">
+          <Link href="/privacy" className="hover:text-cream-50 transition-colors">Privacy Policy</Link>
+          <span className="w-px h-4 bg-cream-100/20"></span>
+          <Link href="/terms" className="hover:text-cream-50 transition-colors">Terms & Conditions</Link>
+        </div>
       </div>
     </div>
   );

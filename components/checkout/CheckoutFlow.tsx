@@ -624,7 +624,7 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
                         <Image src={productImage(r.product)} alt="" fill sizes="48px" className="object-contain p-1" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[0.8rem] text-plum-800">{r.product.name}</p>
+                        <p className="font-sans truncate text-[0.8rem] text-plum-800">{r.product.name}</p>
                         <p className="text-[0.68rem] text-ink-soft">
                           {[r.shade, r.product.size, `Qty: ${r.qty}`].filter(Boolean).join(" · ")}
                         </p>

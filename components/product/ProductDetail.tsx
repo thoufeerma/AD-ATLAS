@@ -197,7 +197,7 @@ export default function ProductDetail({
               </span>
             )}
 
-            <h1 className="mt-3 font-display text-[2rem] leading-tight text-plum-800 sm:text-[2.3rem]">
+            <h1 className="mt-3 font-sans font-medium text-[2rem] leading-tight text-plum-800 sm:text-[2.3rem]">
               {product.name}
             </h1>
             {shade && <p className="mt-1 font-display text-xl text-gold-600">{shade}</p>}
@@ -574,7 +574,7 @@ export default function ProductDetail({
                       <div className="relative aspect-square w-full overflow-hidden rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-50">
                         <Image src={productImage(p)} alt={p.name} fill sizes="144px" className="object-contain p-2" />
                       </div>
-                      <p className="mt-2 line-clamp-2 text-[0.7rem] text-ink">{p.name}</p>
+                      <p className="font-sans mt-2 line-clamp-2 text-[0.7rem] text-ink">{p.name}</p>
                       <p className="text-[0.75rem] font-medium text-plum-800">{inrPaise(p.pricePaise)}</p>
                     </div>
                     {i < bundleItems.length - 1 && <Plus className="size-4 shrink-0 text-gold-600" />}
@@ -627,7 +627,7 @@ export default function ProductDetail({
               <Image src={images[0].url} alt="" fill sizes="40px" className="object-contain p-0.5" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[0.7rem] text-cream-100">{product.name}</p>
+              <p className="font-sans truncate text-[0.7rem] text-cream-100">{product.name}</p>
               <p className="text-[0.75rem] font-medium text-gold-300">{inrPaise(product.pricePaise)}</p>
             </div>
             <Button onClick={handleAdd} variant="gold" size="sm">

@@ -29,7 +29,7 @@ const SLIDES = [
     dark: true,
   },
   {
-    headline: ["Clean.", "Proven.", "Kind."],
+    headline: ["Pure.", "Potent.", "Perfect."],
     copy: "Dermatologically tested, cruelty free and vegan. Made in India, for Indian skin.",
     cta: { label: "Our Ingredients", href: "/ingredients" },
     image: "/brand/hero-3.webp",
@@ -114,10 +114,10 @@ export default function Hero() {
   const track = (
     <div
       className={cn(
-        "flex h-full",
-        silent ? "transition-none" : "transition-transform duration-700 ease-out motion-reduce:transition-none",
+        "flex h-full relative",
+        silent ? "transition-none" : "transition-[left] duration-700 ease-out motion-reduce:transition-none",
       )}
-      style={{ transform: `translateX(-${i * 100}%)` }}
+      style={{ left: `-${i * 100}%` }}
     >
       {[...SLIDES, SLIDES[0]].map((s, n) => (
         <div key={n} className="relative h-full w-full shrink-0">
@@ -139,15 +139,15 @@ export default function Hero() {
   return (
     <section
       className={cn(
-        // Behind the photograph, so the band matches while it loads rather
-        // than leaving dark lettering on a dark ground for a moment.
-        "relative overflow-hidden bg-cream-50 transition-colors duration-700",
+        // Unify the container to flow vertically on mobile, and stack at lg:
+        "relative flex flex-col lg:block overflow-hidden bg-cream-50 transition-colors duration-700",
         dark && "lg:bg-plum-950",
       )}
     >
-      {/* Desktop: the photograph fills the whole band, copy over it */}
-      <div className="absolute inset-0 hidden lg:block">{track}</div>
-
+      {/* Unified track wrapper: aspect box on mobile, full-bleed absolute on lg: */}
+      <div className="relative w-full overflow-hidden aspect-[4/3] sm:aspect-[16/9] lg:absolute lg:inset-0 lg:aspect-auto lg:h-full lg:w-full">
+        {track}
+      </div>
       {/* Just enough shade under the words to keep them readable on any photo */}
       <div
         className={cn(
@@ -156,25 +156,23 @@ export default function Hero() {
         )}
       />
 
-      {/* Phones: the photograph above the copy, so neither is cramped */}
-      <div className="relative aspect-4/3 w-full overflow-hidden sm:aspect-16/9 lg:hidden">{track}</div>
-
-      <div className="container-vel relative flex items-center py-12 lg:min-h-[580px] lg:py-16">
-        <div className="max-w-lg">
+      <div className="container-vel relative flex items-center py-8 md:py-10 lg:min-h-[580px] lg:py-16">
+        <div className="w-full max-w-[800px] lg:ml-12 xl:ml-16">
           {/* Keyed so the words fade up again on every slide */}
-          <div key={shown} className="hero-copy">
+          <div key={shown} className="hero-copy max-w-xl">
             <h1
               className={cn(
-                "font-display text-[2.9rem] font-semibold leading-[1.05] text-plum-800 sm:text-[3.6rem]",
-                dark && "lg:text-cream-50",
+                "font-display font-semibold leading-[1.05] text-[#20082d]",
+                dark && "lg:text-white",
               )}
+              style={{ fontSize: "clamp(2.75rem, 1.5rem + 3.5vw, 4.8rem)" }}
             >
               {slide.headline.map((line, n) => (
                 <span
                   key={line}
                   className={cn(
                     "block",
-                    n === slide.headline.length - 1 && (dark ? "text-gold-600 lg:text-gold-300" : "text-gold-600"),
+                    n === slide.headline.length - 1 && (dark ? "text-[#c8963c] lg:text-[#c8963c]" : "text-[#c8963c]"),
                   )}
                 >
                   {line}
@@ -184,8 +182,8 @@ export default function Hero() {
 
             <p
               className={cn(
-                "mt-5 max-w-sm text-[0.95rem] font-medium leading-relaxed text-ink-soft",
-                dark && "lg:text-cream-200/85",
+                "mt-6 max-w-md text-[1.15rem] font-medium leading-relaxed text-[#20082d]/70",
+                dark && "lg:text-white/80",
               )}
             >
               {slide.copy}
@@ -194,20 +192,20 @@ export default function Hero() {
             <Button
               href={slide.cta.href}
               size="lg"
-              className={cn("mt-7", dark && "lg:bg-gold-600 lg:text-white lg:hover:bg-gold-500")}
+              className={cn("mt-8 px-10 h-14 text-[0.85rem]", dark && "lg:bg-[#c8963c] lg:text-white lg:hover:bg-[#a67b2d]")}
             >
               {slide.cta.label}
             </Button>
           </div>
 
-          <ul className="mt-10 flex flex-wrap gap-x-7 gap-y-4">
+          <ul className="mt-10 md:mt-12 lg:mt-14 flex flex-wrap lg:flex-nowrap items-center gap-x-6 xl:gap-x-10 gap-y-5">
             {BADGES.map(({ Icon, label }) => (
-              <li key={label} className="flex items-center gap-2">
-                <Icon className={cn("size-5 shrink-0 text-gold-600", dark && "lg:text-gold-400")} />
+              <li key={label} className="flex items-center gap-2.5 xl:gap-3">
+                <Icon className={cn("size-5 md:size-6 xl:size-7 shrink-0 text-[#c8963c]", dark && "lg:text-[#c8963c]")} strokeWidth={1.5} />
                 <span
                   className={cn(
-                    "label-caps whitespace-pre-line text-[0.55rem] leading-tight text-ink-soft",
-                    dark && "lg:text-cream-200/80",
+                    "whitespace-pre-line text-[0.65rem] font-bold tracking-wide uppercase leading-tight text-[#20082d]/80",
+                    dark && "lg:text-white/80",
                   )}
                 >
                   {label}
@@ -219,15 +217,18 @@ export default function Hero() {
 
         {/* Introductory offer medallion — only while the welcome code is live */}
         {welcomeOffer && (
-          <div className="pointer-events-none absolute right-6 top-10 hidden size-[132px] flex-col items-center justify-center rounded-full border border-gold-400/70 bg-plum-800/92 text-center xl:flex">
-            <span className="label-caps text-[0.44rem] text-gold-300">Introductory Offer</span>
-            <span className="mt-1 font-display text-3xl font-semibold leading-none text-gold-300">
-              {welcomeOffer.percent}% OFF
+          <div className="pointer-events-none absolute right-16 top-10 hidden size-[180px] flex-col items-center justify-center rounded-full border border-[#c8963c] bg-[#20082d] text-center xl:flex shadow-2xl p-3">
+            <span className="text-[0.45rem] font-bold text-[#c8963c] tracking-[0.15em] uppercase">Introductory Offer</span>
+            <span className="mt-2 font-display text-[3.2rem] font-medium leading-none text-[#c8963c]">
+              {welcomeOffer.percent}%
             </span>
-            <span className="mt-1 text-[0.5rem] text-cream-200/80">
-              {welcomeOffer.firstOrderOnly ? "on your first order" : "on your order"}
+            <span className="mt-0.5 font-display text-[1.5rem] font-medium leading-[1] text-[#c8963c]">
+              OFF
             </span>
-            <span className="label-caps mt-1.5 bg-gold-600 px-2 py-0.5 text-[0.48rem] text-white">
+            <span className="mt-3 text-[0.45rem] font-bold text-white tracking-[0.1em] uppercase">
+              {welcomeOffer.firstOrderOnly ? "On your first order" : "On your order"}
+            </span>
+            <span className="mt-1 text-[0.45rem] font-bold text-white tracking-[0.1em] uppercase">
               Code: {welcomeOffer.code}
             </span>
           </div>
@@ -244,7 +245,7 @@ export default function Hero() {
           onClick={() => go(d)}
           aria-label={label}
           className={cn(
-            "absolute top-1/2 hidden size-9 -translate-y-1/2 place-items-center rounded-full border backdrop-blur transition-colors lg:grid",
+            "absolute inset-y-0 my-auto hidden size-9 place-items-center rounded-full border backdrop-blur transition-colors lg:grid",
             side,
             dark
               ? "border-gold-400/40 bg-plum-900/60 text-gold-200 hover:bg-plum-900/85"
@@ -255,7 +256,7 @@ export default function Hero() {
         </button>
       ))}
 
-      <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-2">
+      <div className="absolute bottom-5 inset-x-0 mx-auto flex w-fit gap-2">
         {SLIDES.map((s, n) => (
           <button
             key={s.image}

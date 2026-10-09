@@ -31,7 +31,6 @@ import { api, ApiError } from "@/lib/api/client";
 import type { OrderStatus, Product, TrackedOrder } from "@/lib/api/types";
 import { inrPaise, cn, productImage, telHref, whatsappHref, looksLikeEmail } from "@/lib/utils";
 
-/** Mirrors O-Order-Track-1.0v.png, driven by the order the API returns. */
 const STAGES: { status: OrderStatus; title: string; Icon: typeof Check }[] = [
   { status: "CONFIRMED", title: "Order Confirmed", Icon: ClipboardCheck },
   { status: "PROCESSING", title: "Processing", Icon: Package },
@@ -44,7 +43,7 @@ const HEADLINE: Record<OrderStatus, { title: string; note: string }> = {
   PENDING: { title: "Awaiting payment", note: "We'll start on your order as soon as payment is confirmed." },
   CONFIRMED: { title: "Order confirmed", note: "We've received your order and will start preparing it shortly." },
   PROCESSING: { title: "Being prepared", note: "We're packing your items with care." },
-  SHIPPED: { title: "Good news! Your order is on the way.", note: "It has left our warehouse and is with the courier." },
+  SHIPPED: { title: "Good news! Your order is on the way.", note: "Your order has been shipped and is expected to be delivered by" },
   OUT_FOR_DELIVERY: { title: "Out for delivery", note: "Your order should reach you today." },
   DELIVERED: { title: "Delivered", note: "Enjoy your Velastia beauty!" },
   CANCELLED: { title: "This order was cancelled", note: "If you didn't expect this, please contact us." },
@@ -64,11 +63,10 @@ const dateTime = (iso: string) =>
     day: "numeric",
     month: "short",
     year: "numeric",
-    hour: "numeric",
+    hour: "2-digit",
     minute: "2-digit",
   });
 
-/** The email used at checkout in this tab, to save retyping it. */
 const subscribe = () => () => {};
 const readLastOrder = () => {
   try {
@@ -88,12 +86,9 @@ export default function TrackOrder({ products }: { products: Product[] }) {
   try {
     const last = raw ? (JSON.parse(raw) as LastOrder) : null;
     if (last && last.order.number === initialNumber.toUpperCase()) rememberedEmail = last.email;
-  } catch {
-    // Unreadable storage just means no prefill.
-  }
+  } catch {}
 
   const [number, setNumber] = useState(initialNumber);
-  // null until the shopper types, so the remembered email can fill in.
   const [emailInput, setEmailInput] = useState<string | null>(null);
   const accountEmail = useAccount((s) => s.me?.email ?? "");
   const email = emailInput ?? (rememberedEmail || accountEmail);
@@ -129,7 +124,7 @@ export default function TrackOrder({ products }: { products: Product[] }) {
   }
 
   const help = [
-    { Icon: Phone, title: store.supportPhone, note: store.supportHours, href: telHref(store.supportPhone) },
+    { Icon: Phone, title: store.supportPhone, note: "Mon - Sat | 10AM - 7PM", href: telHref(store.supportPhone) },
     { Icon: Mail, title: store.supportEmail, note: "We reply within 24 hrs", href: `mailto:${store.supportEmail}` },
     { Icon: MessageCircle, title: "WhatsApp Support", note: "Chat with us", href: whatsappHref(store.supportPhone) },
   ];
@@ -138,22 +133,22 @@ export default function TrackOrder({ products }: { products: Product[] }) {
     { Icon: BadgeCheck, title: "100% Authentic Products", note: "Sourced with Care" },
     { Icon: RotateCcw, title: "Easy Returns", note: "Hassle Free Returns" },
     { Icon: ShieldCheck, title: "Secure Payments", note: "100% Safe & Secure" },
-    { Icon: Headphones, title: "Customer Support", note: "We're Here to Help" },
+    { Icon: Truck, title: "Free Shipping", note: "On Orders Above ₹999" },
   ];
 
   return (
-    <div className="container-vel space-y-6 py-10">
+    <div className="w-full space-y-10 py-10 md:py-14">
       {/* Lookup */}
-      <section className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6 sm:p-8">
-        <h2 className="font-display text-xl text-plum-800">Enter Your Order Details</h2>
-        <p className="mt-1 text-[0.72rem] text-ink-soft">
+      <section className="rounded-2xl border border-[#eaddce] bg-white p-8 md:p-12 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.06)]">
+        <h2 className="font-display text-[1.85rem] font-semibold text-[#20082d]">Enter Your Order Details</h2>
+        <p className="mt-2 text-[0.9rem] font-medium text-[#20082d]/60">
           Enter your Order Number and Email ID to track your order status
         </p>
 
-        <form onSubmit={lookUp} noValidate className="mt-6 grid items-end gap-4 sm:grid-cols-[1fr_1fr_auto]">
+        <form onSubmit={lookUp} noValidate className="mt-8 grid items-end gap-6 sm:grid-cols-[1fr_1fr_auto]">
           <div>
-            <label htmlFor="order-no" className="mb-1.5 block text-[0.72rem] text-plum-800">
-              Order Number <span className="text-gold-600">*</span>
+            <label htmlFor="order-no" className="mb-2 block text-[0.85rem] font-bold text-[#20082d]">
+              Order Number <span className="text-[#c8963c]">*</span>
             </label>
             <input
               id="order-no"
@@ -161,13 +156,13 @@ export default function TrackOrder({ products }: { products: Product[] }) {
               value={number}
               onChange={(e) => setNumber(e.target.value)}
               autoCapitalize="characters"
-              placeholder="e.g. VL2605291234"
-              className="w-full rounded-sm border border-gold-200 bg-cream-50 px-3.5 py-2.5 text-sm uppercase text-plum-800 placeholder:normal-case placeholder:text-ink-soft/50 focus:border-gold-500 focus:outline-none"
+              placeholder="e.g. VL25052978"
+              className="w-full rounded-md border border-[#eaddce] bg-white px-5 py-3.5 text-[0.95rem] font-medium uppercase text-[#20082d] placeholder:normal-case placeholder:text-[#20082d]/30 focus:border-[#c8963c] focus:outline-none transition-colors"
             />
           </div>
           <div>
-            <label htmlFor="order-email" className="mb-1.5 block text-[0.72rem] text-plum-800">
-              Email Address <span className="text-gold-600">*</span>
+            <label htmlFor="order-email" className="mb-2 block text-[0.85rem] font-bold text-[#20082d]">
+              Email Address <span className="text-[#c8963c]">*</span>
             </label>
             <input
               id="order-email"
@@ -177,23 +172,23 @@ export default function TrackOrder({ products }: { products: Product[] }) {
               value={email}
               onChange={(e) => setEmailInput(e.target.value)}
               placeholder="Enter your email address"
-              className="w-full rounded-sm border border-gold-200 bg-cream-50 px-3.5 py-2.5 text-sm text-plum-800 placeholder:text-ink-soft/50 focus:border-gold-500 focus:outline-none"
+              className="w-full rounded-md border border-[#eaddce] bg-white px-5 py-3.5 text-[0.95rem] font-medium text-[#20082d] placeholder:text-[#20082d]/30 focus:border-[#c8963c] focus:outline-none transition-colors"
             />
           </div>
-          <Button type="submit" size="lg" disabled={looking}>
-            <Truck className="size-3.5" /> {looking ? "Looking…" : "Track Order"}
+          <Button type="submit" size="lg" className="h-[3.25rem] px-10 bg-[#20082d] text-white hover:bg-[#371938] font-bold uppercase tracking-widest text-[0.85rem]" disabled={looking}>
+            <Truck className="size-5 mr-2.5" strokeWidth={2} /> {looking ? "LOOKING…" : "TRACK ORDER"}
           </Button>
         </form>
 
         {error && (
-          <p role="alert" className="mt-4 flex items-start gap-2 text-[0.75rem] text-danger">
+          <p role="alert" className="mt-5 flex items-start gap-2 text-[0.85rem] text-danger font-medium">
             <AlertCircle className="mt-0.5 size-4 shrink-0" /> {error}
           </p>
         )}
 
-        <p className="mt-4 text-[0.7rem] text-ink-soft">
+        <p className="mt-6 text-[0.85rem] font-medium text-[#20082d]/60">
           Having trouble finding your order?{" "}
-          <Link href="/contact" className="text-plum-600 hover:text-gold-600">
+          <Link href="/contact" className="text-[#20082d] font-bold hover:text-[#c8963c] transition-colors">
             Contact us
           </Link>
         </p>
@@ -201,45 +196,53 @@ export default function TrackOrder({ products }: { products: Product[] }) {
 
       {order && <OrderResult order={order} bySlug={bySlug} email={email.trim()} />}
 
-      {/* Help */}
-      <section className="rounded-[var(--radius-card)] border border-gold-200/70 bg-blush-100 p-6 sm:p-8">
-        <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
-          <div className="flex items-center gap-3.5">
-            <span className="grid size-12 shrink-0 place-items-center rounded-full bg-blush-200">
-              <Headphones className="size-5 text-gold-700" />
+      {/* Help & Assurances */}
+      <div className="space-y-8">
+        <section className="relative overflow-hidden rounded-2xl border border-[#eaddce] bg-[#fcf9f5] p-8 md:p-12 flex flex-col lg:flex-row items-center justify-between gap-10">
+          <div className="flex items-center gap-6 shrink-0 z-10">
+            <span className="grid size-[4.5rem] shrink-0 place-items-center rounded-full bg-[#f6eadd] border border-[#eaddce]">
+              <Headphones className="size-8 text-[#c8963c]" strokeWidth={1.5} />
             </span>
             <div>
-              <h2 className="font-display text-lg text-plum-800">Need Help?</h2>
-              <p className="text-[0.72rem] text-ink-soft">We&apos;re here for you!</p>
+              <h2 className="font-display text-[1.7rem] font-semibold text-[#20082d]">Need Help?</h2>
+              <p className="text-[0.95rem] font-medium text-[#20082d]/70 mt-1">We're here for you!</p>
             </div>
           </div>
-          <ul className="grid gap-5 sm:grid-cols-3">
+
+          <ul className="grid gap-8 sm:grid-cols-3 flex-1 w-full z-10 lg:pl-12">
             {help.map(({ Icon, title, note, href }) => (
               <li key={title}>
-                <a href={href} className="group flex items-center gap-2.5">
-                  <Icon className="size-4 shrink-0 text-gold-600" />
-                  <span className="text-[0.7rem] leading-tight">
-                    <span className="block font-medium text-plum-800 group-hover:text-gold-600">{title}</span>
-                    <span className="text-ink-soft">{note}</span>
+                <a href={href} className="group flex items-start gap-3.5">
+                  <Icon className="size-6 mt-0.5 shrink-0 text-[#c8963c]" strokeWidth={1.5} />
+                  <span className="text-[0.85rem] leading-[1.5]">
+                    <span className="block font-bold text-[#20082d] group-hover:text-[#c8963c] transition-colors">{title}</span>
+                    <span className="text-[#20082d]/70">{note}</span>
                   </span>
                 </a>
               </li>
             ))}
           </ul>
-        </div>
-      </section>
+          
+          <div className="absolute right-0 top-0 bottom-0 w-80 opacity-70 pointer-events-none hidden lg:block">
+            <Image src="/images/login page left side banner.png" alt="" fill className="object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#fcf9f5] via-[#fcf9f5]/60 to-transparent" />
+          </div>
+        </section>
 
-      <ul className="grid grid-cols-2 gap-6 rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6 lg:grid-cols-4">
-        {assurances.map(({ Icon, title, note }) => (
-          <li key={title} className="flex items-center gap-2.5">
-            <Icon className="size-5 shrink-0 text-gold-600" />
-            <span className="text-[0.66rem] leading-tight">
-              <span className="block font-medium text-plum-800">{title}</span>
-              <span className="text-ink-soft">{note}</span>
-            </span>
-          </li>
-        ))}
-      </ul>
+        <ul className="grid grid-cols-2 gap-8 rounded-2xl border border-[#eaddce] bg-white p-8 md:p-10 lg:grid-cols-4 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.04)]">
+          {assurances.map(({ Icon, title, note }) => (
+            <li key={title} className="flex items-center justify-center lg:justify-start gap-5">
+              <span className="grid size-14 shrink-0 place-items-center rounded-full bg-[#fcf9f5] border border-[#eaddce]/50">
+                <Icon className="size-6 text-[#c8963c]" strokeWidth={1.5} />
+              </span>
+              <span className="text-[0.85rem] leading-[1.4]">
+                <span className="block font-bold text-[#20082d]">{title}</span>
+                <span className="text-[#20082d]/60 font-medium text-[0.8rem]">{note}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
@@ -251,7 +254,6 @@ function OrderResult({
 }: {
   order: TrackedOrder;
   bySlug: Map<string, Product>;
-  /** The address the order was looked up with — how a guest proves it's theirs. */
   email: string;
 }) {
   const stopped = order.status === "CANCELLED" || order.status === "REFUNDED";
@@ -263,161 +265,136 @@ function OrderResult({
 
   const payment =
     order.paymentStatus === "PAID"
-      ? { label: "Paid", tone: "bg-success/12 text-success" }
+      ? { label: "Paid", tone: "bg-green-100 text-green-800" }
       : order.paymentStatus === "REFUNDED"
-        ? { label: "Refunded", tone: "bg-cream-300 text-ink-soft" }
+        ? { label: "Refunded", tone: "bg-gray-200 text-gray-700" }
         : order.paymentStatus === "FAILED"
-          ? { label: "Failed", tone: "bg-danger/10 text-danger" }
+          ? { label: "Failed", tone: "bg-red-100 text-red-800" }
           : isCod
-            ? { label: "Pay on Delivery", tone: "bg-gold-200/60 text-gold-700" }
-            : { label: "Pending", tone: "bg-gold-200/60 text-gold-700" };
+            ? { label: "Pay on Delivery", tone: "bg-[#fcf9f5] text-[#c8963c]" }
+            : { label: "Pending", tone: "bg-[#fcf9f5] text-[#c8963c]" };
 
   return (
     <>
-      {/* Status */}
-      <section className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6 sm:p-8">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <h2 className="font-display text-xl text-plum-800">Order Status</h2>
-          <div className="text-right">
-            <p className="text-sm text-plum-800">Order #{order.number}</p>
-            <p className="text-[0.68rem] text-ink-soft">Placed on {dateTime(order.placedAt)}</p>
+      {/* Status Tracker */}
+      <section className="rounded-2xl border border-[#eaddce] bg-white p-8 md:p-12 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.06)]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <h2 className="font-display text-[1.85rem] font-semibold text-[#20082d]">Order Status</h2>
+          <div className="sm:text-right">
+            <p className="text-[0.95rem] font-bold text-[#20082d]">Order #{order.number}</p>
+            <p className="text-[0.85rem] font-medium text-[#20082d]/60 mt-1">Placed on {dateTime(order.placedAt)}</p>
           </div>
         </div>
 
         {!stopped && order.status !== "PENDING" && (
-          <ol className="mt-8 grid gap-6 sm:grid-cols-3 lg:grid-cols-5">
-            {STAGES.map((s, i) => {
-              const done = i <= reached;
-              const at = firstAt(s.status);
-              return (
-                <li key={s.status} className="flex flex-col items-center text-center">
-                  <span
-                    className={cn(
-                      "grid size-11 place-items-center rounded-full",
-                      done ? "bg-plum-800 text-gold-300" : "border border-gold-300 text-gold-500",
-                      i === reached && "ring-2 ring-gold-500 ring-offset-2 ring-offset-cream-100",
-                    )}
-                  >
-                    {done && i < reached ? <Check className="size-4" /> : <s.Icon className="size-4" />}
-                  </span>
-                  <p className="mt-2.5 text-[0.72rem] font-medium text-plum-800">{s.title}</p>
-                  <p className="text-[0.65rem] text-ink-soft">
-                    {at ? dateTime(at) : done ? "Done" : "Upcoming"}
-                  </p>
-                </li>
-              );
-            })}
-          </ol>
+          <div className="relative mt-20 mb-10 w-full max-w-[92%] mx-auto">
+            {/* Background Line */}
+            <div className="absolute top-[1.45rem] left-0 right-0 h-[2.5px] bg-[#eaddce] z-0" />
+            {/* Active Line Progress */}
+            <div 
+              className="absolute top-[1.45rem] left-0 h-[2.5px] bg-[#20082d] z-0 transition-all duration-500" 
+              style={{ width: `${Math.max(0, (reached / (STAGES.length - 1)) * 100)}%` }} 
+            />
+
+            <ol className="relative z-10 flex justify-between">
+              {STAGES.map((s, i) => {
+                const done = i < reached;
+                const active = i === reached;
+                const future = i > reached;
+                const at = firstAt(s.status);
+                return (
+                  <li key={s.status} className="flex flex-col items-center text-center w-28 -ml-14 first:ml-0 last:mr-0 first:w-auto last:w-auto">
+                    <span
+                      className={cn(
+                        "grid size-12 place-items-center rounded-full border-[2.5px] transition-colors duration-300",
+                        done ? "bg-[#20082d] border-[#20082d] text-white" : 
+                        active ? "bg-white border-[#20082d] text-[#20082d]" : 
+                        "bg-white border-[#eaddce] text-[#20082d]/30"
+                      )}
+                    >
+                      {done ? <Check className="size-5" strokeWidth={3} /> : <s.Icon className="size-5" strokeWidth={active ? 2.5 : 2} />}
+                    </span>
+                    <p className={cn("mt-5 text-[0.85rem] font-bold", future ? "text-[#20082d]/50" : "text-[#20082d]")}>
+                      {s.title}
+                    </p>
+                    <p className={cn("text-[0.75rem] font-medium mt-1.5 leading-[1.5]", future ? "text-[#20082d]/40" : "text-[#20082d]/70")}>
+                      {at ? dateTime(at).split(",").map((line, idx) => <span key={idx} className="block">{line.trim()}</span>) : (
+                        <>
+                          <span className="block">Expected</span>
+                          <span className="block">Soon</span>
+                        </>
+                      )}
+                    </p>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
         )}
 
-        <div className="mt-8 flex items-start gap-3 rounded-sm bg-blush-100 px-5 py-4">
-          {stopped ? (
-            <XCircle className="mt-0.5 size-5 shrink-0 text-gold-600" />
-          ) : order.status === "PENDING" ? (
-            <Clock className="mt-0.5 size-5 shrink-0 text-gold-600" />
-          ) : (
-            <Truck className="mt-0.5 size-5 shrink-0 text-gold-600" />
-          )}
+        <div className="mt-14 flex items-center gap-5 rounded-xl bg-[#f9f2f5] px-8 py-6 border border-[#20082d]/5">
+          <span className="grid size-12 place-items-center rounded-full bg-transparent border border-[#20082d]/20 shrink-0">
+            {stopped ? (
+              <XCircle className="size-6 text-[#20082d]" strokeWidth={1.5} />
+            ) : order.status === "PENDING" ? (
+              <Clock className="size-6 text-[#20082d]" strokeWidth={1.5} />
+            ) : (
+              <Truck className="size-6 text-[#20082d]" strokeWidth={1.5} />
+            )}
+          </span>
           <div>
-            <p className="text-sm font-medium text-plum-800">{headline.title}</p>
-            <p className="text-[0.72rem] text-ink-soft">{headline.note}</p>
+            <p className="text-[0.95rem] font-bold text-[#20082d]">
+              {headline.title}
+            </p>
+            <p className="text-[0.85rem] font-medium text-[#20082d]/70 mt-1">
+              {headline.note} {order.shippingEta ? ` ${order.shippingEta}` : ""}
+            </p>
           </div>
         </div>
-
-        {/* Every update, including notes the team added */}
-        {order.events.length > 0 && (
-          <ul className="mt-6 space-y-2 border-t border-gold-200/70 pt-5">
-            {[...order.events].reverse().map((e, i) => (
-              <li key={`${e.at}-${i}`} className="flex flex-wrap gap-x-3 text-[0.72rem]">
-                <span className="w-40 shrink-0 text-ink-soft">{dateTime(e.at)}</span>
-                <span className="text-plum-800">
-                  {HEADLINE[e.status]?.title ?? e.status}
-                  {e.note && <span className="text-ink-soft"> — {e.note}</span>}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
       </section>
 
-      {/* Details */}
-      <section className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6 sm:p-8">
-          <h2 className="font-display text-xl text-plum-800">Order Details</h2>
-          <dl className="mt-5 space-y-3 text-[0.75rem]">
+      {/* Details Split */}
+      <section className="grid gap-8 lg:gap-10 lg:grid-cols-2 items-start">
+        {/* Order Details Panel */}
+        <div className="rounded-2xl border border-[#eaddce] bg-[#fcf9f5] p-8 md:p-12">
+          <h2 className="font-display text-[1.65rem] font-semibold text-[#20082d] border-b border-[#eaddce] pb-6 mb-8">Order Details</h2>
+          <dl className="space-y-6 text-[0.85rem]">
             <Row label="Order Number" value={order.number} />
             <Row label="Order Date" value={dateTime(order.placedAt)} />
-            {order.shippingMethod && (
-              <Row
-                label="Delivery"
-                value={order.shippingEta ? `${order.shippingMethod} · ${order.shippingEta}` : order.shippingMethod}
-              />
-            )}
+            
             {order.tracking && (
               <div className="flex justify-between gap-6">
-                <dt className="shrink-0 text-ink-soft">Tracking</dt>
-                <dd className="text-right text-plum-800">
+                <dt className="shrink-0 font-bold text-[#20082d]/70">Tracking</dt>
+                <dd className="text-right font-bold text-[#20082d]">
                   {order.tracking.courier && <span className="block">{order.tracking.courier}</span>}
                   {order.tracking.url ? (
-                    <a
-                      href={order.tracking.url}
-                      target="_blank"
-                      rel="noopener"
-                      className="inline-flex items-center gap-1.5 text-plum-600 hover:text-gold-600"
-                    >
-                      <Truck className="size-3.5" /> {order.tracking.number}
+                    <a href={order.tracking.url} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 font-bold text-[#20082d] hover:text-[#c8963c] transition-colors mt-1.5">
+                      <Truck className="size-4" /> {order.tracking.number}
                     </a>
                   ) : (
-                    <span>{order.tracking.number}</span>
+                    <span className="mt-1.5 block">{order.tracking.number}</span>
                   )}
                 </dd>
               </div>
             )}
+            
             <Row label="Payment Method" value={METHOD_LABEL[order.paymentMethod] ?? order.paymentMethod} />
+            
             <div className="flex items-center justify-between">
-              <dt className="text-ink-soft">Payment Status</dt>
+              <dt className="font-bold text-[#20082d]/70">Payment Status</dt>
               <dd>
-                <span className={cn("rounded-sm px-2 py-0.5 text-[0.68rem] font-medium", payment.tone)}>
+                <span className={cn("rounded-[0.25rem] px-3 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider", payment.tone)}>
                   {payment.label}
                 </span>
               </dd>
             </div>
+            
             <Row label="Total Amount" value={inrPaise(order.totalPaise)} />
-            {order.invoice && (
-              <div className="flex items-center justify-between">
-                <dt className="text-ink-soft">Tax Invoice</dt>
-                <dd>
-                  <a
-                    href={order.invoice.url}
-                    target="_blank"
-                    rel="noopener"
-                    className="inline-flex items-center gap-1.5 text-plum-600 hover:text-gold-600"
-                  >
-                    <FileText className="size-3.5" /> {order.invoice.number}
-                  </a>
-                </dd>
-              </div>
-            )}
-            {order.invoice?.creditNotes.map((n) => (
-              <div key={n.number} className="flex items-center justify-between">
-                <dt className="text-ink-soft">Credit Note</dt>
-                <dd>
-                  <a
-                    href={n.url}
-                    target="_blank"
-                    rel="noopener"
-                    className="inline-flex items-center gap-1.5 text-plum-600 hover:text-gold-600"
-                  >
-                    <FileText className="size-3.5" /> {n.number} · {inrPaise(n.totalPaise)}
-                  </a>
-                </dd>
-              </div>
-            ))}
-            <div className="flex justify-between gap-6">
-              <dt className="shrink-0 text-ink-soft">Shipping To</dt>
-              <dd className="text-right leading-relaxed text-plum-800">
-                {order.shipping.name}
-                <br />
+            
+            <div className="flex justify-between gap-6 pt-3">
+              <dt className="shrink-0 font-bold text-[#20082d]/70">Shipping Address</dt>
+              <dd className="text-right leading-[1.65] font-semibold text-[#20082d]">
+                <span className="font-bold block mb-1 text-[0.95rem]">{order.shipping.name}</span>
                 {order.shipping.city}, {order.shipping.state} – {order.shipping.pincode}
                 <br />
                 India
@@ -426,54 +403,56 @@ function OrderResult({
           </dl>
         </div>
 
-        <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6 sm:p-8">
-          <h2 className="font-display text-xl text-plum-800">Items in Your Order ({itemCount})</h2>
-          <ul className="mt-5 divide-y divide-gold-200/60">
+        {/* Items Panel */}
+        <div className="rounded-2xl border border-[#eaddce] bg-[#fcf9f5] p-8 md:p-12">
+          <h2 className="font-display text-[1.65rem] font-semibold text-[#20082d] border-b border-[#eaddce] pb-6 mb-4">Items in Your Order ({itemCount})</h2>
+          
+          <ul className="divide-y divide-[#eaddce]">
             {order.items.map((i, n) => {
               const p = i.slug ? bySlug.get(i.slug) : undefined;
               return (
-                <li key={`${i.slug ?? i.name}-${i.shade ?? ""}-${n}`} className="flex items-center gap-3.5 py-3.5">
-                  <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-cream-50">
-                    {p && <Image src={productImage(p)} alt="" fill sizes="48px" className="object-contain p-1" />}
+                <li key={`${i.slug ?? i.name}-${i.shade ?? ""}-${n}`} className="flex items-center gap-5 py-6">
+                  <div className="relative size-16 shrink-0 overflow-hidden bg-transparent">
+                    {p && <Image src={productImage(p)} alt="" fill sizes="64px" className="object-contain" />}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[0.78rem] text-plum-800">{i.name}</p>
-                    <p className="text-[0.66rem] text-ink-soft">
+                    <p className="truncate text-[0.9rem] font-bold text-[#20082d]">{i.name}</p>
+                    <p className="text-[0.75rem] font-medium text-[#20082d]/70 mt-1">
                       {[i.shade, p?.size].filter(Boolean).join(" · ")}
                     </p>
-                    <p className="text-[0.66rem] text-ink-soft">Qty: {i.quantity}</p>
+                    <p className="text-[0.75rem] font-medium text-[#20082d]/70 mt-1.5">Qty: {i.quantity}</p>
                   </div>
-                  <span className="text-[0.8rem] text-plum-800">{inrPaise(i.lineTotalPaise)}</span>
+                  <span className="text-[0.95rem] font-bold text-[#20082d]">{inrPaise(i.lineTotalPaise)}</span>
                 </li>
               );
             })}
           </ul>
 
-          <dl className="mt-4 space-y-2.5 border-t border-gold-200/70 pt-4 text-[0.78rem]">
+          <dl className="space-y-4 border-t border-[#eaddce] pt-8 text-[0.85rem]">
             <Row label="Subtotal" value={inrPaise(order.subtotalPaise)} />
             {order.discountPaise > 0 && (
-              <div className="flex justify-between">
-                <dt className="text-ink-soft">
+              <div className="flex justify-between items-center">
+                <dt className="font-bold text-[#20082d]/70">
                   Discount{order.couponCode ? ` (${order.couponCode})` : ""}
                 </dt>
-                <dd className="font-medium text-success">– {inrPaise(order.discountPaise)}</dd>
+                <dd className="font-bold text-green-700">– {inrPaise(order.discountPaise)}</dd>
               </div>
             )}
-            <div className="flex justify-between">
-              <dt className="text-ink-soft">Shipping</dt>
-              <dd className={order.shippingPaise === 0 ? "font-medium text-success" : "text-plum-800"}>
+            <div className="flex justify-between items-center">
+              <dt className="font-bold text-[#20082d]/70">Shipping</dt>
+              <dd className={order.shippingPaise === 0 ? "font-bold text-green-700" : "font-bold text-[#20082d]"}>
                 {order.shippingPaise === 0 ? "FREE" : inrPaise(order.shippingPaise)}
               </dd>
             </div>
           </dl>
-          <div className="mt-4 flex items-center justify-between border-t border-gold-200/70 pt-4">
-            <p className="font-display text-lg text-plum-800">
+          
+          <div className="mt-8 flex items-center justify-between border-t border-[#eaddce] pt-8">
+            <p className="font-display text-[1.5rem] font-semibold text-[#20082d]">
               {order.paymentStatus === "PAID" ? "Total Paid" : "Order Total"}
             </p>
-            <p className="font-display text-2xl font-semibold text-plum-800">{inrPaise(order.totalPaise)}</p>
+            <p className="font-display text-[1.7rem] font-bold text-[#20082d]">{inrPaise(order.totalPaise)}</p>
           </div>
 
-          {/* Shows itself only when there's something to say about returns */}
           <ReturnPanel orderNumber={order.number} email={email} />
         </div>
       </section>
@@ -484,8 +463,8 @@ function OrderResult({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <dt className="text-ink-soft">{label}</dt>
-      <dd className="text-plum-800">{value}</dd>
+      <dt className="font-bold text-[#20082d]/70">{label}</dt>
+      <dd className="font-bold text-[#20082d] text-right">{value}</dd>
     </div>
   );
 }

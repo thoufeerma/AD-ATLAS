@@ -24,7 +24,6 @@ const NAV = [
   { href: "/ingredients", label: "Ingredients" },
   { href: "/reviews", label: "Reviews" },
   { href: "/collabs", label: "Collabs" },
-  { href: "/offers", label: "Offers" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -43,6 +42,8 @@ export default function Header({ announcements }: { announcements: string[] }) {
   const lines = useStore((s) => s.lines);
   const wishlist = useStore((s) => s.wishlist);
   const cartCount = lines.reduce((n, l) => n + l.qty, 0);
+
+  if (pathname === "/login") return null;
 
   return (
     <header className="sticky top-0 z-50">

@@ -209,6 +209,7 @@ export default async function ReviewsPage() {
           sizes="100vw"
           placeholderClassName="bg-[linear-gradient(100deg,#2a0e2a,#1e091c_45%,#2a0e2a_70%,#1a0719)]"
         />
+        <div className="absolute inset-0 bg-black/60" />
         <div className="relative xl:absolute xl:top-[1.6vw] xl:left-[5.55vw]">
           <h2 className="relative w-fit font-display text-[1.6rem] font-medium uppercase leading-[1.15] xl:text-[2.09vw] xl:leading-[2.44vw]">
             Your Trust,

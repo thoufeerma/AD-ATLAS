@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-
 import {
   Heart,
   Trash2,
@@ -43,144 +42,155 @@ export default function WishlistView({ products }: { products: Product[] }) {
   const items = products.filter((p) => wishlist.includes(p.slug));
   const buyable = (p: Product) => p.status === "ACTIVE" && p.inStock;
 
-  if (!hydrated) return <div className="container-vel py-20" aria-hidden />;
+  if (!hydrated) return <div className="max-w-[1536px] mx-auto px-6 py-20" aria-hidden />;
 
   return (
-    <div className="container-vel py-10">
+    <div className="max-w-[1536px] mx-auto px-4 lg:px-10 py-4 pb-4">
       {items.length === 0 ? (
         <div className="py-16 text-center">
-          <Heart className="mx-auto size-10 text-gold-500" />
-          <h2 className="mt-5 font-display text-2xl text-plum-800">
+          <Heart className="mx-auto size-10 text-[#c8963c]" />
+          <h2 className="mt-5 font-serif font-bold text-3xl text-[#240b25]">
             Your wishlist is empty
           </h2>
-          <p className="mt-2 text-sm text-ink-soft">
+          <p className="mt-2 text-[1rem] font-medium text-[#240b25]/70">
             Tap the heart on any product to save it for later.
           </p>
-          <Button href="/shop" className="mt-7">
-            Browse the Collection
-          </Button>
+          <Link href="/shop">
+            <button className="mt-7 bg-[#240b25] text-white py-3 px-8 rounded-lg font-bold uppercase tracking-widest text-[0.85rem] hover:bg-[#3a133d] transition-colors shadow-md">
+              Browse the Collection
+            </button>
+          </Link>
         </div>
       ) : (
         <>
           {status === "guest" && (
-            <p className="mb-5 rounded-sm bg-blush-100 px-4 py-3 text-[0.75rem] text-ink-soft">
-              <Link href="/login?next=/wishlist" className="font-medium text-plum-600 hover:text-gold-600">
+            <p className="mb-6 rounded-lg bg-[#fdf2ee] border border-[#eaddce] px-6 py-4 text-[0.9rem] font-medium text-[#240b25]/80 shadow-sm">
+              <Link href="/login?next=/wishlist" className="font-bold text-[#240b25] hover:text-[#c8963c]">
                 Sign in
               </Link>{" "}
-              and we&apos;ll keep this wishlist with your account, so it&apos;s there on your other devices too.
+              and we'll keep this wishlist with your account, so it's there on your other devices too.
             </p>
           )}
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <p className="text-sm text-plum-800">
-              {items.length} {items.length === 1 ? "Item" : "Items"}
-              {status === "signed-in" && <span className="ml-2 text-[0.7rem] text-ink-soft">Saved to your account</span>}
-            </p>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={clearWishlist}
-                className="inline-flex items-center gap-1.5 text-[0.72rem] text-ink-soft transition-colors hover:text-plum-800"
-              >
-                <Trash2 className="size-3.5" /> Clear Wishlist
-              </button>
-              <Button
-                onClick={() =>
-                  items.filter(buyable).forEach((p) => add(p.slug, 1, p.shades[0]?.name))
-                }
-              >
-                <ShoppingBag className="size-3.5" /> Add All to Bag
-              </Button>
-            </div>
-          </div>
-
-          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {items.map((p) => (
-              <li
-                key={p.slug}
-                className="relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100"
-              >
+          <div className="rounded-2xl border border-gold-200/70 p-3 lg:p-4">
+            {/* Controls Header */}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-[#eaddce] pb-4">
+              <p className="font-bold text-[1.15rem] text-[#240b25]">
+                {items.length} {items.length === 1 ? "Item" : "Items"}
+              </p>
+              <div className="flex items-center gap-6 lg:gap-8">
                 <button
-                  onClick={() => toggleWish(p.slug)}
-                  aria-label={`Remove ${p.name} from wishlist`}
-                  className="absolute right-3 top-3 z-10 text-plum-800"
+                  onClick={clearWishlist}
+                  className="inline-flex items-center gap-2 font-bold text-[0.9rem] text-[#240b25] transition-colors hover:text-[#c8963c]"
                 >
-                  <Heart className="size-4" fill="currentColor" />
+                  <Trash2 className="size-4" strokeWidth={2.5} /> Clear Wishlist
                 </button>
+                <button
+                  onClick={() =>
+                    items.filter(buyable).forEach((p) => add(p.slug, 1, p.shades[0]?.name))
+                  }
+                  className="bg-[#240b25] text-white flex items-center justify-center gap-2 py-3 px-8 rounded-lg font-bold uppercase tracking-widest text-[0.8rem] hover:bg-[#3a133d] transition-colors shadow-md"
+                >
+                  <ShoppingBag className="size-4" strokeWidth={2} /> ADD ALL TO BAG
+                </button>
+              </div>
+            </div>
 
-                <Link href={`/product/${p.slug}`} className="block">
-                  <div className="relative aspect-square bg-cream-200/40">
-                    <Image
-                      src={productImage(p)}
-                      alt={p.name}
-                      fill
-                      sizes="(min-width: 1024px) 18vw, 45vw"
-                      className="object-contain p-3"
-                    />
-                  </div>
-                </Link>
-
-                <div className="flex flex-1 flex-col p-4">
-                  <Link
-                    href={`/product/${p.slug}`}
-                    className="text-[0.8rem] leading-snug text-plum-800 hover:text-gold-600"
+            {/* Product Grid */}
+            <ul className="grid grid-cols-2 gap-2 lg:gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              {items.map((p) => (
+                <li
+                  key={p.slug}
+                  className="relative flex flex-col overflow-hidden rounded-xl border border-[#eaddce] bg-[#fdfbf9] group"
+                >
+                  {/* Heart Button */}
+                  <button
+                    onClick={() => toggleWish(p.slug)}
+                    aria-label={`Remove ${p.name} from wishlist`}
+                    className="absolute right-4 top-4 z-10 text-[#240b25] transition-transform hover:scale-110"
                   >
-                    {p.name}
+                    <Heart className="size-5" fill="currentColor" strokeWidth={0} />
+                  </button>
+
+                  {/* Product Image */}
+                  <Link href={`/product/${p.slug}`} className="block relative aspect-square bg-[#fcf9f5] flex items-center justify-center pt-6">
+                    <div className="relative w-[85%] h-[85%]">
+                      <Image
+                        src={productImage(p)}
+                        alt={p.name}
+                        fill
+                        sizes="(min-width: 1024px) 18vw, 45vw"
+                        className="object-contain transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
                   </Link>
-                  {p.descriptor && (
-                    <p className="mt-0.5 text-[0.65rem] text-ink-soft">{p.descriptor}</p>
-                  )}
-                  <p className="mt-1.5 font-display text-lg font-semibold text-plum-800">
-                    {inrPaise(p.pricePaise)}
-                  </p>
 
-                  <p className="mt-1.5 flex items-center gap-1.5 text-[0.65rem]">
-                    <span
-                      className={`size-1.5 rounded-full ${buyable(p) ? "bg-success" : "bg-gold-500"}`}
-                    />
-                    <span className={buyable(p) ? "text-success" : "text-ink-soft"}>
-                      {buyable(p)
-                        ? "In Stock"
-                        : p.status === "COMING_SOON"
-                          ? "Coming Soon"
-                          : "Out of Stock"}
-                    </span>
-                  </p>
+                  {/* Details */}
+                  <div className="flex flex-1 flex-col p-3 lg:p-4 bg-[#fdfbf9]">
+                    <Link
+                      href={`/product/${p.slug}`}
+                      className="font-sans font-semibold text-[0.85rem] leading-snug text-[#240b25] hover:text-[#c8963c] transition-colors block truncate"
+                    >
+                      {p.name}
+                    </Link>
+                    {p.descriptor && (
+                      <p className="mt-0.5 text-[0.75rem] font-normal text-[#240b25]/70 truncate">{p.descriptor}</p>
+                    )}
+                    <p className="mt-1 font-bold text-[1.2rem] text-[#240b25]">
+                      {inrPaise(p.pricePaise)}
+                    </p>
+                    
+                    <p className="mt-1 flex items-center gap-2 text-[0.8rem] font-bold">
+                      <span
+                        className={`size-2.5 rounded-full ${buyable(p) ? "bg-[#1ea838]" : "bg-[#c8963c]"}`}
+                      />
+                      <span className={buyable(p) ? "text-[#1ea838]" : "text-[#240b25]/60"}>
+                        {buyable(p)
+                          ? "In Stock"
+                          : p.status === "COMING_SOON"
+                            ? "Coming Soon"
+                            : "Out of Stock"}
+                      </span>
+                    </p>
 
-                  <div className="mt-auto flex items-center gap-2 pt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      disabled={!buyable(p)}
-                      onClick={() => {
-                        add(p.slug, 1, p.shades[0]?.name);
-                        toggleWish(p.slug);
-                      }}
-                    >
-                      <ShoppingBag className="size-3" /> Move to Bag
-                    </Button>
-                    <button
-                      onClick={() => toggleWish(p.slug)}
-                      aria-label={`Remove ${p.name}`}
-                      className="grid size-8 shrink-0 place-items-center rounded-sm border border-gold-200 text-ink-soft transition-colors hover:border-plum-800 hover:text-plum-800"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
+                    {/* Actions */}
+                    <div className="mt-auto flex items-center gap-3 pt-3">
+                      <button
+                        disabled={!buyable(p)}
+                        onClick={() => {
+                          add(p.slug, 1, p.shades[0]?.name);
+                          toggleWish(p.slug);
+                        }}
+                        className="flex-1 border border-[#c8963c]/50 bg-transparent text-[#240b25] font-bold uppercase tracking-widest text-[0.7rem] py-2 rounded-lg text-center flex items-center justify-center gap-2 hover:bg-[#fcf9f5] transition-colors disabled:opacity-50 disabled:hover:bg-transparent"
+                      >
+                        <ShoppingBag className="size-3.5" strokeWidth={2} /> MOVE TO BAG
+                      </button>
+                      <button
+                        onClick={() => toggleWish(p.slug)}
+                        aria-label={`Remove ${p.name}`}
+                        className="h-[2.35rem] w-[2.35rem] shrink-0 flex items-center justify-center rounded-lg border border-[#c8963c]/50 bg-transparent text-[#240b25] transition-colors hover:bg-[#fcf9f5] hover:text-[#c8963c]"
+                      >
+                        <Trash2 className="size-4" strokeWidth={1.5} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          </div>
         </>
       )}
 
-      <ul className="mt-10 grid grid-cols-2 gap-6 rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6 sm:grid-cols-3 lg:grid-cols-5">
+      {/* Assurances Banner */}
+      <ul className="mt-4 flex flex-wrap lg:flex-nowrap items-center justify-between gap-6 rounded-2xl border border-[#eaddce] bg-transparent py-6 px-6 lg:px-10">
         {assurances.map(({ Icon, title, note }) => (
-          <li key={title} className="flex items-center gap-2.5">
-            <Icon className="size-5 shrink-0 text-gold-600" />
-            <span className="text-[0.66rem] leading-tight">
-              <span className="block font-medium text-plum-800">{title}</span>
-              <span className="text-ink-soft">{note}</span>
-            </span>
+          <li key={title} className="flex flex-col xl:flex-row items-center xl:items-start justify-center xl:justify-start gap-4 flex-1">
+             <div className="flex items-center justify-center mt-0.5">
+               <Icon className="size-8 text-[#c8963c] shrink-0" strokeWidth={1.5} />
+             </div>
+             <div className="flex flex-col items-center xl:items-start text-center xl:text-left">
+               <span className="block font-bold text-[#240b25] text-[0.9rem] leading-tight mb-1">{title}</span>
+               <span className="text-[0.8rem] font-medium text-[#240b25]/70 leading-tight">{note}</span>
+             </div>
           </li>
         ))}
       </ul>

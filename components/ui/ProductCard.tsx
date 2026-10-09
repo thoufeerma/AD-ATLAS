@@ -40,10 +40,10 @@ export default function ProductCard({
       <button
         onClick={() => toggleWish(product.slug)}
         aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
-        className="absolute right-3 top-3 z-10 grid size-7 place-items-center rounded-full bg-cream-50/85 backdrop-blur transition-colors hover:bg-cream-50"
+        className="absolute right-3 top-3 z-10 grid size-8 place-items-center rounded-full bg-cream-50/85 backdrop-blur transition-colors hover:bg-cream-50"
       >
         <Heart
-          className={cn("size-[15px]", wished ? "text-plum-800" : "text-ink-soft")}
+          className={cn("size-3.5 lg:size-[15px]", wished ? "text-plum-800" : "text-ink-soft")}
           fill={wished ? "currentColor" : "none"}
         />
       </button>
@@ -54,19 +54,18 @@ export default function ProductCard({
           alt={product.name}
           fill
           sizes="(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 90vw"
-          className="object-contain p-2 transition-transform duration-500 group-hover:scale-[1.04]"
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
       </div>
 
       <div className="flex flex-1 flex-col items-center px-3 pb-3.5 pt-3 text-center">
         <Link
           href={`/product/${product.slug}`}
-          // Names run to three lines in the narrow home-page cards; the button
           // below is pushed down by mt-auto, so the cards still line up.
           // The after: overlay stretches this link over the whole card, so a
           // click anywhere opens the product; the heart and Add to Cart sit
           // above it (z-10) and keep doing their own job.
-          className="text-balance text-[0.82rem] font-medium leading-snug text-ink transition-colors group-hover:text-gold-600 after:absolute after:inset-0"
+          className="font-sans text-balance text-[0.75rem] lg:text-[0.82rem] font-medium leading-snug text-ink transition-colors group-hover:text-gold-600 after:absolute after:inset-0 line-clamp-2"
         >
           {product.name}
         </Link>
@@ -75,10 +74,10 @@ export default function ProductCard({
           <StarRating value={product.rating.average} size={12} className="mt-1.5" />
         )}
 
-        <p className="mt-1.5 font-price text-[0.95rem] font-semibold text-plum-800">
+        <p className="mt-1.5 font-price text-[0.85rem] lg:text-[0.95rem] font-semibold text-plum-800">
           {inrPaise(product.pricePaise)}
           {product.compareAtPaise != null && product.compareAtPaise > product.pricePaise && (
-            <span className="ml-1.5 text-[0.72rem] font-normal text-ink-soft line-through">
+            <span className="ml-1.5 text-[0.65rem] lg:text-[0.72rem] font-normal text-ink-soft line-through">
               {inrPaise(product.compareAtPaise)}
             </span>
           )}

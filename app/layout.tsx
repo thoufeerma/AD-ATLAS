@@ -26,7 +26,6 @@ const jost = Jost({
 const script = Dancing_Script({
   variable: "--font-script",
   subsets: ["latin"],
-  weight: ["400", "600"],
 });
 
 const montserrat = Montserrat({

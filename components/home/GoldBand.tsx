@@ -34,8 +34,8 @@ export default function GoldBand() {
         <ul className="flex flex-wrap items-start justify-center gap-7 lg:gap-12 lg:pl-2 lg:pr-32 w-full lg:w-auto">
           {FEATURES.map(({ Icon, label }) => (
             <li key={label} className="flex flex-col items-center gap-2.5 text-center">
-              <span className="grid size-[4.25rem] place-items-center rounded-full border border-gold-400/60">
-                <Icon className="size-[28px] text-gold-300" />
+              <span className="grid size-12 lg:size-[4.25rem] place-items-center rounded-full border border-gold-400/60">
+                <Icon className="size-6 lg:size-[28px] text-gold-300" />
               </span>
               <span className="whitespace-pre-line text-[0.82rem] font-medium leading-snug text-cream-50">
                 {label}

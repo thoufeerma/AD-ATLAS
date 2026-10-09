@@ -70,8 +70,17 @@ const NETWORKS = [
 
 /** The profiles the admin has filled in (Settings → Store Details), in display order. */
 export function socialProfiles(social: SocialLinks, only?: (keyof SocialLinks)[]) {
+  const overrides: Partial<Record<keyof SocialLinks, string>> = {
+    instagram: "https://www.instagram.com/velastiaofficial",
+    youtube: "https://www.youtube.com/@velastiaofficial",
+    facebook: "https://www.facebook.com/velastiaofficial",
+    threads: "https://www.threads.net/@velastiaofficial",
+    pinterest: "https://www.pinterest.com/velastiaofficial",
+  };
+
   return NETWORKS.flatMap((n) => {
-    const href = social[n.key];
+    // Prefer the hardcoded override first, fallback to the backend setting if available.
+    const href = overrides[n.key] || social[n.key];
     return href && (!only || only.includes(n.key)) ? [{ ...n, href }] : [];
   });
 }

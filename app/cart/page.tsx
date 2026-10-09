@@ -1,37 +1,12 @@
-import type { Metadata } from "next";
-import PageBanner from "@/components/ui/PageBanner";
-import CartView from "@/components/cart/CartView";
-import { bannerHeadlines, getHomeContent, getProducts, getRatingSummary } from "@/lib/api/server";
-
-export const metadata: Metadata = {
-  title: "Your Cart",
-  description: "Review your Velastia bag before checkout.",
-};
+import React from 'react';
+import { getProducts, getReviews } from "@/lib/api/server";
+import { CartClient } from "./CartClient";
 
 export default async function CartPage() {
-  const [products, [giftBanner], rating, content] = await Promise.all([
+  const [products, reviews] = await Promise.all([
     getProducts(),
-    bannerHeadlines("cart.inline"),
-    getRatingSummary(),
-    getHomeContent(),
+    getReviews()
   ]);
 
-  return (
-    <>
-      <PageBanner
-        title="Your Cart"
-        script="♥"
-        tone="light"
-        lead="Great choices! You're just a step away from flawless beauty."
-        crumbs={[{ label: "Home", href: "/" }, { label: "Cart" }]}
-        image="/brand/cart-banner.png"
-      />
-      <CartView
-        products={products}
-        giftBanner={giftBanner ?? null}
-        rating={rating}
-        testimonials={content.testimonials}
-      />
-    </>
-  );
+  return <CartClient products={products} reviews={reviews} />;
 }

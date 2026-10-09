@@ -85,7 +85,7 @@ export default function Collabs({ collaborators }: { collaborators: Collaborator
         <div className="rounded-[16px] border border-gold-200/50 bg-[#FCFAF8] p-8 shadow-[0_4px_12px_rgba(0,0,0,0.03)] lg:ml-8 lg:self-end">
           <div className="flex items-center gap-3">
             <UserPlus className="size-9 text-gold-500" strokeWidth={1.5} />
-            <h3 className="font-display text-[1.4rem] font-medium uppercase tracking-widest text-plum-800">
+            <h3 className="font-display text-[1.4rem] font-semibold uppercase tracking-widest text-plum-800">
               Be a Part of Velastia
             </h3>
           </div>

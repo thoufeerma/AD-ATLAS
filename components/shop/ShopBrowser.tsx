@@ -348,12 +348,11 @@ export default function ShopBrowser({
                     <br />
                     Coming Soon
                   </h3>
-                  <Link
-                    href="/offers"
-                    className="relative mt-5 self-start rounded-md border border-gold-300/70 px-4 py-2 text-[0.8rem] font-medium uppercase tracking-wide text-cream-50 transition-colors hover:border-gold-200 hover:bg-white/10"
+                  <div
+                    className="relative mt-5 self-start rounded-md border border-gold-300/70 px-4 py-2 text-[0.8rem] font-medium uppercase tracking-wide text-cream-50 transition-colors hover:border-gold-200 hover:bg-white/10 cursor-default"
                   >
                     Stay Tuned
-                  </Link>
+                  </div>
                 </div>
               )}
 

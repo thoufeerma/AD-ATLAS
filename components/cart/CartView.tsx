@@ -166,12 +166,12 @@ export default function CartView({
                         {p ? (
                           <Link
                             href={`/product/${r.slug}`}
-                            className="text-sm text-plum-800 hover:text-gold-600"
+                            className="font-sans text-sm text-plum-800 hover:text-gold-600"
                           >
                             {p.name}
                           </Link>
                         ) : (
-                          <p className="text-sm text-plum-800">{name}</p>
+                          <p className="font-sans text-sm text-plum-800">{name}</p>
                         )}
                         {p?.descriptor && (
                           <p className="mt-0.5 text-[0.68rem] text-ink-soft">{p.descriptor}</p>
