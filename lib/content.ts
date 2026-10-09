@@ -6,7 +6,14 @@
  * come from the Velastia API — see lib/api/server.ts.
  */
 
-export const INSTAGRAM = [1, 2, 3, 4, 5, 6].map((n) => `/social/ig-${n}.png`);
+export const INSTAGRAM = [
+  "/images/Blush Pink Cosmos Still Life.png",
+  "/images/Our promise to you about us.png",
+  "/images/beauty with integrity.png",
+  "/images/happpy customer.png",
+  "/images/our story image.png",
+  "/images/note from founder.png"
+];
 
 export type Ingredient = { name: string; benefit: string };
 
