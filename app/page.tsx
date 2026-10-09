@@ -29,9 +29,10 @@ export default async function HomePage() {
       <GoldBand />
       <OurStory />
       <Collabs collaborators={content.collaborators} />
-      {store.social.instagram && (
-        <InstagramStrip href={store.social.instagram} handle={store.instagramHandle} />
-      )}
+      <InstagramStrip 
+        href={store.social.instagram || "https://www.instagram.com/velastiaofficial/"} 
+        handle={store.instagramHandle || "@velastiaofficial"} 
+      />
       <TrustStrip />
     </>
   );

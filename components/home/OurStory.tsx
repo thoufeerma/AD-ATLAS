@@ -25,7 +25,7 @@ export default async function OurStory() {
         </div>
 
         <div className="pr-2 lg:pr-8">
-          <h2 className="font-display text-[2.4rem] font-semibold tracking-[0.05em] uppercase text-plum-800">Our Story</h2>
+          <h2 className="font-display text-[1.75rem] font-semibold tracking-[0.03em] uppercase text-plum-800">Our Story</h2>
           <p className="mt-6 text-[1.15rem] font-medium leading-[1.7] text-ink-soft">
             Velastia was born from a belief — that beauty is not just about
             appearance, but about confidence, self-expression and self-love.
