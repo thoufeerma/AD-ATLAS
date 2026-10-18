@@ -117,3 +117,29 @@
   }
 }
 
+/* Shop grid row-by-row gentle minimal fade in */
+@keyframes shop-row-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shop-card-fade {
+  animation: shop-row-fade 360ms ease-out both;
+  will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-card-fade {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -78,6 +78,30 @@ const CHIP_ICONS: Record<string, LucideIcon> = {
   perfume: SprayCan,
 };
 
+const SHOP_ADS = [
+  {
+    slot: 1,
+    id: "beauty-event",
+    image: "/images/shop-ad-40-off.png",
+    alt: "The Beauty Event - Up to 40% Off Selected Skincare Essentials",
+    href: "/shop?category=skincare",
+  },
+  {
+    slot: 5,
+    id: "skincare-glow",
+    image: "/images/shop-ad-glow.png",
+    alt: "Your Skincare Ritual - Glow starts here",
+    href: "/shop?category=skincare",
+  },
+  {
+    slot: 7,
+    id: "buy2-get10",
+    image: "/images/shop-ad-buy2.png",
+    alt: "A Little More Luxury - Buy 2, Get 10% Off",
+    href: "/shop?category=lipstick",
+  },
+];
+
 export default function ShopBrowser({
   products,
   categories,
@@ -142,14 +166,59 @@ export default function ShopBrowser({
   // and it's back to page 1, with no effect needed to reset it.
   const columns = useColumns();
   const perPage = ROWS_PER_PAGE * columns;
+
+  // Active ads for the current category
+  const activeAds = useMemo(() => {
+    if (category === "skincare") {
+      return [SHOP_ADS[0], SHOP_ADS[1]];
+    }
+    if (category === "lipstick" || category === "lip-care") {
+      return [SHOP_ADS[2]];
+    }
+    if (category === "all" && checked.length === 0) {
+      return SHOP_ADS;
+    }
+    return [];
+  }, [category, checked]);
+
   const filterKey = JSON.stringify([category, checked, types, bestOnly, maxPrice, sort]);
   const [paging, setPaging] = useState({ key: filterKey, page: 1 });
-  const pageCount = Math.max(1, Math.ceil(results.length / perPage));
+  const pageCount = Math.max(1, Math.ceil((results.length + activeAds.length) / perPage));
   const page = paging.key === filterKey ? Math.min(paging.page, pageCount) : 1;
-  const firstIndex = (page - 1) * perPage;
-  const pageProducts = results.slice(firstIndex, firstIndex + perPage);
+
+  const currentAds = page === 1 ? activeAds : [];
+  const prodsOnPage1 = Math.max(1, perPage - currentAds.length);
+  const firstIndex = page === 1 ? 0 : prodsOnPage1 + (page - 2) * perPage;
+  const pageProducts = results.slice(firstIndex, firstIndex + (page === 1 ? prodsOnPage1 : perPage));
+
+  type DisplayItem =
+    | { kind: "product"; product: Product; key: string }
+    | { kind: "ad"; id: string; image: string; alt: string; href: string; key: string };
+
+  const displayItems = useMemo<DisplayItem[]>(() => {
+    const items: DisplayItem[] = [];
+    let pIdx = 0;
+    const adsMap = new Map(currentAds.map((a) => [a.slot, a]));
+    const totalSlots = pageProducts.length + currentAds.length;
+
+    for (let slot = 0; slot < totalSlots; slot++) {
+      if (adsMap.has(slot)) {
+        const ad = adsMap.get(slot)!;
+        items.push({ kind: "ad", ...ad, key: `ad-${ad.id}` });
+      } else if (pIdx < pageProducts.length) {
+        const p = pageProducts[pIdx++];
+        items.push({ kind: "product", product: p, key: p.slug });
+      }
+    }
+    while (pIdx < pageProducts.length) {
+      const p = pageProducts[pIdx++];
+      items.push({ kind: "product", product: p, key: p.slug });
+    }
+    return items;
+  }, [pageProducts, currentAds]);
+
   // The two closing tiles fill empty cells on the last page — never an extra row.
-  const spareCells = page === pageCount ? perPage - pageProducts.length : 0;
+  const spareCells = page === pageCount ? Math.max(0, perPage - displayItems.length) : 0;
   const resultsTop = useRef<HTMLDivElement>(null);
 
   function goToPage(n: number) {
@@ -324,47 +393,67 @@ export default function ShopBrowser({
               No products match these filters yet.
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4 xl:gap-5 2xl:gap-6 py-2">
-              {pageProducts.map((p) => (
-                <ProductCard key={p.slug} product={p} />
-              ))}
+            <div
+              key={`${category}-${sort}-${page}-${checked.join(",")}-${types.join(",")}-${bestOnly}-${maxPrice ?? "all"}`}
+              className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4 xl:gap-5 2xl:gap-6 py-2"
+            >
+              {displayItems.map((item, i) => {
+                const rowIndex = Math.floor(i / columns);
+                return (
+                  <FadeInItem key={item.key} rowIndex={rowIndex}>
+                    {item.kind === "product" ? (
+                      <ProductCard product={item.product} className="h-full" />
+                    ) : (
+                      <ShopAdCard
+                        image={item.image}
+                        alt={item.alt}
+                        href={item.href}
+                      />
+                    )}
+                  </FadeInItem>
+                );
+              })}
 
               {/* Closing tiles from the reference grid, in the last page's empty cells */}
               {spareCells >= 1 && (
-                <div className="relative flex min-h-[17rem] flex-col overflow-hidden rounded-[var(--radius-card)] bg-plum-900 px-6 pt-9 pb-6">
-                  <Image
-                    src="/images/shop page More Premium Products Coming Soon bg.png"
-                    alt=""
-                    fill
-                    sizes="(min-width: 1280px) 20vw, (min-width: 640px) 30vw, 50vw"
-                    className="object-cover object-right-bottom"
-                  />
-                  {/* A light shade so the lettering reads over the photo */}
-                  <div className="absolute inset-0 bg-plum-950/30" />
-                  <h3 className="relative font-heading text-[1.7rem] font-bold leading-[1.25] text-cream-50">
-                    More Premium
-                    <br />
-                    Products
-                    <br />
-                    Coming Soon
-                  </h3>
-                  <div
-                    className="relative mt-5 self-start rounded-md border border-gold-300/70 px-4 py-2 text-[0.8rem] font-medium uppercase tracking-wide text-cream-50 transition-colors hover:border-gold-200 hover:bg-white/10 cursor-default"
-                  >
-                    Stay Tuned
+                <FadeInItem rowIndex={Math.floor(displayItems.length / columns)}>
+                  <div className="relative flex min-h-[17rem] h-full flex-col overflow-hidden rounded-[var(--radius-card)] bg-plum-900 px-6 pt-9 pb-6">
+                    <Image
+                      src="/images/shop page More Premium Products Coming Soon bg.png"
+                      alt=""
+                      fill
+                      sizes="(min-width: 1280px) 20vw, (min-width: 640px) 30vw, 50vw"
+                      className="object-cover object-right-bottom"
+                    />
+                    {/* A light shade so the lettering reads over the photo */}
+                    <div className="absolute inset-0 bg-plum-950/30" />
+                    <h3 className="relative font-heading text-[1.7rem] font-bold leading-[1.25] text-cream-50">
+                      More Premium
+                      <br />
+                      Products
+                      <br />
+                      Coming Soon
+                    </h3>
+                    <div
+                      className="relative mt-5 self-start rounded-md border border-gold-300/70 px-4 py-2 text-[0.8rem] font-medium uppercase tracking-wide text-cream-50 transition-colors hover:border-gold-200 hover:bg-white/10 cursor-default"
+                    >
+                      Stay Tuned
+                    </div>
                   </div>
-                </div>
+                </FadeInItem>
               )}
 
               {spareCells >= 2 && (
-                <ul className="flex flex-col justify-center gap-4 rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6">
-                  {CLAIMS.map(({ Icon, label }) => (
-                    <li key={label} className="flex items-center gap-3">
-                      <Icon className="size-6 shrink-0 text-gold-600" strokeWidth={1.75} />
-                      <span className="text-[0.95rem] font-medium text-ink">{label}</span>
-                    </li>
-                  ))}
-                </ul>
+                <FadeInItem rowIndex={Math.floor((displayItems.length + 1) / columns)}>
+                  <ul className="flex flex-col justify-center h-full gap-4 rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6">
+                    {CLAIMS.map(({ Icon, label }) => (
+                      <li key={label} className="flex items-center gap-3">
+                        <Icon className="size-6 shrink-0 text-gold-600" strokeWidth={1.75} />
+                        <span className="text-[0.95rem] font-medium text-ink">{label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </FadeInItem>
               )}
             </div>
           )}
@@ -466,3 +555,89 @@ function Check({
     </label>
   );
 }
+
+function FadeInItem({
+  rowIndex,
+  children,
+}: {
+  rowIndex: number;
+  children: React.ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (typeof IntersectionObserver === "undefined") {
+      setInView(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      {
+        threshold: 0.05,
+        rootMargin: "0px 0px -20px 0px",
+      },
+    );
+
+    observer.observe(el);
+    const fallbackTimer = setTimeout(() => setInView(true), 1200);
+
+    return () => {
+      observer.disconnect();
+      clearTimeout(fallbackTimer);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "h-full transition-all duration-700 ease-out",
+        inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-7 pointer-events-none",
+      )}
+      style={{
+        transitionDelay: inView ? `${(rowIndex % 5) * 110}ms` : "0ms",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function ShopAdCard({
+  image,
+  alt,
+  href,
+}: {
+  image: string;
+  alt: string;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group relative flex flex-col h-full overflow-hidden rounded-[var(--radius-card)] bg-[#20082d] border border-gold-300/40 shadow-[0_4px_16px_rgba(32,8,45,0.12),0_1.5px_4px_rgba(32,8,45,0.06)] transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_16px_32px_rgba(32,8,45,0.2),0_4px_12px_rgba(193,136,62,0.18)] hover:border-gold-400/80"
+    >
+      <div className="relative w-full h-full min-h-[300px] sm:min-h-[340px] xl:min-h-[380px] 2xl:min-h-[420px]">
+        <Image
+          src={image}
+          alt={alt}
+          fill
+          sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw"
+          className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
+        />
+      </div>
+    </Link>
+  );
+}
+
