@@ -172,7 +172,7 @@ export default function ReviewsBrowser({
       <section aria-labelledby="beauties-saying" className="mt-8 border-t border-[#efe6dc] pt-5 xl:mt-[2.34vw] xl:pt-[1.95vw]">
         <h2
           id="beauties-saying"
-          className={`font-display text-[1.15rem] font-bold uppercase leading-none tracking-[0.01em] xl:text-[1.47vw] ${INK}`}
+          className={`font-heading text-[1.15rem] font-bold uppercase leading-none tracking-[0.01em] xl:text-[1.47vw] ${INK}`}
         >
           What Our Beauties Are Saying
         </h2>

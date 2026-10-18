@@ -78,7 +78,7 @@ export default function CollabForm({ applyingAs }: { applyingAs?: string } = {})
     return (
       <div role="status" className="flex flex-col items-center justify-center text-center">
         <CheckCircle2 className="size-12 text-gold-400" strokeWidth={1.4} />
-        <h3 className="mt-4 font-display text-2xl text-cream-50">Application received</h3>
+        <h3 className="mt-4 font-heading text-2xl font-bold text-cream-50">Application received</h3>
         <p className="mt-2 max-w-xs text-sm leading-relaxed text-cream-200/75">
           Thank you! Our partnerships team reviews every application and will reach out at{" "}
           {f.email.trim()} if it&apos;s a fit.

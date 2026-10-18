@@ -167,7 +167,7 @@ export default function IngredientsPage() {
         <div className="relative h-[60vw] xl:absolute xl:inset-0 xl:h-auto">
           <Photo src={PHOTOS.hero} alt="Velastia serum, cream and lipstick beside laboratory glassware and a pink flower" sizes="100vw" className="object-[78%_center] xl:object-center" />
           <div className="absolute top-[6%] left-[4%] grid size-28 sm:size-32 xl:left-auto place-items-center rounded-full border-[3px] border-double border-[#c8963c] bg-cream-50/85 text-center xl:top-[6.54vw] xl:right-[3.8vw] xl:size-[11.5vw]">
-            <p className={`font-display text-[0.7rem] font-medium uppercase leading-[1.35] sm:text-[0.8rem] xl:text-[1.142vw] ${INK}`}>
+            <p className={`font-heading text-[0.7rem] font-bold uppercase leading-[1.35] sm:text-[0.8rem] xl:text-[1.142vw] ${INK}`}>
               Transparency
               <span className="block text-[0.85em]">Is Our</span>
               Promise
@@ -181,7 +181,7 @@ export default function IngredientsPage() {
       <section className="px-4 xl:px-0 xl:pr-[3.52vw] xl:pl-[3.71vw]">
         <div className={`flex flex-col gap-8 rounded-md px-6 py-8 xl:h-[10.84vw] xl:flex-row xl:gap-0 xl:p-0 ${PURPLE}`}>
           <div className="relative xl:w-[32.62vw] xl:shrink-0 xl:pt-[1.46vw] xl:pl-[2.64vw] xl:before:absolute xl:before:right-0 xl:before:top-1/2 xl:before:h-[6.45vw] xl:before:w-px xl:before:-translate-y-1/2 xl:before:bg-white/15">
-            <h2 className={`font-display text-[1.4rem] font-semibold uppercase leading-[1.25] xl:text-[1.721vw] ${GOLD}`}>
+            <h2 className={`font-heading text-[1.4rem] font-bold uppercase leading-[1.25] xl:text-[1.721vw] ${GOLD}`}>
               We Promise No Compromises.
             </h2>
             <p className="mt-2 text-[0.95rem] font-semibold leading-[1.35] text-cream-50 xl:mt-[0.71vw] xl:text-[1.122vw]">
@@ -211,7 +211,7 @@ export default function IngredientsPage() {
 
       {/* The power behind our products */}
       <section className="mt-10 px-4 text-center xl:mt-[1.39vw] xl:px-0 xl:pr-[4.1vw] xl:pl-[4.3vw]">
-        <h2 className={`font-display text-[1.5rem] font-semibold uppercase leading-[1.25] tracking-[0.01em] xl:text-[1.833vw] ${INK}`}>
+        <h2 className={`font-heading text-[1.5rem] font-bold uppercase leading-[1.25] tracking-[0.01em] xl:text-[1.833vw] ${INK}`}>
           The Power Behind Our Products
         </h2>
         <p className={`mt-0.5 text-[0.95rem] xl:mt-[0.27vw] xl:text-[1.297vw] ${INK}`}>Carefully Chosen. Purposefully Used.</p>
@@ -226,7 +226,7 @@ export default function IngredientsPage() {
               <div className="relative h-24 w-full xl:h-[9.28vw]">
                 <Photo src={p.image} alt={p.name} sizes="(min-width: 1280px) 15vw, 45vw" className="object-contain" />
               </div>
-              <h3 className={`mt-2 font-display text-[1rem] font-semibold uppercase leading-[1.25] xl:mt-[0.54vw] xl:text-[1.316vw] ${INK}`}>
+              <h3 className={`mt-2 font-heading text-[1rem] font-bold uppercase leading-[1.25] xl:mt-[0.54vw] xl:text-[1.316vw] ${INK}`}>
                 {p.name}
               </h3>
               <p className={`xl:whitespace-pre-line mt-1 text-[0.8rem] leading-[1.35] xl:mt-[0.39vw] xl:text-[1.151vw] xl:leading-[1.465vw] text-[#1d052b]/80`}>
@@ -243,7 +243,7 @@ export default function IngredientsPage() {
       {/* Real life · Say no to · Safe, clean & conscious */}
       <section className="mt-10 grid gap-10 px-6 xl:mt-[1.37vw] xl:grid-cols-[23.44vw_31.35vw_31.74vw] xl:gap-x-[2.54vw] xl:gap-y-0 xl:px-0 xl:pl-[5.66vw]">
         <div className="xl:pt-[0.54vw]">
-          <h2 className={`font-display text-[1.6rem] font-semibold uppercase leading-[1.25] tracking-[0.01em] xl:text-[1.94vw] xl:leading-[2.44vw] ${INK}`}>
+          <h2 className={`font-heading text-[1.6rem] font-bold uppercase leading-[1.25] tracking-[0.01em] xl:text-[1.94vw] xl:leading-[2.44vw] ${INK}`}>
             Made For Real Life.
             {/* The heart trails the second line, as drawn. */}
             <span className="relative block w-fit">
@@ -265,7 +265,7 @@ export default function IngredientsPage() {
         </div>
 
         <div className={`rounded-[10px] px-5 py-5 xl:h-[22.85vw] xl:px-[2.25vw] xl:pt-[1.04vw] xl:pb-0 ${PURPLE}`}>
-          <h2 className={`font-display text-[1.2rem] font-semibold uppercase leading-[1.25] tracking-[0.01em] xl:text-[1.467vw] ${GOLD}`}>
+          <h2 className={`font-heading text-[1.2rem] font-bold uppercase leading-[1.25] tracking-[0.01em] xl:text-[1.467vw] ${GOLD}`}>
             Ingredients We Say No To
           </h2>
           <ul className="mt-3 grid grid-cols-2 xl:mt-[0.68vw] xl:grid-cols-[13.87vw_1fr]">
@@ -288,7 +288,7 @@ export default function IngredientsPage() {
         </div>
 
         <div>
-          <h2 className={`font-display text-[1.5rem] font-semibold uppercase leading-[1.25] tracking-[0.01em] xl:text-[1.802vw] ${INK}`}>
+          <h2 className={`font-heading text-[1.5rem] font-bold uppercase leading-[1.25] tracking-[0.01em] xl:text-[1.802vw] ${INK}`}>
             Safe, Clean &amp; Conscious
           </h2>
           <p className={`xl:whitespace-pre-line mt-1 text-[0.85rem] leading-[1.4] xl:mt-[0.3vw] xl:text-[1.1vw] xl:leading-[1.416vw] text-[#1d052b]/85`}>
@@ -318,7 +318,7 @@ export default function IngredientsPage() {
           <div className="relative mt-4 flex min-h-28 overflow-hidden rounded-md bg-[#f4e2cb] xl:mt-[0.83vw] xl:-ml-[0.88vw] xl:h-[8.3vw] xl:min-h-0">
             <Photo src={PHOTOS.integrity} alt="" sizes="(min-width: 1280px) 33vw, 100vw" className="object-[70%_center] xl:object-left" />
             <div className="relative py-3 pr-[28%] pl-24 xl:py-0 xl:pt-[1.1vw] xl:pr-0 xl:pl-[9.37vw]">
-              <h3 className={`font-display text-[0.95rem] font-semibold uppercase leading-[1.25] tracking-[0.01em] xl:text-[1.209vw] ${INK}`}>
+              <h3 className={`font-heading text-[0.95rem] font-bold uppercase leading-[1.25] tracking-[0.01em] xl:text-[1.209vw] ${INK}`}>
                 Beauty With Integrity
               </h3>
               <p className={`xl:whitespace-pre-line mt-1 text-[0.75rem] leading-[1.4] xl:mt-[0.3vw] xl:text-[1vw] xl:leading-[1.465vw] text-[#1d052b]/85`}>
@@ -352,7 +352,7 @@ export default function IngredientsPage() {
         <div className="relative size-40 shrink-0 rounded-full bg-[conic-gradient(from_200deg,#f6dc95,#b98a32,#f3d68a,#a8772a,#f6dc95,#b98a32,#f6dc95)] p-2 shadow-[0_0.4rem_1rem_rgba(0,0,0,0.35)] xl:mt-[0.38vw] xl:ml-[3.9vw] xl:size-[13.31vw] xl:p-[0.84vw] xl:shadow-[0_0.3vw_0.9vw_rgba(0,0,0,0.35)]">
           <div className="grid size-full place-items-center rounded-full bg-[#fbf6ee] text-center shadow-[inset_0_0_0_3px_#fbf6ee,inset_0_0_0_4px_#c8963c] xl:shadow-[inset_0_0_0_0.25vw_#fbf6ee,inset_0_0_0_0.33vw_#c8963c]">
             <div>
-              <p className="font-display text-[0.8rem] font-semibold uppercase leading-[1.35] text-[#b07c2c] xl:text-[1.15vw] xl:leading-[1.45vw]">
+              <p className="font-heading text-[0.8rem] font-bold uppercase leading-[1.35] text-[#b07c2c] xl:text-[1.15vw] xl:leading-[1.45vw]">
                 Our
                 <span className="block">Promise</span>
               </p>

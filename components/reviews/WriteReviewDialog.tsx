@@ -41,7 +41,7 @@ export default function WriteReviewDialog({
           >
             <X className="size-4" />
           </button>
-          <h2 id="write-review-title" className="mb-5 font-display text-2xl font-semibold uppercase text-[#1d052b]">
+          <h2 id="write-review-title" className="mb-5 font-heading text-2xl font-bold uppercase text-[#1d052b]">
             Write a Review
           </h2>
           <ReviewForm products={products} />

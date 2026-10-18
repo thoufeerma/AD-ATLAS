@@ -156,7 +156,7 @@ export default async function ReviewsPage() {
       <section className="grid grid-cols-2 gap-x-4 xl:gap-x-0 bg-[linear-gradient(100deg,#2a0f2c,#2c102d_50%,#2e1330)] px-6 py-8 text-cream-50 xl:h-[14.45vw] xl:grid-cols-[16.55vw_25.1vw_13.43vw_14.55vw_12.55vw_12.21vw] xl:items-start xl:p-0 xl:pl-[1.07vw]">
         <div className="col-span-2 text-center xl:col-span-1 xl:pt-[2.54vw]">
           <p className="text-[0.78rem] font-medium uppercase xl:text-[1.13vw]">Overall Rating</p>
-          <p className="mt-1 font-display text-[2.4rem] font-medium leading-none xl:mt-[0.6vw] xl:text-[3.13vw]">
+          <p className="mt-1 font-heading text-[2.4rem] font-bold leading-none xl:mt-[0.6vw] xl:text-[3.13vw]">
             {average}
             <span className="text-[0.6em]">/5</span>
           </p>
@@ -185,7 +185,7 @@ export default async function ReviewsPage() {
             className="relative mt-6 flex flex-col items-center text-center xl:mt-0 xl:pt-[2.83vw] xl:before:absolute xl:before:top-[3.03vw] xl:before:left-0 xl:before:h-[8.69vw] xl:before:w-px xl:before:bg-white/15"
           >
             <Icon className="size-8 text-[#d4a038] xl:size-[3.13vw]" strokeWidth={1.1} />
-            <p className="mt-2 font-display text-[1.5rem] font-medium leading-none xl:mt-[1.2vw] xl:text-[1.98vw]">{value}</p>
+            <p className="mt-2 font-heading text-[1.5rem] font-bold leading-none xl:mt-[1.2vw] xl:text-[1.98vw]">{value}</p>
             <p className="mt-1.5 whitespace-pre-line text-[0.75rem] leading-[1.35] xl:mt-[0.5vw] xl:text-[1.09vw] xl:leading-[1.7vw]">{label}</p>
           </div>
         ))}
@@ -211,7 +211,7 @@ export default async function ReviewsPage() {
         />
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative xl:absolute xl:top-[1.6vw] xl:left-[5.55vw]">
-          <h2 className="relative w-fit font-display text-[1.6rem] font-medium uppercase leading-[1.15] xl:text-[2.09vw] xl:leading-[2.44vw]">
+          <h2 className="relative w-fit font-heading text-[1.6rem] font-bold uppercase leading-[1.15] xl:text-[2.09vw] xl:leading-[2.44vw]">
             Your Trust,
             <span className="block">Our Biggest Reward</span>
             <ScriptHeart className={`absolute bottom-0 left-full ml-2 hidden h-9 w-8 -scale-x-100 xl:block xl:ml-[1.1vw] xl:h-[3.6vw] xl:w-[3.26vw] ${GOLD}`} />
@@ -227,7 +227,7 @@ export default async function ReviewsPage() {
               <span className="grid size-11 place-items-center rounded-full border border-[#c8963c]/80 xl:size-[4vw]">
                 <Icon className="size-5 text-[#d9a53f] xl:size-[1.95vw]" strokeWidth={1.3} />
               </span>
-              <p className="mt-2 font-display text-[0.85rem] font-semibold uppercase text-[#d9a53f] xl:mt-[0.75vw] xl:text-[1.21vw]">{title}</p>
+              <p className="mt-2 font-heading text-[0.85rem] font-bold uppercase text-[#d9a53f] xl:mt-[0.75vw] xl:text-[1.21vw]">{title}</p>
               <p className="mt-0.5 text-[0.7rem] xl:mt-[0.45vw] xl:text-[1vw]">{text}</p>
             </li>
           ))}
@@ -252,7 +252,7 @@ export default async function ReviewsPage() {
             />
             <circle cx="50" cy="50" r="40" fill="none" stroke="#7a4d12" strokeOpacity="0.35" strokeWidth="0.8" />
           </svg>
-          <div className="absolute inset-0 grid place-items-center text-center font-display font-semibold uppercase leading-[1.15] text-[#4a2a10]">
+          <div className="absolute inset-0 grid place-items-center text-center font-heading font-bold uppercase leading-[1.15] text-[#4a2a10]">
             <div>
               <p className="text-[0.75rem] xl:text-[1.37vw]">Thank You</p>
               <p className="text-[0.55rem] xl:text-[1.03vw]">For Choosing</p>

@@ -46,7 +46,7 @@ export default function CollaboratorQuotes({ people }: { people: (Collaborator &
             className="flex w-[78vw] shrink-0 snap-start flex-col rounded-md border border-[#efe5da] bg-[#fdf7f1] p-3 sm:w-[44vw] lg:w-[30vw] xl:h-[10.66vw] xl:w-[16.85vw] xl:px-[0.9vw] xl:pt-[0.78vw] xl:pb-0"
           >
             <div className="flex gap-3 xl:gap-[1.09vw]">
-              <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-full bg-[#efdccb] font-display text-lg text-[#6b3b5e] xl:size-[4.79vw] xl:text-[1.6vw]">
+              <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-full bg-[#efdccb] font-heading font-bold text-lg text-[#6b3b5e] xl:size-[4.79vw] xl:text-[1.6vw]">
                 {p.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded photo at any size
                   <img src={p.avatarUrl} alt="" className="size-full object-cover" />

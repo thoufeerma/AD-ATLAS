@@ -28,7 +28,7 @@ export default function ShippingPage() {
            <Heart className="w-4 h-4 text-[#c8963c] mt-2" strokeWidth={2} />
         </div>
 
-        <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 lg:px-12">
+        <div className="relative z-10 w-full container-vel">
           <div className="w-full lg:w-[60%] lg:py-10">
              <h1 className="text-[#c8963c] font-serif font-bold uppercase tracking-[0.2em] text-[1.1rem] mb-2">SHIPPING & DELIVERY</h1>
              <h2 className="text-[#240b25] font-display text-[4rem] lg:text-[4.5rem] leading-[1.05] mb-2 font-medium">
@@ -81,11 +81,11 @@ export default function ShippingPage() {
       </section>
 
       {/* 2. OUR DELIVERY PROMISE (Dark Purple Banner) */}
-      <section className="bg-[#240b25] py-8 px-6 lg:px-12 w-full text-cream-50">
-        <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-12">
+      <section className="bg-[#240b25] py-8 w-full text-cream-50">
+        <div className="container-vel flex flex-col lg:flex-row items-center justify-between gap-12">
           
           <div className="lg:w-[35%] flex flex-col items-center lg:items-start text-center lg:text-left">
-            <h3 className="text-[#c8963c] font-display font-extrabold uppercase tracking-widest text-[1.2rem] mb-3">OUR DELIVERY PROMISE</h3>
+            <h3 className="text-[#c8963c] font-heading font-bold uppercase tracking-widest text-[1.2rem] mb-3">OUR DELIVERY PROMISE</h3>
             <p className="text-[1rem] lg:text-[1.1rem] text-cream-50/90 leading-relaxed max-w-md">
               We are committed to delivering not just products, but happiness – on time, every time.
             </p>
@@ -117,12 +117,12 @@ export default function ShippingPage() {
       </section>
 
       {/* 3. MAIN CONTENT (Information, Timeline, Estimation) */}
-      <section className="py-8 px-6 lg:px-12 w-full">
-        <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+      <section className="py-8 w-full">
+        <div className="container-vel grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           
           {/* Left: SHIPPING INFORMATION */}
           <div className="lg:col-span-3 flex flex-col items-center lg:border-r border-[#c8963c]/20 pr-4">
-            <h3 className="font-display font-extrabold uppercase tracking-widest text-[1.4rem] text-[#240b25] mb-1 text-center whitespace-nowrap">SHIPPING INFORMATION</h3>
+            <h3 className="font-heading font-bold uppercase tracking-widest text-[1.4rem] text-[#240b25] mb-1 text-center whitespace-nowrap">SHIPPING INFORMATION</h3>
             <div className="flex items-center justify-center w-full mb-6">
                <div className="h-px bg-[#c8963c]/50 w-12"></div>
                <Ornament className="w-10 mx-3 text-[#c8963c]" />
@@ -174,7 +174,7 @@ export default function ShippingPage() {
 
           {/* Middle: DELIVERY TIMELINE */}
           <div className="lg:col-span-5 flex flex-col items-center text-center px-2">
-            <h3 className="font-display font-extrabold uppercase tracking-widest text-[1.4rem] text-[#240b25] mb-1">DELIVERY TIMELINE</h3>
+            <h3 className="font-heading font-bold uppercase tracking-widest text-[1.4rem] text-[#240b25] mb-1">DELIVERY TIMELINE</h3>
             <div className="flex items-center justify-center w-full mb-4">
                <div className="h-px bg-[#c8963c]/50 w-16"></div>
                <Ornament className="w-10 mx-3 text-[#c8963c]" />
@@ -251,7 +251,7 @@ export default function ShippingPage() {
           {/* Right: ESTIMATED DELIVERY TIME */}
           <div className="lg:col-span-4">
              <div className="bg-[#240b25] rounded-xl p-8 border border-[#3e1f4f] shadow-lg text-cream-50 h-full flex flex-col justify-start">
-                <h3 className="text-[#c8963c] font-display font-extrabold uppercase tracking-widest text-[1.25rem] mb-6 text-center">ESTIMATED DELIVERY TIME</h3>
+                <h3 className="text-[#c8963c] font-heading font-bold uppercase tracking-widest text-[1.25rem] mb-6 text-center">ESTIMATED DELIVERY TIME</h3>
                 
                 <div className="flex flex-col">
                   <div className="border-b border-cream-50/10 pb-3 mb-3">
@@ -285,9 +285,9 @@ export default function ShippingPage() {
       </section>
 
       {/* 4. EVERY ORDER IS SPECIAL */}
-      <section className="bg-[#fcf9f5] py-4 px-6 lg:px-12 w-full border-t border-[#f3eadf]">
-        <div className="max-w-[1400px] mx-auto flex flex-col items-center">
-          <h3 className="font-display font-extrabold uppercase tracking-widest text-[1.4rem] text-[#240b25] mb-1 text-center">EVERY ORDER IS SPECIAL</h3>
+      <section className="bg-[#fcf9f5] py-4 w-full border-t border-[#f3eadf]">
+        <div className="container-vel flex flex-col items-center">
+          <h3 className="font-heading font-bold uppercase tracking-widest text-[1.4rem] text-[#240b25] mb-1 text-center">EVERY ORDER IS SPECIAL</h3>
           <div className="flex items-center justify-center w-full mb-8">
              <div className="h-px bg-[#c8963c]/50 w-20"></div>
              <Ornament className="w-12 mx-3 text-[#c8963c]" />
@@ -340,15 +340,16 @@ export default function ShippingPage() {
       </section>
 
       {/* 5. WE DELIVER ACROSS INDIA */}
-      <section className="bg-[#fcf9f5] pb-4 px-6 lg:px-12 w-full">
-        <div className="relative max-w-[1400px] mx-auto rounded-[10px] overflow-hidden shadow-md">
+      <section className="bg-[#fcf9f5] pb-4 w-full">
+        <div className="container-vel">
+          <div className="relative rounded-[10px] overflow-hidden shadow-md">
            <div className="absolute inset-0 z-0 w-full h-full">
               <img src="/images/WE DELIVER ACROSS INDIA banner.png" alt="We Deliver Across India" className="w-full h-full object-cover object-center" />
            </div>
            
            <div className="relative z-10 w-full flex flex-col lg:flex-row items-center justify-between gap-8 py-10 px-6 lg:px-12">
                <div className="lg:w-1/3 flex flex-col items-center lg:items-start text-center lg:text-left">
-                  <h3 className="font-display font-extrabold uppercase tracking-widest text-[1.6rem] text-[#240b25] mb-1">WE DELIVER ACROSS INDIA</h3>
+                  <h3 className="font-heading font-bold uppercase tracking-widest text-[1.6rem] text-[#240b25] mb-1">WE DELIVER ACROSS INDIA</h3>
                   <p className="text-[1.1rem] text-[#240b25]/80 font-medium">
                     From metros to the most remote corners, Velastia delivers beauty everywhere.
                   </p>
@@ -379,9 +380,9 @@ export default function ShippingPage() {
                </div>
            </div>
         </div>
+        </div>
       </section>
 
-      {/* 6. YOUR HAPPINESS, OUR PRIORITY + NEED HELP       {/* 6. YOUR HAPPINESS, OUR PRIORITY + NEED HELP */}
       {/* 6. YOUR HAPPINESS, OUR PRIORITY + NEED HELP */}
       <section className="bg-[#fcf9f5] w-full border-t border-[#f3eadf] overflow-hidden">
         <div className="w-full max-w-[1600px] mx-auto flex flex-col xl:flex-row items-stretch justify-between">
@@ -393,7 +394,7 @@ export default function ShippingPage() {
 
           {/* Middle Text Block */}
           <div className="w-full xl:w-[22%] flex flex-col justify-center py-6 xl:py-8 text-center xl:text-left items-center xl:items-start shrink-0 px-6 xl:px-0 z-10">
-             <h3 className="font-display font-extrabold uppercase tracking-widest text-[1.6rem] text-[#240b25] mb-2 leading-tight">YOUR HAPPINESS,<br/>OUR PRIORITY</h3>
+             <h3 className="font-heading font-bold uppercase tracking-widest text-[1.6rem] text-[#240b25] mb-2 leading-tight">YOUR HAPPINESS,<br/>OUR PRIORITY</h3>
              <div className="flex items-center w-full mb-6 justify-center xl:justify-start">
                 <Ornament className="w-10 text-[#c8963c]" />
                 <div className="h-px bg-[#c8963c]/50 w-16 ml-3"></div>
@@ -424,7 +425,7 @@ export default function ShippingPage() {
           {/* Right Dark Box */}
           <div className="w-full xl:w-[54%] flex flex-col justify-center py-6 xl:py-8 shrink-0 px-6 xl:pr-12 z-10">
              <div className="bg-[#240b25] rounded-[16px] py-7 px-8 lg:px-10 text-center text-cream-50 w-full shadow-2xl">
-               <h3 className="font-display font-extrabold uppercase tracking-widest text-[1.45rem] text-white mb-1">NEED HELP WITH YOUR ORDER?</h3>
+               <h3 className="font-heading font-bold uppercase tracking-widest text-[1.45rem] text-white mb-1">NEED HELP WITH YOUR ORDER?</h3>
                <p className="text-[1rem] text-cream-50/80 mb-7">Our support team is just a message away!</p>
 
                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
@@ -464,8 +465,8 @@ export default function ShippingPage() {
       </section>
 
       {/* 7. BOTTOM TRUST STRIP */}
-      <section className="bg-[#fcf9f5] py-8 px-6 border-y border-[#f3eadf] w-full">
-         <div className="max-w-[1400px] mx-auto flex flex-wrap justify-between items-center gap-8 lg:gap-0">
+      <section className="bg-[#fcf9f5] py-8 border-y border-[#f3eadf] w-full">
+         <div className="container-vel flex flex-wrap justify-between items-center gap-8 lg:gap-0">
             <div className="flex items-center gap-4 flex-1 min-w-[180px]">
                <span className="grid size-12 rounded-full border border-[#c8963c]/40 text-[#c8963c] place-items-center shrink-0">
                   <ShieldCheck size={24} strokeWidth={1.5} />
@@ -512,10 +513,10 @@ export default function ShippingPage() {
            <img src="/images/Blush Pink Cosmos Still Life.png" alt="Flowers" className="w-full h-[150%] object-contain object-left-bottom absolute bottom-0 -left-6" />
         </div>
 
-        <div className="max-w-[1400px] mx-auto w-full flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10 px-6 lg:px-12 lg:pl-[240px]">
+        <div className="container-vel w-full flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10 lg:pl-[240px]">
            <div className="flex flex-col items-center lg:items-start text-center lg:text-left flex-1 py-4 lg:py-6">
               <div className="flex items-center justify-center lg:justify-start gap-4 mb-1">
-                 <h2 className="font-display font-medium text-[1.3rem] lg:text-[1.5rem] tracking-wider uppercase text-[#c8963c]">THANK YOU FOR CHOOSING VELASTIA</h2>
+                 <h2 className="font-heading font-bold text-[1.3rem] lg:text-[1.5rem] tracking-wider uppercase text-[#c8963c]">THANK YOU FOR CHOOSING VELASTIA</h2>
                  <ScriptHeart className="w-8 h-8 text-[#c8963c] shrink-0" />
               </div>
               <p className="text-[0.95rem] text-cream-50/90 font-medium">

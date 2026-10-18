@@ -180,8 +180,8 @@ export default async function CollabsPage() {
 
       {/* Who can collaborate */}
       <section className="px-4 pt-10 pb-8 text-center xl:px-0 xl:pt-[1.27vw] xl:pb-[1.37vw]">
-        <p className="font-display text-[0.8rem] font-semibold uppercase text-[#b07c2c] xl:text-[1.04vw]">Collaborate Your Way</p>
-        <h2 className={`mt-1 font-display text-[1.5rem] font-semibold uppercase leading-none xl:mt-[0.3vw] xl:text-[1.93vw] ${INK}`}>
+        <p className="font-heading text-[0.8rem] font-bold uppercase text-[#b07c2c] xl:text-[1.04vw]">Collaborate Your Way</p>
+        <h2 className={`mt-1 font-heading text-[1.5rem] font-bold uppercase leading-none xl:mt-[0.3vw] xl:text-[1.93vw] ${INK}`}>
           Who Can Collaborate?
         </h2>
         <Ornament className="mx-auto mt-3 w-40 xl:mt-[0.78vw] xl:w-[13.57vw]" />
@@ -197,7 +197,7 @@ export default async function CollabsPage() {
                   <Icon className="size-5 text-[#d9a53f] xl:size-[1.66vw]" strokeWidth={1.4} />
                 </span>
               </div>
-              <h3 className={`mt-8 font-display text-[1rem] font-semibold uppercase xl:mt-[2.69vw] xl:text-[1.21vw] xl:leading-[1.45vw] ${INK}`}>{title}</h3>
+              <h3 className={`mt-8 font-heading text-[1rem] font-bold uppercase xl:mt-[2.69vw] xl:text-[1.21vw] xl:leading-[1.45vw] ${INK}`}>{title}</h3>
               <p className="mt-1.5 whitespace-pre-line text-[0.75rem] leading-[1.6] text-[#1d052b]/80 xl:mt-[0.54vw] xl:text-[0.9vw] xl:leading-[1.4vw]">
                 {text}
               </p>
@@ -216,7 +216,7 @@ export default async function CollabsPage() {
       <section className="relative overflow-hidden bg-[#270e29] px-6 py-8 text-center text-cream-50 xl:h-[14.26vw] xl:p-0">
         <OptionalPhoto src={PHOTOS.impact} alt="" sizes="100vw" placeholderClassName="bg-[linear-gradient(100deg,#2a0f2c,#260d28_50%,#2e1330)]" />
         <div className="absolute inset-0 bg-black/60" />
-        <h2 className="relative font-display text-[1.15rem] font-medium uppercase xl:pt-[1.27vw] xl:text-[1.55vw] xl:leading-none">
+        <h2 className="relative font-heading text-[1.15rem] font-bold uppercase xl:pt-[1.27vw] xl:text-[1.55vw] xl:leading-none">
           Together, We Create Impact
         </h2>
         <ul className="relative mt-6 grid grid-cols-2 gap-y-6 sm:grid-cols-3 xl:mt-[0.98vw] xl:grid-cols-[repeat(5,18.98vw)] xl:gap-0 xl:pl-[1.82vw]">
@@ -230,7 +230,7 @@ export default async function CollabsPage() {
               }`}
             >
               <Icon className="size-8 text-[#d9a53f] xl:size-[2.73vw]" strokeWidth={1.1} />
-              <p className="mt-2 font-display text-[1.6rem] font-medium leading-none xl:mt-[1.17vw] xl:text-[2.39vw]">{value}</p>
+              <p className="mt-2 font-heading text-[1.6rem] font-bold leading-none xl:mt-[1.17vw] xl:text-[2.39vw]">{value}</p>
               <p className="mt-1.5 whitespace-pre-line text-[0.75rem] leading-[1.4] xl:mt-[0.34vw] xl:text-[1.06vw] xl:leading-[1.46vw]">{label}</p>
             </li>
           ))}
@@ -240,7 +240,7 @@ export default async function CollabsPage() {
       {/* Why collaborate with Velastia */}
       <section className="relative flex flex-col gap-8 px-6 py-10 xl:block xl:h-[24.9vw] xl:p-0">
         <div className="relative z-10 xl:pt-[1.56vw] xl:pl-[5.93vw]">
-          <h2 className={`font-display text-[1.5rem] font-semibold uppercase leading-[1.15] xl:text-[2.03vw] xl:leading-[2.25vw] ${INK}`}>
+          <h2 className={`font-heading text-[1.5rem] font-bold uppercase leading-[1.15] xl:text-[2.03vw] xl:leading-[2.25vw] ${INK}`}>
             Why Collaborate
             <span className="block">With Velastia?</span>
           </h2>
@@ -279,7 +279,7 @@ export default async function CollabsPage() {
       {/* What our collaborators say */}
       {quoted.length > 0 && (
         <section className="relative pt-8 pb-10 text-center xl:pt-[0.8vw] xl:pb-[1.37vw]">
-          <h2 className={`font-display text-[1.25rem] font-medium uppercase leading-none xl:text-[1.43vw] ${INK}`}>
+          <h2 className={`font-heading text-[1.25rem] font-bold uppercase leading-none xl:text-[1.43vw] ${INK}`}>
             What Our Collaborators Say
           </h2>
           <Ornament className="mx-auto mt-2 w-36 xl:mt-[0.6vw] xl:w-[12.44vw]" />
@@ -293,7 +293,7 @@ export default async function CollabsPage() {
       <section className="relative overflow-hidden bg-[#220a22] px-6 py-10 text-cream-50 xl:h-[16.41vw] xl:p-0">
         <OptionalPhoto src={PHOTOS.cta} alt="" sizes="100vw" placeholderClassName="bg-[linear-gradient(100deg,#2a0e2a,#1e091c_55%,#2a0e2a)]" />
         <div className="relative xl:absolute xl:top-[2.2vw] xl:left-[5.22vw]">
-          <h2 className="font-display text-[1.4rem] font-medium uppercase leading-[1.15] xl:text-[1.93vw]">
+          <h2 className="font-heading text-[1.4rem] font-bold uppercase leading-[1.15] xl:text-[1.93vw]">
             Let&apos;s Create Something Beautiful Together
           </h2>
           <p className="mt-3 text-[0.85rem] leading-[1.6] xl:mt-[0.94vw] xl:text-[1.04vw] xl:leading-[1.59vw]">
@@ -311,7 +311,7 @@ export default async function CollabsPage() {
         </ul>
         <span className="absolute top-[2.7vw] left-[52.7vw] hidden h-[11.95vw] w-px bg-[#c8963c]/40 xl:block" aria-hidden="true" />
         <div className="relative mt-8 xl:absolute xl:top-[3.98vw] xl:left-[54.93vw] xl:mt-0">
-          <h2 className="font-display text-[1.1rem] font-medium uppercase xl:text-[1.37vw] xl:leading-none">Ready To Collaborate?</h2>
+          <h2 className="font-heading text-[1.1rem] font-bold uppercase xl:text-[1.37vw] xl:leading-none">Ready To Collaborate?</h2>
           <p className="mt-2 text-[0.85rem] leading-[1.6] xl:mt-[0.78vw] xl:text-[1.05vw] xl:leading-[1.59vw]">
             Tell us about yourself and your creative work.
             <span className="block">Our team will get back to you!</span>

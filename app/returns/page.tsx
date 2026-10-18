@@ -33,7 +33,7 @@ export default function ReturnsPage() {
            </div>
         </div>
 
-        <div className="relative z-10 w-full max-w-[1500px] mx-auto px-6 lg:px-12">
+        <div className="relative z-10 w-full container-vel">
           <div className="w-full lg:w-[50%] lg:py-16 bg-[#fcf9f5]/80 lg:bg-transparent backdrop-blur-sm lg:backdrop-blur-none p-6 rounded-2xl lg:p-0">
              <h1 className="text-[#c8963c] font-serif font-bold uppercase tracking-[0.2em] text-[1.1rem] mb-3">RETURN & REFUNDS</h1>
              <h2 className="text-[#240b25] font-display text-[4.5rem] lg:text-[5rem] leading-[1.05] mb-1 font-medium">
@@ -86,15 +86,16 @@ export default function ReturnsPage() {
       </section>
 
       {/* 2. OUR PROMISE TO YOU (Dark Banner) */}
-      <section className="bg-[#240b25] w-full text-cream-50 py-10 px-6 lg:px-12 border-t border-[#f3eadf] relative z-20 lg:-mt-6 mx-auto max-w-[1500px] rounded-xl shadow-2xl">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-6">
+      <div className="container-vel">
+        <section className="bg-[#240b25] w-full text-cream-50 py-10 px-6 lg:px-12 border-t border-[#f3eadf] relative z-20 lg:-mt-6 rounded-xl shadow-2xl">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-6">
            {/* Left side */}
            <div className="flex items-start gap-6 lg:w-[40%]">
              <div className="grid size-16 rounded-full border-[1.5px] border-[#c8963c] place-items-center shrink-0">
                <Heart className="text-[#c8963c]" size={30} strokeWidth={1.5} />
              </div>
              <div className="flex flex-col">
-               <h3 className="font-display font-medium uppercase tracking-widest text-[1.4rem] text-[#c8963c] mb-2">OUR PROMISE TO YOU</h3>
+               <h3 className="font-heading font-bold uppercase tracking-widest text-[1.4rem] text-[#c8963c] mb-2">OUR PROMISE TO YOU</h3>
                <p className="text-[1.1rem] text-cream-50/90 leading-relaxed font-medium">
                  Every Velastia product is crafted with love and care. If it doesn't meet your expectations, we're here to help.
                </p>
@@ -122,9 +123,10 @@ export default function ReturnsPage() {
            </div>
         </div>
       </section>
+      </div>
 
       {/* 3. 3-COLUMN SECTION (Eligibility, How to Return, Not Eligible) */}
-      <section className="w-full py-6 lg:py-8 px-6 lg:px-12 bg-transparent relative">
+      <section className="w-full py-6 lg:py-8 bg-transparent relative">
         <div className="absolute top-0 right-0 z-0 opacity-40">
            <img src="/images/Blush Pink Cosmos Still Life.png" alt="Decor" className="w-[300px]" />
         </div>
@@ -132,11 +134,11 @@ export default function ReturnsPage() {
            <img src="/images/Blush Pink Cosmos Still Life.png" alt="Decor" className="w-[300px] scale-x-[-1]" />
         </div>
 
-        <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8 relative z-10">
+        <div className="container-vel grid grid-cols-1 lg:grid-cols-4 gap-8 relative z-10">
           
           {/* Column 1: Return Eligibility */}
           <div className="flex flex-col lg:border-r border-[#c8963c]/40 lg:pr-6 lg:col-span-1">
-            <h3 className="font-display font-bold uppercase tracking-widest text-[1.2rem] text-[#240b25] text-center mb-1">RETURN ELIGIBILITY</h3>
+            <h3 className="font-heading font-bold uppercase tracking-widest text-[1.2rem] text-[#240b25] text-center mb-1">RETURN ELIGIBILITY</h3>
             <div className="flex justify-center mb-8">
                <Ornament className="w-12 text-[#c8963c]" />
             </div>
@@ -161,7 +163,7 @@ export default function ReturnsPage() {
 
           {/* Column 2: How to Return */}
           <div className="flex flex-col items-center lg:col-span-2 lg:px-4">
-            <h3 className="font-display font-bold uppercase tracking-widest text-[1.2rem] text-[#240b25] text-center mb-1">HOW TO RETURN</h3>
+            <h3 className="font-heading font-bold uppercase tracking-widest text-[1.2rem] text-[#240b25] text-center mb-1">HOW TO RETURN</h3>
             <div className="flex justify-center mb-12">
                <Ornament className="w-12 text-[#c8963c]" />
             </div>
@@ -256,7 +258,7 @@ export default function ReturnsPage() {
 
           {/* Column 3: Not Eligible */}
           <div className="flex flex-col lg:border-l border-[#c8963c]/40 lg:pl-6 lg:col-span-1">
-            <h3 className="font-display font-bold uppercase tracking-widest text-[1.2rem] text-[#240b25] text-center mb-1">NOT ELIGIBLE FOR RETURN</h3>
+            <h3 className="font-heading font-bold uppercase tracking-widest text-[1.2rem] text-[#240b25] text-center mb-1">NOT ELIGIBLE FOR RETURN</h3>
             <div className="flex justify-center mb-8">
                <Ornament className="w-12 text-[#c8963c]" />
             </div>
@@ -283,11 +285,12 @@ export default function ReturnsPage() {
       </section>
 
       {/* 4. REFUND INFORMATION */}
-      <section className="w-full py-4 px-6 lg:px-12 bg-transparent">
-        <div 
-          className="max-w-[1500px] mx-auto rounded-[1.5rem] shadow-sm flex flex-col lg:flex-row items-stretch overflow-hidden bg-cover bg-center"
-          style={{ backgroundImage: "url('/images/REFUND INFORMATION products.png')" }}
-        >
+      <section className="w-full py-4 bg-transparent">
+        <div className="container-vel">
+          <div 
+            className="rounded-[1.5rem] shadow-sm flex flex-col lg:flex-row items-stretch overflow-hidden bg-cover bg-center"
+            style={{ backgroundImage: "url('/images/REFUND INFORMATION products.png')" }}
+          >
            
            {/* Empty Left Space for Background Image */}
            <div className="w-full lg:w-[32%] min-h-[150px] lg:min-h-[auto]">
@@ -295,7 +298,7 @@ export default function ReturnsPage() {
            
            {/* Middle Content */}
            <div className="w-full lg:w-[42%] flex flex-col justify-center px-4 lg:px-6 py-6 lg:py-8">
-              <h3 className="font-display font-extrabold uppercase tracking-widest text-[1.2rem] text-[#240b25] mb-5 text-center lg:text-left">REFUND INFORMATION</h3>
+              <h3 className="font-heading font-bold uppercase tracking-widest text-[1.2rem] text-[#240b25] mb-5 text-center lg:text-left">REFUND INFORMATION</h3>
               <div className="flex flex-col gap-4">
                  {[
                    "Refunds are initiated within 24-48 hours after approval.",
@@ -334,12 +337,13 @@ export default function ReturnsPage() {
            </div>
 
         </div>
+        </div>
       </section>
 
       {/* 5. FREQUENTLY ASKED QUESTIONS */}
-      <section className="w-full py-12 px-6 lg:px-12 bg-[#fcf9f5]">
-        <div className="max-w-[1300px] mx-auto flex flex-col items-center">
-          <h3 className="font-display font-extrabold uppercase tracking-widest text-[1.2rem] text-[#240b25] mb-1 text-center">FREQUENTLY ASKED QUESTIONS</h3>
+      <section className="w-full py-12 bg-[#fcf9f5]">
+        <div className="container-vel flex flex-col items-center">
+          <h3 className="font-heading font-bold uppercase tracking-widest text-[1.2rem] text-[#240b25] mb-1 text-center">FREQUENTLY ASKED QUESTIONS</h3>
           <div className="flex justify-center mb-8">
              <Ornament className="w-12 text-[#c8963c]" />
           </div>
@@ -377,10 +381,10 @@ export default function ReturnsPage() {
       <section className="w-full relative overflow-hidden border-t-2 border-[#f3eadf]">
          
          {/* Top Dark Bar */}
-         <div className="bg-[#240b25] py-8 px-6 lg:px-12 text-cream-50 relative z-0">
-            <div className="max-w-[1500px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-8">
+         <div className="bg-[#240b25] py-8 text-cream-50 relative z-0">
+            <div className="container-vel flex flex-col lg:flex-row items-center justify-between gap-8">
                <div className="lg:w-[35%] flex flex-col">
-                  <h3 className="font-display uppercase tracking-widest text-[0.95rem] text-[#c8963c] mb-1">WE DON'T JUST SELL BEAUTY,</h3>
+                  <h3 className="font-heading font-bold uppercase tracking-widest text-[0.95rem] text-[#c8963c] mb-1">WE DON'T JUST SELL BEAUTY,</h3>
                   <div className="flex items-center gap-2 mb-3">
                     <h2 className="font-script text-[2.6rem] text-[#c8963c] leading-none">We Stand Behind It.</h2>
                     <ScriptHeart className="w-6 h-6 text-[#c8963c]" />
@@ -409,8 +413,8 @@ export default function ReturnsPage() {
          </div>
 
          {/* Middle Cream Bar */}
-         <div className="bg-[#fdfbf9] py-5 px-6 lg:px-12 relative z-0 border-y border-[#eaddce]/60">
-            <div className="max-w-[1500px] mx-auto flex items-center justify-between w-full">
+         <div className="bg-[#fdfbf9] py-5 relative z-0 border-y border-[#eaddce]/60">
+            <div className="container-vel flex items-center justify-between w-full">
                {[
                  { icon: Shield, t1: "100% Original", t2: "Products" },
                  { icon: RefreshCcw, t1: "7 Days Easy", t2: "Returns" },
@@ -433,8 +437,8 @@ export default function ReturnsPage() {
          </div>
 
          {/* Bottom Dark Bar */}
-         <div className="bg-[#240b25] py-6 px-6 lg:px-12 text-cream-50 relative z-0">
-            <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-6">
+         <div className="bg-[#240b25] py-6 text-cream-50 relative z-0">
+            <div className="container-vel flex flex-col lg:flex-row items-center justify-between gap-6">
                
                {/* Left Logo */}
                <div className="flex items-center justify-center lg:justify-start lg:w-1/3">

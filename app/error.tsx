@@ -18,7 +18,7 @@ export default function Error({
 
   return (
     <div className="container-vel py-24 text-center">
-      <h1 className="font-display text-3xl text-plum-800">We couldn&apos;t load this page</h1>
+      <h1 className="font-heading font-bold text-3xl text-plum-800">We couldn&apos;t load this page</h1>
       <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-soft">
         Something went wrong on our side. Please try again in a moment — your cart and
         wishlist are safe.

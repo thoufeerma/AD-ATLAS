@@ -77,7 +77,7 @@ export default function ContactForm() {
     return (
       <div role="status" className="flex h-full flex-col items-center justify-center text-center text-cream-50 p-8">
         <CheckCircle2 className="size-12 text-[#c8963c]" strokeWidth={1.4} />
-        <h2 className="mt-4 font-display text-[1.5rem] uppercase">Message sent</h2>
+        <h2 className="mt-4 font-heading text-[1.5rem] font-bold uppercase">Message sent</h2>
         <p className="mt-1.5 text-[0.85rem] leading-relaxed text-cream-50/80">
           Thank you, {f.name.trim().split(/\s+/)[0]}. We&apos;ll reply to {f.email.trim()} as soon as we can.
         </p>
@@ -89,7 +89,7 @@ export default function ContactForm() {
     <form onSubmit={submit} noValidate className="flex flex-col h-full text-cream-50">
       <div className="flex items-center gap-4 mb-8">
         <MailIcon />
-        <h2 className="font-display text-[1.2rem] lg:text-[1.4rem] font-bold uppercase tracking-wider text-cream-50">Send us a message</h2>
+        <h2 className="font-heading text-[1.2rem] lg:text-[1.4rem] font-bold uppercase tracking-wider text-cream-50">Send us a message</h2>
       </div>
 
       <div className="grid gap-4 flex-1">

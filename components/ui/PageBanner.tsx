@@ -39,25 +39,25 @@ export default function PageBanner({
 
       <div className={cn("container-vel relative", title ? "py-10 md:py-12" : "py-4")}>
         <nav aria-label="Breadcrumb" className={title ? "mb-4" : ""}>
-          <ol className="flex flex-wrap items-center gap-1.5 text-[0.68rem]">
+          <ol className="flex flex-wrap items-center gap-2 text-[0.84rem] sm:text-[0.88rem] font-medium">
             {crumbs.map((c, i) => (
-              <li key={c.label} className="flex items-center gap-1.5">
+              <li key={c.label} className="flex items-center gap-2">
                 {c.href ? (
                   <Link
                     href={c.href}
                     className={cn(
                       "transition-colors",
-                      dark ? "text-cream-200/65 hover:text-gold-300" : "text-ink-soft hover:text-gold-600",
+                      dark ? "text-cream-200/75 hover:text-gold-300" : "text-ink-soft hover:text-gold-600",
                     )}
                   >
                     {c.label}
                   </Link>
                 ) : (
-                  <span className={dark ? "text-gold-300" : "text-plum-800"}>{c.label}</span>
+                  <span className={dark ? "text-gold-300 font-semibold" : "text-plum-800 font-semibold"}>{c.label}</span>
                 )}
                 {i < crumbs.length - 1 && (
                   <ChevronRight
-                    className={cn("size-3", dark ? "text-cream-200/40" : "text-ink-soft/50")}
+                    className={cn("size-3.5 shrink-0", dark ? "text-cream-200/40" : "text-ink-soft/50")}
                   />
                 )}
               </li>

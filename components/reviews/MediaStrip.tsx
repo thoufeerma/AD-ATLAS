@@ -28,7 +28,7 @@ export default function MediaStrip({ items }: { items: MediaItem[] }) {
       <div className="flex min-h-8 items-center justify-between xl:min-h-[2.44vw]">
         <h2
           id="customer-media"
-          className="font-display text-[1.15rem] font-bold uppercase leading-none tracking-[0.01em] text-[#1d052b] xl:text-[1.42vw]"
+          className="font-heading text-[1.15rem] font-bold uppercase leading-none tracking-[0.01em] text-[#1d052b] xl:text-[1.42vw]"
         >
           Customer Photos &amp; Videos
         </h2>

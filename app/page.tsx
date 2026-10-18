@@ -6,10 +6,11 @@ import OurStory from "@/components/home/OurStory";
 import Collabs from "@/components/home/Collabs";
 import InstagramStrip from "@/components/home/InstagramStrip";
 import TrustStrip from "@/components/ui/TrustStrip";
+import OfferPopup from "@/components/home/OfferPopup";
 import { getBestsellers, getHomeContent, getRatingSummary, getSettings } from "@/lib/api/server";
 
 export default async function HomePage() {
-  const [bestsellers, content, rating, { copy, store }] = await Promise.all([
+  const [bestsellers, content, rating, { copy, store, welcomeOffer }] = await Promise.all([
     getBestsellers(),
     getHomeContent(),
     getRatingSummary(),
@@ -18,6 +19,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <OfferPopup welcomeOffer={welcomeOffer} />
       <Hero />
       <ServiceStrip />
       <BestsellersBlock

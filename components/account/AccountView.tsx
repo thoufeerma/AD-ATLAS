@@ -72,7 +72,7 @@ export default function AccountView({ products }: { products: Product[] }) {
     <div className="container-vel py-10">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="font-display text-3xl text-plum-800">Hello, {me.name.split(/\s+/)[0]}</h2>
+          <h2 className="font-heading text-3xl font-bold text-plum-800">Hello, {me.name.split(/\s+/)[0]}</h2>
           <p className="mt-1 text-[0.8rem] text-ink-soft">{me.email}</p>
         </div>
         <Button variant="outline" size="sm" onClick={leave}>
@@ -154,7 +154,7 @@ function Orders({ verified, products }: { verified: boolean; products: Product[]
 
   return (
     <section className={card}>
-      <h3 className="flex items-center gap-2 font-display text-xl text-plum-800">
+      <h3 className="flex items-center gap-2 font-heading text-xl font-bold text-plum-800">
         <Package className="size-5 text-gold-600" /> My Orders
       </h3>
 
@@ -282,7 +282,7 @@ function Addresses() {
   return (
     <section className={card}>
       <div className="flex items-center justify-between gap-3">
-        <h3 className="flex items-center gap-2 font-display text-xl text-plum-800">
+        <h3 className="flex items-center gap-2 font-heading text-xl font-bold text-plum-800">
           <MapPin className="size-5 text-gold-600" /> Saved Addresses
         </h3>
         {editing !== "new" && (addresses?.length ?? 0) < 10 && (
@@ -460,7 +460,7 @@ function Profile({ me }: { me: Me }) {
 
   return (
     <section className={card}>
-      <h3 className="font-display text-xl text-plum-800">Profile</h3>
+      <h3 className="font-heading text-xl font-bold text-plum-800">Profile</h3>
       <form onSubmit={save} noValidate className="mt-4 space-y-3">
         <label className="block">
           <span className="mb-1 block text-[0.7rem] font-medium text-plum-800">Name</span>
@@ -517,7 +517,7 @@ function Password({ email }: { email: string }) {
 
   return (
     <section className={card}>
-      <h3 className="font-display text-xl text-plum-800">Change Password</h3>
+      <h3 className="font-heading text-xl font-bold text-plum-800">Change Password</h3>
       <form onSubmit={save} noValidate className="mt-4 space-y-3">
         <input type="text" name="username" autoComplete="username" value={email} readOnly hidden />
         <input type="password" aria-label="Current password" placeholder="Current password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" className={input} />

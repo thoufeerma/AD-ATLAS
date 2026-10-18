@@ -11,7 +11,7 @@ export default function NotFound() {
   return (
     <div className="container-vel py-24 text-center">
       <p className="label-caps text-gold-600">Error 404</p>
-      <h1 className="mt-3 font-display text-3xl text-plum-800 sm:text-4xl">
+      <h1 className="mt-3 font-heading font-bold text-3xl text-plum-800 sm:text-4xl">
         We couldn&apos;t find that page
       </h1>
       <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-soft">

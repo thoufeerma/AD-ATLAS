@@ -140,7 +140,7 @@ export default function TrackOrder({ products }: { products: Product[] }) {
     <div className="w-full space-y-10 py-10 md:py-14">
       {/* Lookup */}
       <section className="rounded-2xl border border-[#eaddce] bg-white p-8 md:p-12 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.06)]">
-        <h2 className="font-display text-[1.85rem] font-semibold text-[#20082d]">Enter Your Order Details</h2>
+        <h2 className="font-heading text-[1.85rem] font-bold text-[#20082d]">Enter Your Order Details</h2>
         <p className="mt-2 text-[0.9rem] font-medium text-[#20082d]/60">
           Enter your Order Number and Email ID to track your order status
         </p>
@@ -204,7 +204,7 @@ export default function TrackOrder({ products }: { products: Product[] }) {
               <Headphones className="size-8 text-[#c8963c]" strokeWidth={1.5} />
             </span>
             <div>
-              <h2 className="font-display text-[1.7rem] font-semibold text-[#20082d]">Need Help?</h2>
+              <h2 className="font-heading text-[1.7rem] font-bold text-[#20082d]">Need Help?</h2>
               <p className="text-[0.95rem] font-medium text-[#20082d]/70 mt-1">We're here for you!</p>
             </div>
           </div>
@@ -279,7 +279,7 @@ function OrderResult({
       {/* Status Tracker */}
       <section className="rounded-2xl border border-[#eaddce] bg-white p-8 md:p-12 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.06)]">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <h2 className="font-display text-[1.85rem] font-semibold text-[#20082d]">Order Status</h2>
+          <h2 className="font-heading text-[1.85rem] font-bold text-[#20082d]">Order Status</h2>
           <div className="sm:text-right">
             <p className="text-[0.95rem] font-bold text-[#20082d]">Order #{order.number}</p>
             <p className="text-[0.85rem] font-medium text-[#20082d]/60 mt-1">Placed on {dateTime(order.placedAt)}</p>
@@ -357,7 +357,7 @@ function OrderResult({
       <section className="grid gap-8 lg:gap-10 lg:grid-cols-2 items-start">
         {/* Order Details Panel */}
         <div className="rounded-2xl border border-[#eaddce] bg-[#fcf9f5] p-8 md:p-12">
-          <h2 className="font-display text-[1.65rem] font-semibold text-[#20082d] border-b border-[#eaddce] pb-6 mb-8">Order Details</h2>
+          <h2 className="font-heading text-[1.65rem] font-bold text-[#20082d] border-b border-[#eaddce] pb-6 mb-8">Order Details</h2>
           <dl className="space-y-6 text-[0.85rem]">
             <Row label="Order Number" value={order.number} />
             <Row label="Order Date" value={dateTime(order.placedAt)} />
@@ -405,7 +405,7 @@ function OrderResult({
 
         {/* Items Panel */}
         <div className="rounded-2xl border border-[#eaddce] bg-[#fcf9f5] p-8 md:p-12">
-          <h2 className="font-display text-[1.65rem] font-semibold text-[#20082d] border-b border-[#eaddce] pb-6 mb-4">Items in Your Order ({itemCount})</h2>
+          <h2 className="font-heading text-[1.65rem] font-bold text-[#20082d] border-b border-[#eaddce] pb-6 mb-4">Items in Your Order ({itemCount})</h2>
           
           <ul className="divide-y divide-[#eaddce]">
             {order.items.map((i, n) => {
@@ -447,10 +447,10 @@ function OrderResult({
           </dl>
           
           <div className="mt-8 flex items-center justify-between border-t border-[#eaddce] pt-8">
-            <p className="font-display text-[1.5rem] font-semibold text-[#20082d]">
+            <p className="font-heading text-[1.5rem] font-bold text-[#20082d]">
               {order.paymentStatus === "PAID" ? "Total Paid" : "Order Total"}
             </p>
-            <p className="font-display text-[1.7rem] font-bold text-[#20082d]">{inrPaise(order.totalPaise)}</p>
+            <p className="font-heading text-[1.7rem] font-bold text-[#20082d]">{inrPaise(order.totalPaise)}</p>
           </div>
 
           <ReturnPanel orderNumber={order.number} email={email} />

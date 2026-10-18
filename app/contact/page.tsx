@@ -72,10 +72,10 @@ export default async function ContactPage() {
       </section>
 
       {/* 2. How Can We Help You? */}
-      <section className="pt-6 pb-10 lg:pt-10 lg:pb-12 bg-[#fcf9f5] px-6 relative z-10">
-        <div className="max-w-[1400px] mx-auto">
+      <section className="pt-6 pb-10 lg:pt-10 lg:pb-12 bg-[#fcf9f5] relative z-10">
+        <div className="container-vel">
           <div className="text-center mb-8">
-            <h2 className={`font-display text-2xl lg:text-[1.75rem] font-semibold uppercase tracking-wider ${INK}`}>How Can We Help You?</h2>
+            <h2 className={`font-heading text-2xl lg:text-[1.75rem] font-bold uppercase tracking-wider ${INK}`}>How Can We Help You?</h2>
             <Ornament className="mx-auto mt-2 w-28" />
           </div>
           
@@ -91,7 +91,7 @@ export default async function ContactPage() {
                 <span className="grid size-[60px] place-items-center rounded-full border border-[#c8963c] bg-white mb-5 shadow-sm">
                   {item.icon}
                 </span>
-                <h3 className={`font-display text-[0.95rem] lg:text-[1.05rem] font-bold uppercase tracking-wider ${INK}`}>{item.title}</h3>
+                <h3 className={`font-heading text-[0.95rem] lg:text-[1.05rem] font-bold uppercase tracking-wider ${INK}`}>{item.title}</h3>
                 <p className="text-[0.8rem] lg:text-[0.85rem] text-[#1d052b]/90 mt-2.5 whitespace-pre-line leading-relaxed font-medium">{item.text}</p>
               </div>
             ))}
@@ -100,8 +100,9 @@ export default async function ContactPage() {
       </section>
 
       {/* 3. Get In Touch 3-Column Block */}
-      <section className="pb-16 pt-0 px-6 max-w-[1400px] mx-auto w-full">
-        <div className="flex flex-col lg:flex-row w-full rounded-md overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-[#eaddce]">
+      <section className="pb-16 pt-0 w-full">
+        <div className="container-vel">
+          <div className="flex flex-col lg:flex-row w-full rounded-md overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-[#eaddce]">
           
           {/* Left: Contact Form */}
           <div className="bg-[#1f0b24] p-8 lg:p-10 lg:w-[38%] flex flex-col justify-center">
@@ -111,7 +112,7 @@ export default async function ContactPage() {
           {/* Middle: Contact Info */}
           <div className="bg-[#faf5ef] p-8 lg:p-10 flex flex-col justify-center border-y lg:border-y-0 lg:border-x border-[#eaddce] lg:w-[30%]">
             <div className="text-center mb-10">
-              <h2 className={`font-display text-xl lg:text-2xl uppercase tracking-widest font-bold ${INK}`}>Get In Touch</h2>
+              <h2 className={`font-heading text-xl lg:text-2xl uppercase tracking-widest font-bold ${INK}`}>Get In Touch</h2>
               <Ornament className="mx-auto mt-2 w-28" />
             </div>
             
@@ -165,13 +166,14 @@ export default async function ContactPage() {
              <img src="/images/we glow together contact page.png" alt="You glow. We glow. Together." className="w-full h-full object-cover" />
           </div>
         </div>
+        </div>
       </section>
 
       {/* 4. Instagram / Follow Us */}
-      <section className="py-12 px-6 w-full bg-[#f6ece2]">
-        <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row items-center gap-10">
+      <section className="py-12 w-full bg-[#f6ece2]">
+        <div className="container-vel flex flex-col lg:flex-row items-center gap-10">
           <div className="lg:w-[300px] shrink-0 text-center lg:text-left">
-            <h2 className={`font-display text-2xl font-semibold uppercase tracking-wide ${INK} mb-3 flex flex-col items-center lg:items-start`}>
+            <h2 className={`font-heading text-2xl font-bold uppercase tracking-wide ${INK} mb-3 flex flex-col items-center lg:items-start`}>
               <span>Follow Us &</span>
               <span className="flex items-center gap-2">Stay Connected <ScriptHeart className={`w-6 h-6 ${GOLD} inline-block`} /></span>
             </h2>
@@ -206,11 +208,11 @@ export default async function ContactPage() {
       </section>
 
       {/* 5. Reviews Kinda Section */}
-      <section className="bg-[#1f0b24] text-cream-50 py-20 px-6 w-full">
-        <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
+      <section className="bg-[#1f0b24] text-cream-50 py-20 w-full">
+        <div className="container-vel flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
            <div className="lg:w-[35%] relative flex flex-col items-start lg:pr-6">
              <span className="text-[#c8963c] text-[4.5rem] font-serif absolute -top-10 -left-2 leading-none">&ldquo;</span>
-             <p className="font-display text-xl lg:text-[1.65rem] leading-[1.45] relative z-10 text-cream-50 font-medium tracking-wide">
+             <p className="font-heading text-xl lg:text-[1.65rem] leading-[1.45] relative z-10 text-cream-50 font-bold tracking-wide">
                Velastia isn&apos;t just about beauty.<br/>It&apos;s about confidence, self-love and<br/>feeling your best every single day.
                <ScriptHeart className="w-10 h-10 text-[#c8963c] inline-block ml-3 -translate-y-2" />
              </p>
@@ -240,8 +242,8 @@ export default async function ContactPage() {
       </section>
 
       {/* 6. Icons Band */}
-      <section className="bg-[#fcf9f5] py-16 px-6 w-full border-b border-[#f3eadf]">
-        <div className="max-w-[1400px] mx-auto flex flex-wrap lg:flex-nowrap justify-between gap-y-10 lg:gap-0 lg:divide-x lg:divide-[#eaddce]">
+      <section className="bg-[#fcf9f5] py-16 w-full border-b border-[#f3eadf]">
+        <div className="container-vel flex flex-wrap lg:flex-nowrap justify-between gap-y-10 lg:gap-0 lg:divide-x lg:divide-[#eaddce]">
           <div className="flex items-center gap-4 lg:gap-5 lg:px-4 xl:px-6 w-full md:w-1/2 lg:w-auto">
              <span className="grid size-[70px] shrink-0 place-items-center rounded-full border border-[#c8963c] bg-transparent">
                 <Lock className="text-[#c8963c]" size={32} strokeWidth={1.25} />
@@ -290,39 +292,6 @@ export default async function ContactPage() {
         </div>
       </section>
 
-      {/* 7. STAY IN THE LOOP Footer */}
-      <section className="bg-[#1f0b24] py-14 px-6 w-full text-cream-50 border-t border-[#c8963c]/20">
-        <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row items-center justify-between gap-10">
-           <div className="flex items-center gap-6 pl-4">
-              <span className="grid size-[70px] shrink-0 place-items-center rounded-full border border-[#c8963c]">
-                <Gift className="text-[#c8963c]" size={30} strokeWidth={1.25} />
-              </span>
-              <div>
-                 <h2 className="font-display text-[1.75rem] uppercase tracking-widest font-semibold text-white">STAY IN THE LOOP!</h2>
-                 <p className="text-[1rem] text-cream-50 mt-1.5 leading-relaxed font-medium">
-                   Subscribe to our newsletter and be the first to know about<br/>exclusive offers, new launches & beauty secrets.
-                 </p>
-              </div>
-           </div>
-           
-           <div className="w-full md:w-[500px]">
-             <form className="flex w-full">
-                <input 
-                  type="email" 
-                  placeholder="Enter your email address" 
-                  className="w-full bg-[#1f0b24] border border-[#4a2b4d] rounded-l px-6 py-4 text-[0.95rem] text-cream-50 placeholder:text-cream-50/50 focus:outline-none focus:border-[#c8963c] transition-colors"
-                />
-                <button 
-                  type="submit" 
-                  className="shrink-0 bg-gradient-to-b from-[#ca9d4c] to-[#a27334] hover:brightness-110 text-white font-bold text-[0.9rem] uppercase tracking-wider px-8 py-4 rounded-r transition-all flex items-center gap-2"
-                >
-                  SUBSCRIBE NOW <Heart className="size-4 fill-white" />
-                </button>
-             </form>
-           </div>
-        </div>
-      </section>
-      
     </div>
   );
 }

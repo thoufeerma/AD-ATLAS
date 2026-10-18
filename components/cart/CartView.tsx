@@ -77,7 +77,7 @@ export default function CartView({
     return (
       <div className="container-vel py-20 text-center">
         <ShoppingBag className="mx-auto size-10 text-gold-500" />
-        <h2 className="mt-5 font-display text-2xl text-plum-800">Your cart is empty</h2>
+        <h2 className="mt-5 font-heading text-2xl font-bold text-plum-800">Your cart is empty</h2>
         <p className="mt-2 text-sm text-ink-soft">
           Once you add something you love, it will show up here.
         </p>
@@ -319,7 +319,7 @@ export default function CartView({
             <div className="mt-6 flex items-center gap-5 rounded-[var(--radius-card)] bg-blush-100 p-6">
               <Gift className="size-8 shrink-0 text-gold-600" />
               <div>
-                <h3 className="font-display text-lg text-plum-800">{giftBanner}</h3>
+                <h3 className="font-heading text-lg font-bold text-plum-800">{giftBanner}</h3>
                 <p className="mt-0.5 text-xs text-ink-soft">
                   Luxury deserves a little extra. Treat yourself!
                 </p>
@@ -331,7 +331,7 @@ export default function CartView({
         {/* Summary */}
         <aside className="space-y-5 lg:sticky lg:top-28 lg:self-start">
           <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6">
-            <h2 className="font-display text-xl text-plum-800">Order Summary</h2>
+            <h2 className="font-heading text-xl font-bold text-plum-800">Order Summary</h2>
 
             {items.length > 0 ? (
               <QuoteSummary
@@ -377,7 +377,7 @@ export default function CartView({
           </div>
 
           <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6">
-            <h3 className="font-display text-lg text-plum-800">Why Velastia?</h3>
+            <h3 className="font-heading text-lg font-bold text-plum-800">Why Velastia?</h3>
             <ul className="mt-4 space-y-3">
               {copy.whyVelastia.map((w) => (
                 <li key={w} className="flex items-center gap-2.5 text-[0.75rem] text-ink-soft">
@@ -395,7 +395,7 @@ export default function CartView({
         <section className="mt-12 rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-7">
           <div className="grid gap-7 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-center">
             <div>
-              <h2 className="font-display text-xl leading-snug text-plum-800">
+              <h2 className="font-heading text-xl font-bold leading-snug text-plum-800">
                 {copy.socialProofHeadline}
               </h2>
               {rating.total > 0 && (

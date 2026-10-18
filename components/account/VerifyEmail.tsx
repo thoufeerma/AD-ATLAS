@@ -37,7 +37,7 @@ export default function VerifyEmail() {
         {state.status === "done" && (
           <>
             <CheckCircle2 className="mx-auto size-12 text-success" strokeWidth={1.4} />
-            <h2 className="mt-4 font-display text-2xl text-plum-800">Email confirmed</h2>
+            <h2 className="mt-4 font-heading text-2xl font-bold text-plum-800">Email confirmed</h2>
             <p className="mt-2 text-sm text-ink-soft">Your order history is now in your account.</p>
             <Button href="/account" className="mt-6">
               Go to My Account
@@ -47,7 +47,7 @@ export default function VerifyEmail() {
         {state.status === "failed" && (
           <>
             <AlertCircle className="mx-auto size-12 text-gold-500" strokeWidth={1.4} />
-            <h2 className="mt-4 font-display text-2xl text-plum-800">We couldn&apos;t confirm that link</h2>
+            <h2 className="mt-4 font-heading text-2xl font-bold text-plum-800">We couldn&apos;t confirm that link</h2>
             <p className="mt-2 text-sm text-ink-soft">{state.message}</p>
             <Button href="/account" className="mt-6">
               Go to My Account

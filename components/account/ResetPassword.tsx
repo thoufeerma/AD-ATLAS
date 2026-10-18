@@ -47,7 +47,7 @@ export default function ResetPassword() {
   return (
     <div className="container-vel flex justify-center py-14">
       <form onSubmit={submit} noValidate className="w-full max-w-sm">
-        <h2 className="font-display text-2xl text-plum-800">Choose a new password</h2>
+        <h2 className="font-heading text-2xl font-bold text-plum-800">Choose a new password</h2>
         <p className="mt-1 text-[0.8rem] text-ink-soft">
           At least 8 characters. You&apos;ll be signed in straight after.
         </p>

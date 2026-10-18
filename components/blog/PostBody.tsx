@@ -33,7 +33,7 @@ export default function PostBody({ body }: { body: string }) {
     flush();
     if (line.startsWith("## ")) {
       blocks.push(
-        <h2 key={`h-${blocks.length}`} className="pt-2 font-display text-2xl text-plum-800">
+        <h2 key={`h-${blocks.length}`} className="pt-2 font-heading font-bold text-2xl text-plum-800">
           {line.slice(3).trim()}
         </h2>,
       );

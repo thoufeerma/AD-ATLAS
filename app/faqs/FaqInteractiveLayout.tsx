@@ -38,11 +38,11 @@ export default function FaqInteractiveLayout() {
   const currentFaqs = FAQ_DATA.find(cat => cat.category === activeCategory)?.questions || [];
 
   return (
-    <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[250px_1fr_320px] gap-10 lg:gap-16">
+    <div className="container-vel grid grid-cols-1 lg:grid-cols-[250px_1fr_320px] gap-10 lg:gap-16">
       {/* Left Sidebar */}
       <div className="flex flex-col border border-[#f3eadf] rounded-xl overflow-hidden h-fit">
         <div className="pt-6 pb-4">
-          <h3 className="text-[#a57a2f] font-display text-[1.05rem] font-bold uppercase tracking-widest text-center">
+          <h3 className="text-[#a57a2f] font-heading text-[1.05rem] font-bold uppercase tracking-widest text-center">
             BROWSE TOPICS
           </h3>
         </div>
@@ -75,7 +75,7 @@ export default function FaqInteractiveLayout() {
       {/* Center Content */}
       <div className="flex flex-col">
         <div className="mb-10 flex flex-col items-start w-max">
-          <h3 className="text-[#240b25] font-display text-[1.5rem] uppercase tracking-widest font-bold text-left">
+          <h3 className="text-[#240b25] font-heading text-[1.5rem] uppercase tracking-widest font-bold text-left">
             FREQUENTLY ASKED QUESTIONS
           </h3>
           <div className="flex items-center justify-center w-full mt-4">

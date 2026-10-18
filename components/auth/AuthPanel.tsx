@@ -72,12 +72,14 @@ export default function AuthPanel() {
     <div className="flex flex-col min-h-screen font-sans">
       <div className="flex-1 grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] xl:grid-cols-[minmax(0,35%)_minmax(0,65%)]">
         {/* Left Dark Panel */}
-        <aside className="relative flex flex-col items-center justify-start overflow-hidden bg-[#20082d] px-8 py-16 text-center lg:px-10 h-full">
+        <aside className="relative flex flex-col items-center justify-start overflow-hidden bg-[#20082d] px-8 pt-12 pb-8 text-center lg:px-10 h-full min-h-[600px]">
           <Image
-            src="/images/login page left side banner.png"
-            alt="Velastia Background"
+            src="/images/login-left-banner.png"
+            alt="Velastia Luxury Beauty"
             fill
-            className="object-cover object-center z-0"
+            priority
+            sizes="(min-width: 1280px) 35vw, (min-width: 1024px) 40vw, 100vw"
+            className="object-cover object-bottom z-0"
           />
           
           <div className="relative z-10 flex flex-col items-center w-full">
@@ -91,7 +93,7 @@ export default function AuthPanel() {
               />
             </div>
 
-            <h1 className="font-display text-[2.5rem] xl:text-[2.8rem] leading-tight text-cream-50 font-semibold tracking-wide">
+            <h1 className="font-heading text-[2.5rem] xl:text-[2.8rem] leading-tight text-cream-50 font-bold tracking-wide">
               Welcome to Velastia
             </h1>
             <p className="mt-1 flex items-center justify-center gap-2 font-script text-[2.2rem] xl:text-[2.4rem] text-[#c8963c]">
@@ -145,20 +147,62 @@ export default function AuthPanel() {
           </div>
 
           <div className="flex-1 w-full max-w-[65rem] mx-auto flex flex-col">
-            {/* Tabs (Visual only on desktop) */}
+            {/* Tabs */}
             <div className="flex justify-center gap-16 lg:gap-24 border-b border-[#eaddce] pb-4 mb-12">
-              <span className="text-[1.1rem] font-bold text-[#20082d] uppercase tracking-wide relative cursor-pointer">
+              <button
+                type="button"
+                onClick={() => setTab("login")}
+                className={cn(
+                  "text-[1.1rem] uppercase tracking-wide relative cursor-pointer pb-1 transition-all",
+                  tab === "login"
+                    ? "font-bold text-[#20082d]"
+                    : "font-medium text-[#20082d]/40 hover:text-[#20082d]/70",
+                )}
+              >
                 LOGIN
-                <span className="absolute -bottom-4 left-0 right-0 h-[3px] bg-[#20082d]" />
-              </span>
-              <span className="text-[1.1rem] font-medium text-[#20082d]/40 uppercase tracking-wide cursor-pointer hover:text-[#20082d]/70 transition-colors">
+                {tab === "login" && (
+                  <span className="absolute -bottom-[17px] left-0 right-0 h-[3px] bg-[#20082d]" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab("register")}
+                className={cn(
+                  "text-[1.1rem] uppercase tracking-wide relative cursor-pointer pb-1 transition-all",
+                  tab === "register"
+                    ? "font-bold text-[#20082d]"
+                    : "font-medium text-[#20082d]/40 hover:text-[#20082d]/70",
+                )}
+              >
                 REGISTER
-              </span>
+                {tab === "register" && (
+                  <span className="absolute -bottom-[17px] left-0 right-0 h-[3px] bg-[#20082d]" />
+                )}
+              </button>
             </div>
 
             {/* Forms Split */}
             <div className="grid lg:grid-cols-[1fr_auto_1fr] gap-10 lg:gap-12 xl:gap-16 mb-16 items-start">
-              <LoginForm onDone={done} />
+              {/* Welcome Back (Login) Section */}
+              <div
+                className={cn(
+                  "relative transition-all duration-300",
+                  tab === "login"
+                    ? "filter-none opacity-100"
+                    : "blur-[3.5px] opacity-35 grayscale-[20%] select-none cursor-pointer hover:opacity-50",
+                )}
+                onClick={() => {
+                  if (tab !== "login") setTab("login");
+                }}
+              >
+                {tab !== "login" && (
+                  <div
+                    className="absolute inset-0 z-30 cursor-pointer"
+                    title="Click to switch to Login"
+                  />
+                )}
+                <LoginForm onDone={done} />
+              </div>
 
               <div className="hidden lg:flex flex-col items-center pt-8 h-full min-h-[400px]">
                 <span className="w-px flex-1 bg-[#eaddce]" />
@@ -168,20 +212,43 @@ export default function AuthPanel() {
                 <span className="w-px flex-1 bg-[#eaddce]" />
               </div>
 
-              <RegisterForm onDone={done} />
+              {/* Create Account (Register) Section */}
+              <div
+                className={cn(
+                  "relative transition-all duration-300",
+                  tab === "register"
+                    ? "filter-none opacity-100"
+                    : "blur-[3.5px] opacity-35 grayscale-[20%] select-none cursor-pointer hover:opacity-50",
+                )}
+                onClick={() => {
+                  if (tab !== "register") setTab("register");
+                }}
+              >
+                {tab !== "register" && (
+                  <div
+                    className="absolute inset-0 z-30 cursor-pointer"
+                    title="Click to switch to Register"
+                  />
+                )}
+                <RegisterForm onDone={done} />
+              </div>
             </div>
 
             {/* Right Panel Bottom Badges */}
-            <div className="mt-auto grid grid-cols-2 lg:grid-cols-4 gap-6 xl:gap-8 pt-10 border-t border-[#eaddce]">
+            <div className="mt-auto grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 xl:gap-6 pt-8 border-t border-[#eaddce]">
               {rightBadges.map(({ Icon, title, note }) => (
-                <div key={title} className="flex items-center gap-3">
-                  <span className="grid size-[2.8rem] shrink-0 place-items-center rounded-full border border-[#eaddce] bg-transparent">
-                    <Icon className="size-5 text-[#c8963c]" strokeWidth={1.5} />
+                <div key={title} className="flex items-center gap-3.5">
+                  <span className="grid size-12 xl:size-13 shrink-0 place-items-center rounded-full border border-[#eaddce] bg-white/70 shadow-xs">
+                    <Icon className="size-5 xl:size-5.5 text-[#c8963c]" strokeWidth={1.6} />
                   </span>
-                  <span className="text-[0.65rem] leading-[1.35]">
-                    <span className="block font-bold text-[#20082d]">{title}</span>
-                    <span className="text-[#20082d]/70">{note}</span>
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-[0.85rem] xl:text-[0.9rem] font-bold text-[#20082d] leading-snug">
+                      {title}
+                    </span>
+                    <span className="text-[0.74rem] xl:text-[0.78rem] text-[#20082d]/75 leading-snug mt-0.5">
+                      {note}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -249,7 +316,7 @@ function LoginForm({ className, onDone }: { className?: string; onDone: (me: Me)
 
   return (
     <form className={className} onSubmit={submit} noValidate>
-      <h2 className="flex items-center gap-2 font-display text-[2.1rem] font-semibold text-[#20082d]">
+      <h2 className="flex items-center gap-2 font-heading text-[2.1rem] font-bold text-[#20082d]">
         Welcome Back <Heart className="size-[1.4rem] shrink-0 text-[#c8963c]" strokeWidth={1.5} />
       </h2>
       <p className="mt-1 text-[0.8rem] text-[#20082d]/80 font-medium">Login to continue your Velastia journey</p>
@@ -341,7 +408,7 @@ function RegisterForm({ className, onDone }: { className?: string; onDone: (me: 
 
   return (
     <form className={className} onSubmit={submit} noValidate>
-      <h2 className="flex items-center gap-2 font-display text-[2.1rem] font-semibold text-[#20082d]">
+      <h2 className="flex items-center gap-2 font-heading text-[2.1rem] font-bold text-[#20082d]">
         Create Account <Heart className="size-[1.4rem] shrink-0 text-[#c8963c]" strokeWidth={1.5} />
       </h2>
       <p className="mt-1 text-[0.8rem] text-[#20082d]/80 font-medium">Join Velastia &amp; unlock exclusive benefits</p>

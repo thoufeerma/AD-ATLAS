@@ -14,9 +14,18 @@ export default function FooterSwitch({
   shop,
 }: {
   standard: React.ReactNode;
-  shop: React.ReactNode;
+  shop?: React.ReactNode;
 }) {
   const pathname = usePathname();
-  if (["/about", "/ingredients", "/reviews", "/collabs", "/contact", "/faqs", "/shipping", "/returns", "/terms", "/privacy", "/login"].includes(pathname)) return null;
-  return pathname === "/shop" || pathname === "/cart" || pathname === "/checkout" || pathname === "/order-success" || pathname === "/wishlist" ? shop : standard;
+  // Exclude only the focused checkout flow, recovery pages, and admin
+  if (
+    pathname.startsWith("/checkout") ||
+    pathname.startsWith("/admin") ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password" ||
+    pathname === "/verify-email"
+  ) {
+    return null;
+  }
+  return standard;
 }

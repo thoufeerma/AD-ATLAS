@@ -152,7 +152,7 @@ export default function OrderSuccess({ products }: { products: Product[] }) {
       </section>
 
       {/* 2. MAIN CONTENT WRAPPER */}
-      <div className="max-w-[1250px] mx-auto px-6 pb-20 relative -mt-16">
+      <div className="container-vel pb-20 relative -mt-16">
         
         {/* Floating Tracker Box */}
         <section className="mb-14">

@@ -49,3 +49,5 @@ next-env.d.ts
 
 # uploaded images (local storage in development)
 /backend/uploads/
+
+.vscode/

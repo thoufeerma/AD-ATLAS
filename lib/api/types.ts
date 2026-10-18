@@ -17,6 +17,7 @@ export type Product = {
   compareAtPaise: number | null;
   status: "ACTIVE" | "COMING_SOON";
   isBestseller: boolean;
+  saleBadge?: string | null;
   /** Purchasable right now. Exact stock is never exposed. */
   inStock: boolean;
   lowStock: boolean;

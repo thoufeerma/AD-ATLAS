@@ -134,10 +134,10 @@ export default async function AboutPage() {
           Tablets and phones get fixed sizes of their own. */}
       <section className="grid gap-10 px-6 pt-7 xl:grid-cols-[37.5vw_48.27vw] xl:gap-0 xl:pt-[1.464vw] xl:pr-[7.43vw] xl:pl-[6.8vw]">
         <div className="max-w-[520px] xl:max-w-[27.2vw] xl:pt-[0.575vw]">
-          <p className="font-display text-[1.35rem] font-bold uppercase tracking-[0.03em] text-gold-600 xl:text-[1.37vw]">
+          <p className="font-heading text-[1.35rem] font-bold uppercase tracking-[0.03em] text-gold-600 xl:text-[1.37vw]">
             Our Story
           </p>
-          <h2 className="mt-1 font-display text-[2.55rem] font-semibold leading-[1.1] text-ink xl:mt-[0.262vw] xl:text-[2.8vw]">
+          <h2 className="mt-1 font-heading font-bold text-[2.55rem] leading-[1.1] text-ink xl:mt-[0.262vw] xl:text-[2.8vw]">
             Born From A Belief.
             <span className="block">Made For You.</span>
           </h2>
@@ -150,7 +150,7 @@ export default async function AboutPage() {
             We combine the best of science and nature to create high-performance
             products that are safe, effective and luxuriously indulgent.
           </p>
-          <p className="mt-3 font-display text-[1.7rem] font-semibold leading-[1.2] text-gold-600 xl:mt-[0.68vw] xl:text-[1.76vw] xl:leading-[2.1vw]">
+          <p className="mt-3 font-heading text-[1.7rem] font-bold leading-[1.2] text-gold-600 xl:mt-[0.68vw] xl:text-[1.76vw] xl:leading-[2.1vw]">
             Luxury. Science. You.
           </p>
         </div>
@@ -164,7 +164,7 @@ export default async function AboutPage() {
                 </span>
                 <span>
                   <span className="block text-[1.15rem] leading-[1.3] text-cream-50 xl:text-[1.124vw]">{label}</span>
-                  <span className="mt-0.5 block font-display text-[1.4rem] font-bold leading-[1.3] text-gold-400 xl:mt-[0.15vw] xl:text-[1.365vw]">
+                  <span className="mt-0.5 block font-heading text-[1.4rem] font-bold leading-[1.3] text-gold-400 xl:mt-[0.15vw] xl:text-[1.365vw]">
                     {value}
                   </span>
                 </span>
@@ -189,7 +189,7 @@ export default async function AboutPage() {
       <section className="pt-6 pb-2 xl:pt-[1.255vw] xl:pb-[0.366vw]">
         <div className="flex items-center gap-6 px-6 xl:gap-[1.255vw] xl:px-[3.24vw]">
           <span className="h-px flex-1 bg-gold-300/70 xl:flex-[723]" />
-          <h2 className="shrink-0 font-display text-[1.3rem] font-bold uppercase tracking-[0.02em] text-ink xl:text-[1.229vw]">
+          <h2 className="shrink-0 font-heading text-[1.3rem] font-bold uppercase tracking-[0.02em] text-ink xl:text-[1.229vw]">
             The Velastia Way
           </h2>
           <span className="h-px flex-1 bg-gold-300/70 xl:flex-[795]" />
@@ -198,7 +198,7 @@ export default async function AboutPage() {
           {WAY.map(({ Icon, title, note }) => (
             <li key={title} className="text-center">
               <Icon className="mx-auto size-14 text-gold-700 xl:size-[3.766vw]" strokeWidth={1} />
-              <h3 className="mt-4 whitespace-pre-line font-display text-[1.15rem] font-bold uppercase leading-[1.24] tracking-[0.02em] text-ink xl:mt-[0.994vw] xl:text-[1.098vw]">
+              <h3 className="mt-4 whitespace-pre-line font-heading text-[1.15rem] font-bold uppercase leading-[1.24] tracking-[0.02em] text-ink xl:mt-[0.994vw] xl:text-[1.098vw]">
                 {title}
               </h3>
               <p className="mt-2.5 whitespace-pre-line text-[1rem] leading-[1.35] text-ink/80 xl:mt-[0.575vw] xl:text-[1.02vw] xl:leading-[1.334vw]">
@@ -216,7 +216,7 @@ export default async function AboutPage() {
       <section className="grid xl:grid-cols-[33.48vw_minmax(0,1fr)]">
         {/* The thin gold rule along its foot divides it from the stats band, as drawn. */}
         <div className="border-b border-gold-400/60 bg-[#2e0829] px-6 py-10 xl:px-0 xl:pt-[1.68vw] xl:pb-0 xl:pl-[4.52vw]">
-          <h2 className="font-display text-[1.8rem] font-medium uppercase leading-[1.25] tracking-[0.02em] text-cream-50 xl:text-[1.98vw] xl:leading-[2.482vw]">
+          <h2 className="font-heading font-bold text-[1.8rem] uppercase leading-[1.25] tracking-[0.02em] text-cream-50 xl:text-[1.98vw] xl:leading-[2.482vw]">
             The Science Behind
             <span className="block">Our Beauty</span>
           </h2>
@@ -269,7 +269,7 @@ export default async function AboutPage() {
             >
               <Icon className="size-12 shrink-0 text-[#e2b781] xl:size-[4.6vw]" strokeWidth={1} />
               <span>
-                <span className="block font-display text-[2rem] font-semibold leading-[1.1] text-[#e2b781] xl:text-[2.261vw]">
+                <span className="block font-heading text-[2rem] font-bold leading-[1.1] text-[#e2b781] xl:text-[2.261vw]">
                   {value}
                 </span>
                 <span className="mt-1 block text-[1rem] text-cream-50 xl:mt-[0.58vw] xl:text-[1.17vw]">{label}</span>
@@ -301,10 +301,10 @@ export default async function AboutPage() {
             className="object-cover object-right"
           />
           <div className="relative xl:w-[30.05vw] xl:shrink-0 xl:pt-[1.71vw]">
-            <p className="font-display text-[1.3rem] font-medium uppercase tracking-[0.02em] text-ink xl:text-[1.329vw]">
+            <p className="font-heading text-[1.3rem] font-bold uppercase tracking-[0.02em] text-ink xl:text-[1.329vw]">
               Our Promise to You
             </p>
-            <h2 className="mt-1 font-display text-[2.3rem] font-bold leading-[1.1] text-ink xl:mt-[0.32vw] xl:text-[2.482vw] xl:leading-[2.6vw]">
+            <h2 className="mt-1 font-heading text-[2.3rem] font-bold leading-[1.1] text-ink xl:mt-[0.32vw] xl:text-[2.482vw] xl:leading-[2.6vw]">
               No Harmful Chemicals.
               <span className="block">Just Honest Beauty.</span>
             </h2>
@@ -345,10 +345,10 @@ export default async function AboutPage() {
         </div>
 
         <div className="px-6 py-10 xl:px-0 xl:pt-[2.23vw] xl:pb-0 xl:pl-[2.66vw]">
-          <p className="font-display text-[1.1rem] font-medium uppercase tracking-[0.02em] text-[#e9b869] xl:text-[1.139vw]">
+          <p className="font-heading text-[1.1rem] font-bold uppercase tracking-[0.02em] text-[#e9b869] xl:text-[1.139vw]">
             A Note From Our Founder
           </p>
-          <p className="mt-2 font-display text-[1.9rem] font-medium leading-[1.15] text-[#e9b869] xl:mt-[0.836vw] xl:text-[1.99vw] xl:leading-[2.13vw]">
+          <p className="mt-2 font-heading text-[1.9rem] font-bold leading-[1.15] text-[#e9b869] xl:mt-[0.836vw] xl:text-[1.99vw] xl:leading-[2.13vw]">
             {/* The design sets this first line a touch larger than the second. */}
             <span className="block xl:text-[2.13vw]">This brand is for every you.</span>
             <span className="block">The bold you. The soft you. The unstoppable you.</span>
@@ -371,13 +371,13 @@ export default async function AboutPage() {
             height={394}
             className="size-20 xl:size-[5.7vw]"
           />
-          <p className="font-display text-[3rem] font-semibold uppercase leading-none tracking-[0.02em] text-[#e9b869] xl:text-[3.288vw]">
+          <p className="font-heading text-[3rem] font-bold uppercase leading-none tracking-[0.02em] text-[#e9b869] xl:text-[3.288vw]">
             Velastia
           </p>
-          <p className="font-display text-[1.3rem] font-medium leading-[1.2] text-[#e9b869] xl:text-[1.418vw]">
+          <p className="font-heading text-[1.3rem] font-bold leading-[1.2] text-[#e9b869] xl:text-[1.418vw]">
             Luxury. Science. You.
           </p>
-          <p className="mt-5 font-display text-[1rem] font-medium uppercase tracking-[0.1em] text-[#e9b869] xl:mt-[1.594vw] xl:text-[1.096vw]">
+          <p className="mt-5 font-heading text-[1rem] font-bold uppercase tracking-[0.1em] text-[#e9b869] xl:mt-[1.594vw] xl:text-[1.096vw]">
             Because you deserve more.
           </p>
           <p className="mt-2 font-script text-[2rem] leading-[1.2] text-[#e9b869] xl:mt-[0.65vw] xl:text-[2.161vw]">

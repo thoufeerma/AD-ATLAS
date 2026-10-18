@@ -48,7 +48,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
 
       <article className="container-vel py-10">
         <header className="mx-auto max-w-3xl text-center">
-          <h1 className="font-display text-3xl leading-tight text-plum-800 sm:text-4xl">{post.title}</h1>
+          <h1 className="font-heading font-bold text-3xl leading-tight text-plum-800 sm:text-4xl">{post.title}</h1>
           <p className="mt-3 text-[0.75rem] text-ink-soft">
             {post.author} · {day(post.publishedAt)} · {post.readingMinutes} min read
           </p>
@@ -62,7 +62,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
 
         <div className="mx-auto mt-10 max-w-2xl">
           {post.excerpt && (
-            <p className="mb-6 border-l-2 border-gold-400 pl-4 font-display text-lg leading-relaxed text-plum-800">
+            <p className="mb-6 border-l-2 border-gold-400 pl-4 font-heading font-bold text-lg leading-relaxed text-plum-800">
               {post.excerpt}
             </p>
           )}
@@ -82,7 +82,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
       {more.length > 0 && (
         <section className="bg-cream-100 py-12">
           <div className="container-vel">
-            <h2 className="font-display text-2xl text-plum-800">More from the Journal</h2>
+            <h2 className="font-heading font-bold text-2xl text-plum-800">More from the Journal</h2>
             <ul className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {more.map((p) => (
                 <li key={p.slug}>
@@ -98,7 +98,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blog/[slug]">
                         />
                       )}
                     </div>
-                    <h3 className="mt-3.5 font-display text-lg leading-snug text-plum-800 group-hover:text-gold-700">
+                    <h3 className="mt-3.5 font-heading font-bold text-lg leading-snug text-plum-800 group-hover:text-gold-700">
                       {p.title}
                     </h3>
                     <p className="mt-1.5 text-[0.7rem] text-ink-soft">

@@ -42,10 +42,10 @@ export default function WishlistView({ products }: { products: Product[] }) {
   const items = products.filter((p) => wishlist.includes(p.slug));
   const buyable = (p: Product) => p.status === "ACTIVE" && p.inStock;
 
-  if (!hydrated) return <div className="max-w-[1536px] mx-auto px-6 py-20" aria-hidden />;
+  if (!hydrated) return <div className="container-vel py-20" aria-hidden />;
 
   return (
-    <div className="max-w-[1536px] mx-auto px-4 lg:px-10 py-4 pb-4">
+    <div className="container-vel py-4 pb-4">
       {items.length === 0 ? (
         <div className="py-16 text-center">
           <Heart className="mx-auto size-10 text-[#c8963c]" />
@@ -96,7 +96,7 @@ export default function WishlistView({ products }: { products: Product[] }) {
             </div>
 
             {/* Product Grid */}
-            <ul className="grid grid-cols-2 gap-2 lg:gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 xl:gap-5">
               {items.map((p) => (
                 <li
                   key={p.slug}

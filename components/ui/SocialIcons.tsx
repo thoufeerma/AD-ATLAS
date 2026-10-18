@@ -75,6 +75,7 @@ export function socialProfiles(social: SocialLinks, only?: (keyof SocialLinks)[]
     youtube: "https://www.youtube.com/@velastiaofficial",
     facebook: "https://www.facebook.com/velastiaofficial",
     threads: "https://www.threads.net/@velastiaofficial",
+    x: "https://x.com/velastiaofficial",
     pinterest: "https://www.pinterest.com/velastiaofficial",
   };
 

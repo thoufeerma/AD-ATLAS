@@ -50,7 +50,7 @@ export default function QuoteSummary({
           <p className="text-sm font-medium text-plum-800">{totalLabel}</p>
           <p className="text-[0.65rem] text-ink-soft">Inclusive of all taxes</p>
         </div>
-        <p className="font-display text-2xl font-semibold text-plum-800">{money(quote?.totalPaise)}</p>
+        <p className="font-heading text-2xl font-bold text-plum-800">{money(quote?.totalPaise)}</p>
       </div>
     </div>
   );

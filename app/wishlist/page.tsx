@@ -19,7 +19,7 @@ export default async function WishlistPage() {
            <img src="/images/your cart banner.png" alt="Decor" className="w-full h-full object-cover object-right" />
         </div>
         
-        <div className="relative z-10 flex flex-col items-start px-6 lg:px-20 max-w-[1536px] mx-auto">
+        <div className="relative z-10 flex flex-col items-start container-vel">
            <div className="flex items-center gap-4 mb-4">
              <h1 className="font-display font-bold text-[3.5rem] lg:text-[4.5rem] text-[#240b25] leading-none tracking-wide">
                My Wishlist

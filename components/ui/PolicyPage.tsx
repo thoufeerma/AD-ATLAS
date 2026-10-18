@@ -77,7 +77,7 @@ export default async function PolicyPage({ slug }: { slug: string }) {
           <div className="mt-8 space-y-9">
             {page.body.sections.map((s, i) => (
               <section key={`${i}-${s.heading}`}>
-                <h2 className="font-display text-xl text-plum-800">
+                <h2 className="font-heading font-bold text-xl text-plum-800">
                   <span className="mr-2.5 text-gold-500">{String(i + 1).padStart(2, "0")}</span>
                   {fill(s.heading)}
                 </h2>

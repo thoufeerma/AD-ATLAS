@@ -43,7 +43,7 @@ export default function ApplyDialog({
           <p className="text-[0.65rem] font-medium uppercase tracking-[0.12em] text-[#d9a53f]">
             {applyingAs ? `Applying as ${applyingAs}` : "Let's create magic"}
           </p>
-          <h2 className="mt-1 mb-6 font-display text-2xl font-medium uppercase text-cream-50">Apply for a Collab</h2>
+          <h2 className="mt-1 mb-6 font-heading text-2xl font-bold uppercase text-cream-50">Apply for a Collab</h2>
           <CollabForm applyingAs={applyingAs} />
         </div>
       </dialog>

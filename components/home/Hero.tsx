@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { ChevronLeft, ChevronRight, FlaskConical, Leaf, ShieldCheck, Heart } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { useSettings } from "@/components/providers/SettingsProvider";
+import IntroductoryOfferMedallion from "@/components/home/IntroductoryOfferMedallion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -32,17 +33,17 @@ const SLIDES = [
     headline: ["Pure.", "Potent.", "Perfect."],
     copy: "Dermatologically tested, cruelty free and vegan. Made in India, for Indian skin.",
     cta: { label: "Our Ingredients", href: "/ingredients" },
-    image: "/brand/hero-3.webp",
-    alt: "Velastia lipstick, liquid lipstick and box on a marble slab",
+    image: "/brand/hero-ingredients.webp",
+    alt: "Velastia serum, face cream and lipstick on marble pedestal with botanical flask on cream silk",
     dark: false,
   },
 ];
 
 const BADGES = [
-  { Icon: FlaskConical, label: "Premium\nIngredients" },
-  { Icon: ShieldCheck, label: "Dermatologically\nTested" },
-  { Icon: Heart, label: "Cruelty Free\n& Vegan" },
-  { Icon: Leaf, label: "Made in\nIndia" },
+  { Icon: FlaskConical, line1: "PREMIUM", line2: "INGREDIENTS" },
+  { Icon: ShieldCheck, line1: "DERMATOLOGICALLY", line2: "TESTED" },
+  { Icon: Heart, line1: "CRUELTY FREE &", line2: "VEGAN" },
+  { Icon: Leaf, line1: "MADE IN", line2: "INDIA" },
 ];
 
 /** How long each slide is shown, and how long the slide across takes. */
@@ -127,9 +128,9 @@ export default function Hero() {
             fill
             priority={n === 0}
             sizes="100vw"
-            // The products sit right of centre in every shot, so the narrower
-            // crop on a phone keeps that side.
-            className="object-cover object-right lg:object-center"
+            // The products sit right of centre in every shot, so object-right
+            // keeps them framed cleanly on the right half across all viewports.
+            className="object-cover object-right lg:object-[86%_32%] xl:object-[84%_28%]"
           />
         </div>
       ))}
@@ -139,40 +140,42 @@ export default function Hero() {
   return (
     <section
       className={cn(
-        // Unify the container to flow vertically on mobile, and stack at lg:
-        "relative flex flex-col lg:block overflow-hidden bg-cream-50 transition-colors duration-700",
-        dark && "lg:bg-plum-950",
+        "relative overflow-hidden transition-colors duration-700",
+        dark ? "bg-plum-950" : "bg-cream-50",
       )}
     >
-      {/* Unified track wrapper: aspect box on mobile, full-bleed absolute on lg: */}
-      <div className="relative w-full overflow-hidden aspect-[4/3] sm:aspect-[16/9] lg:absolute lg:inset-0 lg:aspect-auto lg:h-full lg:w-full">
+      {/* Full-bleed photography background across mobile and desktop */}
+      <div className="absolute inset-0 h-full w-full overflow-hidden">
         {track}
       </div>
-      {/* Just enough shade under the words to keep them readable on any photo */}
+
+      {/* Shade gradient overlay to keep text readable on any photo across mobile and desktop */}
       <div
         className={cn(
-          "pointer-events-none absolute inset-0 hidden bg-gradient-to-r to-transparent transition-colors duration-700 lg:block",
-          dark ? "from-plum-950/70 via-plum-950/15" : "from-cream-50/80 via-cream-50/20",
+          "pointer-events-none absolute inset-0 z-[5] transition-colors duration-700",
+          dark
+            ? "bg-gradient-to-r from-plum-950/95 via-plum-950/70 to-plum-950/25 sm:from-plum-950/90 sm:via-plum-950/60 lg:from-plum-950/85 lg:via-plum-950/35"
+            : "bg-gradient-to-r from-cream-50/95 via-cream-50/80 to-cream-50/30 sm:from-cream-50/90 sm:via-cream-50/65 lg:from-cream-50/85 lg:via-cream-50/30",
         )}
       />
 
-      <div className="container-vel relative flex items-center py-8 md:py-10 lg:min-h-[580px] lg:py-16">
-        <div className="w-full max-w-[800px] lg:ml-12 xl:ml-16">
+      <div className="container-vel relative z-10 flex min-h-[500px] sm:min-h-[540px] lg:min-h-[620px] xl:min-h-[680px] 2xl:min-h-[740px] items-center pt-10 pb-20 sm:pt-12 sm:pb-22 lg:pt-14 lg:pb-24">
+        <div className="w-full max-w-[850px] lg:ml-2 xl:ml-4">
           {/* Keyed so the words fade up again on every slide */}
           <div key={shown} className="hero-copy max-w-xl">
             <h1
               className={cn(
-                "font-display font-semibold leading-[1.05] text-[#20082d]",
-                dark && "lg:text-white",
+                "font-display font-semibold leading-[1.05]",
+                dark ? "text-cream-50" : "text-[#20082d]",
               )}
-              style={{ fontSize: "clamp(2.75rem, 1.5rem + 3.5vw, 4.8rem)" }}
+              style={{ fontSize: "clamp(2.35rem, 1.35rem + 3.8vw, 4.8rem)" }}
             >
               {slide.headline.map((line, n) => (
                 <span
                   key={line}
                   className={cn(
                     "block",
-                    n === slide.headline.length - 1 && (dark ? "text-[#c8963c] lg:text-[#c8963c]" : "text-[#c8963c]"),
+                    n === slide.headline.length - 1 ? "text-[#c8963c]" : dark ? "text-cream-50" : "text-[#20082d]",
                   )}
                 >
                   {line}
@@ -182,8 +185,8 @@ export default function Hero() {
 
             <p
               className={cn(
-                "mt-6 max-w-md text-[1.15rem] font-medium leading-relaxed text-[#20082d]/70",
-                dark && "lg:text-white/80",
+                "mt-4 sm:mt-6 max-w-md text-[clamp(0.95rem,2.2vw,1.15rem)] font-medium leading-relaxed drop-shadow-sm",
+                dark ? "text-cream-100" : "text-[#20082d]",
               )}
             >
               {slide.copy}
@@ -192,46 +195,19 @@ export default function Hero() {
             <Button
               href={slide.cta.href}
               size="lg"
-              className={cn("mt-8 px-10 h-14 text-[0.85rem]", dark && "lg:bg-[#c8963c] lg:text-white lg:hover:bg-[#a67b2d]")}
+              className="mt-6 sm:mt-8 px-8 sm:px-10 h-12 sm:h-14 min-h-[44px] text-[0.82rem] sm:text-[0.85rem] bg-[#20082d] text-cream-50 hover:bg-[#2e0c40] border border-gold-400/40 shadow-[0_4px_16px_rgba(0,0,0,0.35)]"
             >
               {slide.cta.label}
             </Button>
           </div>
-
-          <ul className="mt-10 md:mt-12 lg:mt-14 flex flex-wrap lg:flex-nowrap items-center gap-x-6 xl:gap-x-10 gap-y-5">
-            {BADGES.map(({ Icon, label }) => (
-              <li key={label} className="flex items-center gap-2.5 xl:gap-3">
-                <Icon className={cn("size-5 md:size-6 xl:size-7 shrink-0 text-[#c8963c]", dark && "lg:text-[#c8963c]")} strokeWidth={1.5} />
-                <span
-                  className={cn(
-                    "whitespace-pre-line text-[0.65rem] font-bold tracking-wide uppercase leading-tight text-[#20082d]/80",
-                    dark && "lg:text-white/80",
-                  )}
-                >
-                  {label}
-                </span>
-              </li>
-            ))}
-          </ul>
         </div>
 
-        {/* Introductory offer medallion — only while the welcome code is live */}
+        {/* Introductory offer medallion — 100% pure-coded component matching reference design */}
         {welcomeOffer && (
-          <div className="pointer-events-none absolute right-16 top-10 hidden size-[180px] flex-col items-center justify-center rounded-full border border-[#c8963c] bg-[#20082d] text-center xl:flex shadow-2xl p-3">
-            <span className="text-[0.45rem] font-bold text-[#c8963c] tracking-[0.15em] uppercase">Introductory Offer</span>
-            <span className="mt-2 font-display text-[3.2rem] font-medium leading-none text-[#c8963c]">
-              {welcomeOffer.percent}%
-            </span>
-            <span className="mt-0.5 font-display text-[1.5rem] font-medium leading-[1] text-[#c8963c]">
-              OFF
-            </span>
-            <span className="mt-3 text-[0.45rem] font-bold text-white tracking-[0.1em] uppercase">
-              {welcomeOffer.firstOrderOnly ? "On your first order" : "On your order"}
-            </span>
-            <span className="mt-1 text-[0.45rem] font-bold text-white tracking-[0.1em] uppercase">
-              Code: {welcomeOffer.code}
-            </span>
-          </div>
+          <IntroductoryOfferMedallion
+            offer={welcomeOffer}
+            className="absolute right-6 top-6 hidden lg:flex xl:right-14 xl:top-10 z-20"
+          />
         )}
       </div>
 
@@ -245,7 +221,7 @@ export default function Hero() {
           onClick={() => go(d)}
           aria-label={label}
           className={cn(
-            "absolute inset-y-0 my-auto hidden size-9 place-items-center rounded-full border backdrop-blur transition-colors lg:grid",
+            "absolute inset-y-0 my-auto hidden size-11 place-items-center rounded-full border backdrop-blur transition-colors lg:grid",
             side,
             dark
               ? "border-gold-400/40 bg-plum-900/60 text-gold-200 hover:bg-plum-900/85"
@@ -256,7 +232,8 @@ export default function Hero() {
         </button>
       ))}
 
-      <div className="absolute bottom-5 inset-x-0 mx-auto flex w-fit gap-2">
+      {/* Slide Navigation Dots */}
+      <div className="absolute bottom-[4.25rem] lg:bottom-[4.75rem] inset-x-0 mx-auto flex w-fit gap-1 sm:gap-2 z-20">
         {SLIDES.map((s, n) => (
           <button
             key={s.image}
@@ -266,12 +243,48 @@ export default function Hero() {
             }}
             aria-label={`Go to slide ${n + 1}`}
             aria-current={n === shown}
-            className={cn(
-              "h-1.5 rounded-full transition-all",
-              n === shown ? "w-6 bg-gold-600" : "w-1.5 bg-gold-500/50",
-            )}
-          />
+            className="p-3 grid place-items-center focus:outline-none"
+          >
+            <span
+              className={cn(
+                "block h-1.5 rounded-full transition-all",
+                n === shown ? "w-6 bg-gold-600" : "w-1.5 bg-gold-500/50",
+              )}
+            />
+          </button>
         ))}
+      </div>
+
+      {/* ── Full-Width Edge-to-Edge Trust Ribbon ──────────────────────────
+          Spans 100% from one end to the other end, matching the clean
+          rectilinear architectural aesthetic of the site (like the
+          AnnouncementBar and GoldBand).
+      ─────────────────────────────────────────────────────────────────── */}
+      <div className="relative z-20 w-full bg-[#20082d] border-t border-gold-400/40 border-b border-black/20 shadow-md">
+        <div className="container-vel py-3 sm:py-3.5 xl:py-4 2xl:py-5">
+          <ul className="grid grid-cols-2 gap-y-3.5 gap-x-3 sm:gap-x-4 sm:flex sm:items-center sm:justify-between px-2 sm:px-6 lg:px-8 xl:px-6 2xl:px-8">
+            {BADGES.map(({ Icon, line1, line2 }, idx) => (
+              <Fragment key={line1}>
+                <li className="flex items-center justify-start gap-2.5 sm:gap-3 xl:gap-4">
+                  <span className="grid size-8 sm:size-9 lg:size-10 xl:size-12 2xl:size-13 shrink-0 place-items-center rounded-full border border-gold-400/60 bg-gold-500/15 text-gold-300 shadow-inner">
+                    <Icon className="size-4 sm:size-4.5 lg:size-5 xl:size-6 2xl:size-6.5 text-[#fcedc7]" strokeWidth={1.5} />
+                  </span>
+                  <div className="flex flex-col text-left leading-[1.15]">
+                    <span className="font-heading text-[0.62rem] sm:text-[0.74rem] lg:text-[0.8rem] xl:text-[0.9rem] 2xl:text-[0.96rem] font-bold tracking-[0.06em] sm:tracking-[0.14em] uppercase text-cream-50">
+                      {line1}
+                    </span>
+                    <span className="font-heading text-[0.62rem] sm:text-[0.74rem] lg:text-[0.8rem] xl:text-[0.9rem] 2xl:text-[0.96rem] font-bold tracking-[0.06em] sm:tracking-[0.14em] uppercase text-cream-50">
+                      {line2}
+                    </span>
+                  </div>
+                </li>
+                {idx < BADGES.length - 1 && (
+                  <span className="hidden sm:block h-6 xl:h-8 w-px bg-gold-400/30 shrink-0" aria-hidden="true" />
+                )}
+              </Fragment>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );

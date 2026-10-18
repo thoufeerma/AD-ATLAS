@@ -36,7 +36,7 @@ export default function ForgotPassword() {
         {state === "sent" ? (
           <div role="status" className="text-center">
             <MailCheck className="mx-auto size-12 text-gold-600" strokeWidth={1.4} />
-            <h2 className="mt-4 font-display text-2xl text-plum-800">Check your inbox</h2>
+            <h2 className="mt-4 font-heading text-2xl font-bold text-plum-800">Check your inbox</h2>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">
               If there&apos;s an account for <strong className="text-plum-800">{email.trim()}</strong>,
               we&apos;ve sent it a link to choose a new password. The link works for one hour.
@@ -47,7 +47,7 @@ export default function ForgotPassword() {
           </div>
         ) : (
           <form onSubmit={submit} noValidate>
-            <h2 className="font-display text-2xl text-plum-800">Forgot your password?</h2>
+            <h2 className="font-heading text-2xl font-bold text-plum-800">Forgot your password?</h2>
             <p className="mt-1 text-[0.8rem] text-ink-soft">
               Enter your email and we&apos;ll send you a link to choose a new one.
             </p>

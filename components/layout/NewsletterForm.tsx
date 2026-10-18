@@ -68,7 +68,7 @@ export default function NewsletterForm({ variant = "button" }: { variant?: "butt
           </button>
         </div>
       ) : (
-      <div className="flex gap-3">
+      <div className="flex gap-2.5 sm:gap-3">
         <input
           id="footer-email"
           type="email"
@@ -78,12 +78,12 @@ export default function NewsletterForm({ variant = "button" }: { variant?: "butt
           aria-invalid={!!error}
           aria-describedby={error ? "footer-email-error" : undefined}
           placeholder="Enter your email"
-          className="w-full min-w-0 rounded-md border border-cream-200/40 bg-transparent px-4 py-2.5 text-[0.95rem] text-cream-100 placeholder:text-cream-200/70 focus:border-gold-400 focus:outline-none"
+          className="w-full min-w-0 rounded-md border border-white/20 bg-[#160420] px-3.5 sm:px-4 py-2.5 h-11 text-[0.88rem] sm:text-[0.92rem] text-cream-50 placeholder:text-cream-100/50 focus:border-gold-400 focus:outline-none"
         />
         <button
           type="submit"
           disabled={state === "sending"}
-          className="shrink-0 rounded-md bg-gold-500 px-5 py-2.5 text-[0.95rem] font-medium uppercase text-white transition-colors hover:bg-gold-400 disabled:opacity-60"
+          className="shrink-0 rounded-md bg-[#c8963c] px-4 sm:px-6 py-2.5 h-11 min-h-[44px] text-[0.82rem] sm:text-[0.88rem] font-medium uppercase tracking-wider text-white transition-colors hover:bg-[#b8862c] disabled:opacity-60"
         >
           {state === "sending" ? "..." : "SUBSCRIBE"}
         </button>

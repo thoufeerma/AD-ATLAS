@@ -5,11 +5,11 @@ type Variant = "primary" | "gold" | "outline" | "ghost";
 type Size = "sm" | "md" | "lg";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-plum-800 text-cream-50 hover:bg-plum-700",
+  primary: "bg-[#20082d] text-cream-50 hover:bg-[#2e0c40]",
   gold: "bg-gold-600 text-white hover:bg-gold-500",
   outline:
-    "border border-plum-800/25 text-plum-800 hover:border-plum-800 hover:bg-plum-800 hover:text-cream-50",
-  ghost: "text-plum-800 hover:text-gold-600",
+    "border border-[#20082d]/25 text-[#20082d] hover:border-[#20082d] hover:bg-[#20082d] hover:text-cream-50",
+  ghost: "text-[#20082d] hover:text-gold-600",
 };
 
 const SIZES: Record<Size, string> = {

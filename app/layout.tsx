@@ -4,7 +4,6 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import ShopFooter from "@/components/layout/ShopFooter";
 import FooterSwitch from "@/components/layout/FooterSwitch";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
 import AccountLoader from "@/components/providers/AccountLoader";
@@ -20,7 +19,6 @@ const cormorant = Cormorant_Garamond({
 const jost = Jost({
   variable: "--font-jost",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
 });
 
 const script = Dancing_Script({
@@ -68,12 +66,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${cormorant.variable} ${jost.variable} ${script.variable} ${montserrat.variable} ${digits.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-cream-50 text-ink">
+      <body className="min-h-full flex flex-col bg-cream-50 text-ink font-sans">
         <SettingsProvider settings={settings}>
           <AccountLoader />
           <Header announcements={announcements} />
           <main className="flex-1">{children}</main>
-          <FooterSwitch standard={<Footer />} shop={<ShopFooter />} />
+          <FooterSwitch standard={<Footer />} />
         </SettingsProvider>
       </body>
     </html>

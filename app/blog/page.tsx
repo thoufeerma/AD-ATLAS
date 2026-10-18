@@ -48,7 +48,7 @@ export default async function BlogIndexPage() {
           </div>
           <div className="flex flex-col justify-center gap-3 p-6 sm:p-9">
             <p className="label-caps text-[0.6rem] text-gold-700">Latest</p>
-            <h2 className="font-display text-2xl leading-tight text-plum-800 group-hover:text-gold-700 sm:text-3xl">
+            <h2 className="font-heading font-bold text-2xl leading-tight text-plum-800 group-hover:text-gold-700 sm:text-3xl">
               {lead.title}
             </h2>
             {lead.excerpt && <p className="text-[0.9rem] leading-relaxed text-ink-soft">{lead.excerpt}</p>}
@@ -74,7 +74,7 @@ export default async function BlogIndexPage() {
                       />
                     )}
                   </div>
-                  <h3 className="mt-4 font-display text-lg leading-snug text-plum-800 group-hover:text-gold-700">
+                  <h3 className="mt-4 font-heading font-bold text-lg leading-snug text-plum-800 group-hover:text-gold-700">
                     {post.title}
                   </h3>
                   {post.excerpt && (

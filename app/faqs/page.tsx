@@ -21,7 +21,7 @@ export default async function FaqsPage() {
         <div className="absolute inset-0 z-0 hidden lg:block">
           <img src="/images/faqs section hero banner.png" alt="FAQs" className="w-full h-full object-cover object-[center_right]" />
         </div>
-        <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6">
+        <div className="relative z-10 w-full container-vel">
           <div className="w-full lg:w-[45%] lg:py-24">
              <h1 className="text-[#c8963c] font-bold uppercase tracking-[0.2em] text-[0.8rem] mb-4">FAQS</h1>
              <h2 className="text-[#240b25] font-display text-[3.5rem] lg:text-[4.5rem] leading-[1.05] font-medium mb-3">
@@ -68,20 +68,20 @@ export default async function FaqsPage() {
       </section>
 
       {/* 2. Main FAQs Interactive Section */}
-      <section className="bg-[#fcf9f5] py-10 px-6 w-full">
+      <section className="bg-[#fcf9f5] py-10 w-full">
          <FaqInteractiveLayout />
       </section>
 
       {/* 3. Trust Badges Band */}
-      <section className="bg-[#f9eee6] py-10 px-6 w-full border-y border-[#f3eadf]">
-        <div className="max-w-[1400px] mx-auto flex flex-wrap justify-between items-center gap-y-10 lg:gap-0">
+      <section className="bg-[#f9eee6] py-10 w-full border-y border-[#f3eadf]">
+        <div className="container-vel flex flex-wrap justify-between items-center gap-y-10 lg:gap-0">
            {/* Item 1 */}
            <div className="flex flex-col items-center text-center gap-3 flex-1 relative px-1 lg:px-2">
               <span className="grid size-14 lg:size-16 place-items-center rounded-full border border-[#240b25]/40 bg-transparent text-[#240b25]">
                  <FlaskConical size={28} strokeWidth={1} />
               </span>
               <div>
-                <h4 className="text-[0.75rem] lg:text-[0.85rem] font-display font-extrabold uppercase tracking-widest text-[#240b25] mb-1 lg:mb-2 whitespace-nowrap">SAFE INGREDIENTS</h4>
+                <h4 className="text-[0.75rem] lg:text-[0.85rem] font-heading font-bold uppercase tracking-widest text-[#240b25] mb-1 lg:mb-2 whitespace-nowrap">SAFE INGREDIENTS</h4>
                 <p className="text-[0.65rem] lg:text-[0.75rem] text-[#240b25]/80 leading-snug font-medium">Carefully chosen for your<br/>skin & health.</p>
               </div>
               <div className="hidden lg:block absolute right-0 top-[10%] bottom-[10%] w-px bg-[#240b25]/10" />
@@ -93,7 +93,7 @@ export default async function FaqsPage() {
                  <ShieldCheck size={28} strokeWidth={1} />
               </span>
               <div>
-                <h4 className="text-[0.75rem] lg:text-[0.85rem] font-display font-extrabold uppercase tracking-widest text-[#240b25] mb-1 lg:mb-2 whitespace-nowrap">DERMATOLOGICALLY TESTED</h4>
+                <h4 className="text-[0.75rem] lg:text-[0.85rem] font-heading font-bold uppercase tracking-widest text-[#240b25] mb-1 lg:mb-2 whitespace-nowrap">DERMATOLOGICALLY TESTED</h4>
                 <p className="text-[0.65rem] lg:text-[0.75rem] text-[#240b25]/80 leading-snug font-medium">Each product is tested<br/>for safety.</p>
               </div>
               <div className="hidden lg:block absolute right-0 top-[10%] bottom-[10%] w-px bg-[#240b25]/10" />
@@ -105,7 +105,7 @@ export default async function FaqsPage() {
                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M13 16a3 3 0 0 1 2.24 5"/><path d="M18 12h.01"/><path d="M18 21h-8a4 4 0 0 1-4-4 7 7 0 0 1 7-7h.2L9.6 6.4a1 1 0 1 1 2.8-2.8L15.8 7h.2c3.3 0 6 2.7 6 6v1a2 2 0 0 1-2 2h-1a3 3 0 0 0-3 3"/><path d="M20 8.54V4a2 2 0 1 0-4 0v3"/><path d="M7.612 12.524a3 3 0 1 0-1.6 4.3"/></svg>
               </span>
               <div>
-                <h4 className="text-[0.75rem] lg:text-[0.85rem] font-display font-extrabold uppercase tracking-widest text-[#240b25] mb-1 lg:mb-2 whitespace-nowrap">CRUELTY FREE & VEGAN</h4>
+                <h4 className="text-[0.75rem] lg:text-[0.85rem] font-heading font-bold uppercase tracking-widest text-[#240b25] mb-1 lg:mb-2 whitespace-nowrap">CRUELTY FREE & VEGAN</h4>
                 <p className="text-[0.65rem] lg:text-[0.75rem] text-[#240b25]/80 leading-snug font-medium">We love animals as much<br/>as you do.</p>
               </div>
                <div className="hidden lg:block absolute right-0 top-[10%] bottom-[10%] w-px bg-[#240b25]/10" />
@@ -117,7 +117,7 @@ export default async function FaqsPage() {
                  <MapPin size={28} strokeWidth={1} />
               </span>
               <div>
-                <h4 className="text-[0.75rem] lg:text-[0.85rem] font-display font-extrabold uppercase tracking-widest text-[#240b25] mb-1 lg:mb-2 whitespace-nowrap">MADE IN INDIA</h4>
+                <h4 className="text-[0.75rem] lg:text-[0.85rem] font-heading font-bold uppercase tracking-widest text-[#240b25] mb-1 lg:mb-2 whitespace-nowrap">MADE IN INDIA</h4>
                 <p className="text-[0.65rem] lg:text-[0.75rem] text-[#240b25]/80 leading-snug font-medium">Proudly formulated<br/>for Indian skin.</p>
               </div>
               <div className="hidden lg:block absolute right-0 top-[10%] bottom-[10%] w-px bg-[#240b25]/10" />
@@ -129,7 +129,7 @@ export default async function FaqsPage() {
                  <Award size={28} strokeWidth={1} />
               </span>
               <div>
-                <h4 className="text-[0.75rem] lg:text-[0.85rem] font-display font-semibold uppercase tracking-widest text-[#240b25] mb-1 lg:mb-2 whitespace-nowrap">QUALITY YOU CAN TRUST</h4>
+                <h4 className="text-[0.75rem] lg:text-[0.85rem] font-heading font-bold uppercase tracking-widest text-[#240b25] mb-1 lg:mb-2 whitespace-nowrap">QUALITY YOU CAN TRUST</h4>
                 <p className="text-[0.65rem] lg:text-[0.75rem] text-[#240b25]/80 leading-snug font-medium">Luxury care with complete<br/>transparency.</p>
               </div>
            </div>
@@ -137,10 +137,10 @@ export default async function FaqsPage() {
       </section>
 
       {/* 4. LOVED BY THOUSANDS Testimonials */}
-      <section className="bg-white py-10 px-6 w-full border-t border-[#f3eadf]">
-         <div className="max-w-[1400px] mx-auto">
+      <section className="bg-white py-10 w-full border-t border-[#f3eadf]">
+         <div className="container-vel">
             <div className="text-center mb-10">
-               <h3 className="text-[#240b25] font-display text-[1.5rem] uppercase tracking-widest font-extrabold">LOVED BY THOUSANDS OF BEAUTIFUL YOU</h3>
+               <h3 className="text-[#240b25] font-heading text-[1.5rem] uppercase tracking-widest font-bold">LOVED BY THOUSANDS OF BEAUTIFUL YOU</h3>
                <div className="flex items-center justify-center w-full mt-4">
                   <div className="h-px bg-[#c8963c]/50 w-16"></div>
                   <Ornament className="w-12 mx-3 text-[#c8963c]" />
@@ -153,10 +153,10 @@ export default async function FaqsPage() {
       </section>
 
       {/* 5. Banner Section (Moved to be ABOVE the trust strip) */}
-      <section className="bg-[#240b25] py-10 px-6 w-full text-cream-50">
-        <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-10">
+      <section className="bg-[#240b25] py-10 w-full text-cream-50">
+        <div className="container-vel flex flex-col lg:flex-row items-center justify-between gap-10">
            <div className="lg:w-auto flex flex-col items-center lg:items-start text-center lg:text-left pr-10">
-              <h2 className="font-display font-medium text-[1.4rem] lg:text-[1.6rem] tracking-wider uppercase mb-3 text-white">BEAUTY SHOULD BE SAFE. ALWAYS.</h2>
+              <h2 className="font-heading font-bold text-[1.4rem] lg:text-[1.6rem] tracking-wider uppercase mb-3 text-white">BEAUTY SHOULD BE SAFE. ALWAYS.</h2>
               <p className="text-[0.95rem] text-cream-50/90 leading-relaxed font-medium mb-6 max-w-md">
                  That's why every Velastia product is created with love, backed by science and inspired by you.
               </p>
@@ -213,8 +213,8 @@ export default async function FaqsPage() {
       </section>
 
       {/* 6. White Trust Strip (Moved to be BELOW the banner) */}
-      <section className="bg-white py-10 px-6 border-t border-[#f3eadf] w-full">
-         <div className="max-w-[1400px] mx-auto flex justify-between items-center flex-wrap gap-8">
+      <section className="bg-white py-10 border-t border-[#f3eadf] w-full">
+         <div className="container-vel flex justify-between items-center flex-wrap gap-8">
             <div className="flex items-center gap-4">
                <span className="grid size-12 rounded-full bg-[#fdfbf9] border border-[#c8963c]/40 text-[#c8963c] place-items-center shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>

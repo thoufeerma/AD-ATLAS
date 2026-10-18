@@ -95,39 +95,41 @@ export function CartClient({ products, reviews }: { products: Product[], reviews
     <div className="bg-[#fcf9f5] w-full min-h-screen flex flex-col font-sans text-[#240b25]">
       
       {/* 1. CART BANNER SECTION */}
-      <section className="w-full pt-8 pb-0 lg:pt-10 lg:pb-0 px-6 lg:px-12">
-        <div className="max-w-[1400px] mx-auto relative rounded-2xl overflow-hidden shadow-sm flex items-center min-h-[220px] lg:min-h-[280px]">
-           {/* Background Image */}
-           <div className="absolute inset-0 z-0">
-              <img src="/images/your cart banner.png" alt="Cart Banner" className="w-full h-full object-cover object-right lg:object-center" />
-           </div>
-           
-           {/* Left Content overlaid on the banner */}
-           <div className="relative z-10 w-full lg:w-[50%] flex flex-col py-8 px-8 lg:px-12">
-             <div className="flex items-center gap-4 mb-1">
-               <h1 className="font-display font-bold text-[3.2rem] lg:text-[4rem] leading-[1.05] text-[#240b25] tracking-tight">
-                 Your Cart
-               </h1>
-               <ScriptHeart className="w-10 h-10 text-[#c8963c] mt-1 shrink-0" />
-             </div>
-             
-             {/* Breadcrumbs */}
-             <div className="flex items-center gap-2 text-[0.8rem] text-[#240b25]/70 mb-6 font-medium">
-                <Link href="/">Home</Link>
-                <ChevronRight size={14} />
-                <span className="text-[#240b25]">Cart</span>
-             </div>
-             
-             <p className="text-[1.05rem] lg:text-[1.15rem] text-[#240b25]/80 font-medium max-w-[400px] leading-relaxed">
-               Great choices! You're just a step away from <span className="text-[#c8963c] font-bold">flawless beauty.</span>
-             </p>
-           </div>
+      <section className="w-full pt-8 pb-0 lg:pt-10 lg:pb-0">
+        <div className="container-vel">
+          <div className="relative rounded-2xl overflow-hidden shadow-sm flex items-center min-h-[220px] lg:min-h-[280px]">
+            {/* Background Image */}
+            <div className="absolute inset-0 z-0">
+               <img src="/images/your cart banner.png" alt="Cart Banner" className="w-full h-full object-cover object-right lg:object-center" />
+            </div>
+            
+            {/* Left Content overlaid on the banner */}
+            <div className="relative z-10 w-full lg:w-[50%] flex flex-col py-8 px-8 lg:px-12">
+              <div className="flex items-center gap-4 mb-1">
+                <h1 className="font-display font-bold text-[3.2rem] lg:text-[4rem] leading-[1.05] text-[#240b25] tracking-tight">
+                  Your Cart
+                </h1>
+                <ScriptHeart className="w-10 h-10 text-[#c8963c] mt-1 shrink-0" />
+              </div>
+              
+              {/* Breadcrumbs */}
+              <div className="flex items-center gap-2 text-[0.86rem] sm:text-[0.9rem] text-[#240b25]/75 mb-6 font-medium">
+                 <Link href="/" className="hover:text-[#c8963c] transition-colors">Home</Link>
+                 <ChevronRight size={15} className="text-[#240b25]/50 shrink-0" />
+                 <span className="text-[#240b25] font-semibold">Cart</span>
+              </div>
+              
+              <p className="text-[1.05rem] lg:text-[1.15rem] text-[#240b25]/80 font-medium max-w-[400px] leading-relaxed">
+                Great choices! You're just a step away from <span className="text-[#c8963c] font-bold">flawless beauty.</span>
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* 2. MAIN CART CONTENT */}
-      <section className="w-full pt-4 pb-12 lg:pt-5 lg:pb-12 px-6 lg:px-12">
-        <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-8 lg:gap-8">
+      <section className="w-full pt-4 pb-12 lg:pt-5 lg:pb-12">
+        <div className="container-vel grid grid-cols-1 lg:grid-cols-[1fr_420px] xl:grid-cols-[1fr_460px] gap-8 xl:gap-10">
            
            {/* LEFT COLUMN: Cart Items & Badges */}
            <div className="flex flex-col bg-[#fdfbf9] border border-[#eaddce] rounded-xl p-6 lg:p-10 shadow-sm h-fit">
@@ -357,12 +359,12 @@ export function CartClient({ products, reviews }: { products: Product[], reviews
                  </p>
 
                  {/* Payment Methods */}
-                 <div className="flex items-center justify-center gap-3 mt-2">
-                    <Razorpay className="h-5 w-auto" />
-                    <Visa className="h-5 w-auto" />
-                    <Mastercard className="h-5 w-auto" />
-                    <Upi className="h-5 w-auto text-[#240b25]" />
-                    <Paytm className="h-4 w-auto" />
+                 <div className="flex items-center justify-center gap-3 mt-2 flex-wrap">
+                    <Razorpay className="h-5 w-auto shrink-0" />
+                    <Visa className="h-5 w-auto shrink-0" />
+                    <Mastercard className="h-5 w-auto shrink-0" />
+                    <Upi className="h-5 w-auto shrink-0 text-[#240b25]" />
+                    <Paytm className="h-4 w-auto shrink-0" />
                  </div>
               </div>
 
@@ -390,8 +392,9 @@ export function CartClient({ products, reviews }: { products: Product[], reviews
       </section>
 
       {/* 3. COMPLIMENTARY GIFT BANNER */}
-      <section className="w-full px-6 lg:px-12 py-4">
-         <div className="max-w-[1400px] mx-auto rounded-2xl relative overflow-hidden shadow-sm">
+      <section className="w-full py-4">
+         <div className="container-vel">
+           <div className="rounded-2xl relative overflow-hidden shadow-sm">
             
             {/* Carousel Slider */}
             <div 
@@ -432,12 +435,14 @@ export function CartClient({ products, reviews }: { products: Product[], reviews
                   <ChevronRight size={16} />
                </button>
             </div>
+           </div>
          </div>
       </section>
 
       {/* 4. TRUSTED REVIEWS SECTION */}
-      <section className="w-full pb-16 px-6 lg:px-12">
-        <div className="max-w-[1400px] mx-auto bg-[#fcf9f5] border border-[#eaddce] rounded-xl p-8 lg:p-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 lg:gap-12 shadow-sm">
+      <section className="w-full pb-16">
+        <div className="container-vel">
+          <div className="bg-[#fcf9f5] border border-[#eaddce] rounded-xl p-8 lg:p-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 lg:gap-12 shadow-sm">
            
            {/* Left Total Reviews */}
            <div className="flex flex-col shrink-0 lg:border-r border-[#eaddce] lg:pr-12 lg:py-2">
@@ -479,6 +484,7 @@ export function CartClient({ products, reviews }: { products: Product[], reviews
                 </div>
               ))}
            </div>
+         </div>
         </div>
       </section>
 

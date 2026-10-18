@@ -200,14 +200,14 @@ export default function ShopBrowser({
             onClick={() => setFiltersOpen((o) => !o)}
             className="mb-4 flex w-full items-center justify-between rounded-sm border border-gold-200 bg-cream-100 px-4 py-3 lg:hidden"
           >
-            <span className="font-display text-[1.15rem] font-bold uppercase tracking-wide text-plum-800">Filters</span>
+            <span className="font-heading text-[1.15rem] font-bold uppercase tracking-wide text-plum-800">Filters</span>
             <SlidersHorizontal className="size-4 text-gold-600" />
           </button>
 
           <div className={cn("space-y-7", filtersOpen ? "block" : "hidden lg:block")}>
             <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-5">
               <div className="mb-5 flex items-center justify-between border-b border-gold-200/70 pb-3">
-                <h2 className="font-display text-[1.3rem] font-bold uppercase tracking-wide text-plum-800">Filters</h2>
+                <h2 className="font-heading text-[1.3rem] font-bold uppercase tracking-wide text-plum-800">Filters</h2>
                 <SlidersHorizontal className="size-5 text-gold-600" />
               </div>
 
@@ -324,7 +324,7 @@ export default function ShopBrowser({
               No products match these filters yet.
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4 xl:gap-5 2xl:gap-6 py-2">
               {pageProducts.map((p) => (
                 <ProductCard key={p.slug} product={p} />
               ))}
@@ -341,7 +341,7 @@ export default function ShopBrowser({
                   />
                   {/* A light shade so the lettering reads over the photo */}
                   <div className="absolute inset-0 bg-plum-950/30" />
-                  <h3 className="relative font-display text-[1.7rem] font-medium leading-[1.25] text-cream-50">
+                  <h3 className="relative font-heading text-[1.7rem] font-bold leading-[1.25] text-cream-50">
                     More Premium
                     <br />
                     Products

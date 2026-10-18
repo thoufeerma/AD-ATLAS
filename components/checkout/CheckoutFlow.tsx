@@ -159,7 +159,7 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
     return (
       <div className="container-vel py-20 text-center">
         <ShoppingBag className="mx-auto size-10 text-gold-500" />
-        <h2 className="mt-5 font-display text-2xl text-plum-800">Nothing to check out</h2>
+        <h2 className="mt-5 font-heading text-2xl font-bold text-plum-800">Nothing to check out</h2>
         <p className="mt-2 text-sm text-ink-soft">Your cart is empty.</p>
         <Button href="/shop" className="mt-7">
           Continue Shopping
@@ -172,7 +172,7 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
     return (
       <div className="container-vel py-20 text-center">
         <AlertCircle className="mx-auto size-10 text-gold-500" />
-        <h2 className="mt-5 font-display text-2xl text-plum-800">Your cart needs a look</h2>
+        <h2 className="mt-5 font-heading text-2xl font-bold text-plum-800">Your cart needs a look</h2>
         <p className="mt-2 text-sm text-ink-soft">
           Some items are no longer available. Remove them from your cart to continue.
         </p>
@@ -328,7 +328,7 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
         <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6 sm:p-8">
           {step === "Shipping" && (
             <>
-              <h2 className="font-display text-xl text-plum-800">Shipping Details</h2>
+              <h2 className="font-heading text-xl font-bold text-plum-800">Shipping Details</h2>
               {me ? (
                 <p className="mt-2 flex items-center gap-2 text-[0.75rem] text-ink-soft">
                   <UserCheck className="size-4 text-success" /> Signed in as {me.email}
@@ -521,7 +521,7 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
 
           {step === "Payment" && (
             <>
-              <h2 className="font-display text-xl text-plum-800">Payment Method</h2>
+              <h2 className="font-heading text-xl font-bold text-plum-800">Payment Method</h2>
               <p className="mt-1 text-[0.72rem] text-ink-soft">
                 {offered.some((m) => m.id !== "COD")
                   ? "Pay securely through Razorpay, or in cash when your order arrives."
@@ -579,7 +579,7 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
 
           {step === "Review" && (
             <>
-              <h2 className="font-display text-xl text-plum-800">Review Your Order</h2>
+              <h2 className="font-heading text-xl font-bold text-plum-800">Review Your Order</h2>
 
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
                 <div className="rounded-sm border border-gold-200 p-4">
@@ -682,7 +682,7 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
         {/* Summary */}
         <aside className="lg:sticky lg:top-28 lg:self-start">
           <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6">
-            <h2 className="font-display text-xl text-plum-800">Order Summary</h2>
+            <h2 className="font-heading text-xl font-bold text-plum-800">Order Summary</h2>
             <QuoteSummary quote={quote} stale={stale || !!error} totalLabel="Total" />
             {(error || couponProblem) && (
               <p role="alert" className="mt-4 flex items-start gap-2 rounded-sm bg-blush-100 px-3 py-2.5 text-[0.72rem] text-plum-800">

@@ -23,7 +23,7 @@ export default function SectionHeading({
       )}
     >
       <div className={align === "center" ? "text-center" : ""}>
-        <h2 className="font-display text-[1.7rem] tracking-[0.06em] text-plum-800 sm:text-[2rem]">
+        <h2 className="font-heading font-bold text-[1.7rem] tracking-[0.06em] text-plum-800 sm:text-[2rem]">
           {title}
         </h2>
         {subtitle && <p className="mt-1 text-sm text-ink-soft">{subtitle}</p>}

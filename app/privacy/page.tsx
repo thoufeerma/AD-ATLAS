@@ -68,7 +68,7 @@ export default function PrivacyPage() {
         <div className="absolute inset-0 z-0 w-full h-full">
            <img src="/images/faqs section hero banner.png" alt="Privacy Banner" className="w-full h-full object-cover object-right lg:object-center" />
         </div>
-        <div className="max-w-[1500px] mx-auto w-full px-6 lg:px-16 flex flex-col relative z-10 pt-10 lg:pt-0">
+        <div className="container-vel w-full flex flex-col relative z-10 pt-10 lg:pt-0">
            
            {/* Content (Left aligned over background) */}
            <div className="w-full lg:w-[45%] flex flex-col relative z-10">
@@ -110,10 +110,10 @@ export default function PrivacyPage() {
       </section>
 
       {/* 2. DARK BANNER */}
-      <section className="w-full bg-[#240b25] py-6 px-6 lg:px-12 text-cream-50 border-b-2 border-[#f3eadf]">
-        <div className="max-w-[1500px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-16">
+      <section className="w-full bg-[#240b25] py-6 text-cream-50 border-b-2 border-[#f3eadf]">
+        <div className="container-vel flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-16">
            <div className="lg:w-[45%] flex flex-col">
-              <h3 className="font-display font-bold uppercase tracking-[0.15em] text-[#c8963c] text-[1.1rem] mb-3">
+              <h3 className="font-heading font-bold uppercase tracking-[0.15em] text-[#c8963c] text-[1.1rem] mb-3">
                 OUR COMMITMENT TO YOU
               </h3>
               <p className="text-[0.95rem] font-medium leading-relaxed text-cream-50/90">
@@ -130,7 +130,7 @@ export default function PrivacyPage() {
               ].map((item, i) => (
                 <div key={i} className={`flex flex-col items-center justify-center gap-3 ${i !== 0 ? 'md:border-l border-[#c8963c]/20' : ''}`}>
                   <item.icon className="text-[#c8963c]" size={36} strokeWidth={1} />
-                  <p className="text-[0.85rem] font-display uppercase tracking-widest text-cream-50 font-semibold">{item.t}</p>
+                  <p className="text-[0.85rem] font-heading uppercase tracking-widest text-cream-50 font-bold">{item.t}</p>
                 </div>
               ))}
            </div>
@@ -138,21 +138,21 @@ export default function PrivacyPage() {
       </section>
 
       {/* 3. POLICY GRID SECTION */}
-      <section className="w-full py-10 px-6 lg:px-12 relative bg-[#fcf9f5]">
-        <div className="max-w-[1400px] mx-auto flex flex-col items-center">
-          <h3 className="font-display font-extrabold uppercase tracking-[0.2em] text-[1.4rem] text-[#240b25] mb-8 text-center">
+      <section className="w-full py-10 relative bg-[#fcf9f5]">
+        <div className="container-vel flex flex-col items-center">
+          <h3 className="font-heading font-bold uppercase tracking-[0.2em] text-[1.4rem] text-[#240b25] mb-8 text-center">
             HOW WE PROTECT & RESPECT YOUR PRIVACY
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
             {policies.map((pol, i) => (
               <div key={i} className="bg-white border border-[#f3eadf] rounded-[1.2rem] p-8 flex flex-col hover:shadow-lg transition-shadow duration-300 relative group min-h-[280px]">
-                 <div className="size-8 rounded-full bg-[#240b25] text-cream-50 font-display font-bold text-[0.85rem] flex items-center justify-center absolute top-6 left-6">
+                 <div className="size-8 rounded-full bg-[#240b25] text-cream-50 font-heading font-bold text-[0.85rem] flex items-center justify-center absolute top-6 left-6">
                    {pol.id}
                  </div>
                  <div className="flex justify-center mb-6 mt-2">
                    <pol.icon className="text-[#c8963c]" size={32} strokeWidth={1.2} />
                  </div>
-                 <h4 className="font-display font-bold uppercase tracking-widest text-[1rem] text-[#240b25] mb-3 text-center">
+                 <h4 className="font-heading font-bold uppercase tracking-widest text-[1rem] text-[#240b25] mb-3 text-center">
                    {pol.title}
                  </h4>
                  <p className="text-[0.9rem] text-[#240b25]/85 font-medium leading-relaxed text-center">
@@ -165,17 +165,18 @@ export default function PrivacyPage() {
       </section>
 
       {/* 4. LIGHT PROMISE BANNER */}
-      <section className="w-full pb-8 lg:pb-10 px-6 lg:px-12 bg-[#fcf9f5]">
-        <div 
-          className="max-w-[1400px] mx-auto rounded-[1.5rem] py-6 px-8 lg:px-12 flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-10 bg-cover bg-center bg-no-repeat relative overflow-hidden"
-          style={{ backgroundImage: "url('/images/Your privacy is more than a policy – it\\'s our promise.png')" }}
-        >
+      <section className="w-full pb-8 lg:pb-10 bg-[#fcf9f5]">
+        <div className="container-vel">
+          <div 
+            className="rounded-[1.5rem] py-6 px-8 lg:px-12 flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-10 bg-cover bg-center bg-no-repeat relative overflow-hidden"
+            style={{ backgroundImage: "url('/images/Your privacy is more than a policy – it\\'s our promise.png')" }}
+          >
            {/* Space for background image graphics on left */}
            <div className="lg:w-[25%] hidden lg:block"></div>
 
            {/* Middle Text */}
            <div className="lg:w-[35%] flex flex-col items-center lg:items-start text-center lg:text-left relative z-10">
-              <h3 className="font-display font-bold text-[1.6rem] lg:text-[1.8rem] leading-[1.2] text-[#240b25] mb-3">
+              <h3 className="font-heading font-bold text-[1.6rem] lg:text-[1.8rem] leading-[1.2] text-[#240b25] mb-3">
                 Your privacy is more than a policy – it's our promise.
               </h3>
               <p className="text-[0.95rem] font-medium text-[#240b25]/80">
@@ -199,6 +200,7 @@ export default function PrivacyPage() {
                 </div>
               ))}
            </div>
+         </div>
         </div>
       </section>
 
@@ -206,7 +208,7 @@ export default function PrivacyPage() {
       <section className="w-full pt-2 pb-10 lg:pt-4 lg:pb-12 px-6 lg:px-12 bg-[#fcf9f5]">
         <div className="max-w-[1100px] mx-auto flex flex-col items-center">
           <div className="flex flex-col items-center mb-6 text-center">
-            <h3 className="font-display font-bold uppercase tracking-[0.15em] text-[1.5rem] text-[#240b25] mb-2">
+            <h3 className="font-heading font-bold uppercase tracking-[0.15em] text-[1.5rem] text-[#240b25] mb-2">
               FREQUENTLY ASKED QUESTIONS
             </h3>
             <div className="flex items-center gap-4">
@@ -258,123 +260,27 @@ export default function PrivacyPage() {
         </div>
       </section>
 
-      {/* 6. PRIVACY CUSTOM FOOTER */}
-      <section className="w-full bg-[#240b25] text-cream-50 pt-8 relative overflow-hidden">
-        <div className="max-w-[1250px] mx-auto px-6 lg:px-12 pb-8 relative z-10">
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-8 items-start">
-              
-              {/* Brand Column */}
-              <div className="lg:col-span-3 flex flex-col items-start pr-4 lg:pr-6">
-                 <img src="/brand/footer-logo-light.png" alt="Velastia" className="w-[185px] h-auto object-contain mb-5" />
-                 <p className="text-[0.85rem] leading-relaxed text-cream-50/90 mb-5 font-medium">
-                   Clean beauty backed by science and made to make you feel beautiful, every day.
-                 </p>
-                 <div className="flex items-center gap-3">
-                   {[Instagram, Youtube, Facebook, XIcon, Pinterest].map((Icon, i) => (
-                     <div key={i} className="size-8 rounded-full border border-cream-50/40 flex items-center justify-center hover:border-[#c8963c] hover:text-[#c8963c] transition-colors cursor-pointer">
-                       <Icon className="size-4" />
-                     </div>
-                   ))}
-                 </div>
-              </div>
-
-              {/* Quick Links Column */}
-              <div className="lg:col-span-2 flex flex-col items-start lg:pl-8 lg:border-l border-[#c8963c]/20">
-                 <h4 className="font-display uppercase tracking-widest font-bold text-[0.95rem] text-cream-50 mb-5">QUICK LINKS</h4>
-                 <div className="flex flex-col gap-3">
-                   {[
-                     { label: "Shop All", href: "/shop" },
-                     { label: "Best Sellers", href: "/shop" },
-                     { label: "New Arrivals", href: "/shop" },
-                     { label: "Offers", href: "/shop" },
-                     { label: "Gift Cards", href: "/shop" }
-                   ].map(link => (
-                     <a key={link.label} href={link.href} className="text-[0.85rem] font-medium text-cream-50/80 hover:text-[#c8963c] transition-colors">{link.label}</a>
-                   ))}
-                 </div>
-              </div>
-
-              {/* Customer Care Column */}
-              <div className="lg:col-span-2 flex flex-col items-start lg:pl-8 lg:border-l border-[#c8963c]/20">
-                 <h4 className="font-display uppercase tracking-widest font-bold text-[0.95rem] text-cream-50 mb-5 whitespace-nowrap">CUSTOMER CARE</h4>
-                 <div className="flex flex-col gap-3">
-                   {[
-                     { label: "FAQs", href: "/faqs" },
-                     { label: "Shipping & Delivery", href: "/shipping" },
-                     { label: "Return & Refunds", href: "/returns" },
-                     { label: "Terms & Conditions", href: "/terms" },
-                     { label: "Privacy Policy", href: "/privacy" }
-                   ].map(link => (
-                     <a key={link.label} href={link.href} className="text-[0.85rem] font-medium text-cream-50/80 hover:text-[#c8963c] transition-colors whitespace-nowrap">{link.label}</a>
-                   ))}
-                 </div>
-              </div>
-
-              {/* Contact Us Column */}
-              <div className="lg:col-span-2 flex flex-col items-start lg:pl-8 lg:border-l border-[#c8963c]/20">
-                 <h4 className="font-display uppercase tracking-widest font-bold text-[0.95rem] text-cream-50 mb-5 whitespace-nowrap">CONTACT US</h4>
-                 <div className="flex flex-col gap-3">
-                   <div className="flex items-center gap-2.5 text-[0.85rem] font-medium text-cream-50/80 whitespace-nowrap">
-                     <Mail size={15} className="text-[#c8963c]" /> hello@velastia.com
-                   </div>
-                   <div className="flex flex-col gap-0.5 text-[0.85rem] font-medium text-cream-50/80">
-                     <div className="flex items-center gap-2.5 whitespace-nowrap">
-                       <Phone size={15} className="text-[#c8963c]" /> +91 98765 43210
-                     </div>
-                     <span className="pl-6 text-[0.75rem] text-cream-50/60 whitespace-nowrap">(Mon - Sat | 10AM - 7PM)</span>
-                   </div>
-                   <div className="flex items-center gap-2.5 text-[0.85rem] font-medium text-cream-50/80">
-                     <MapPin size={15} className="text-[#c8963c]" /> Mumbai, India
-                   </div>
-                 </div>
-              </div>
-
-              {/* Newsletter Column */}
-              <div className="lg:col-span-3 flex flex-col items-start lg:pl-8 lg:border-l border-[#c8963c]/20 relative">
-                 <h4 className="font-display uppercase tracking-widest font-bold text-[0.95rem] text-cream-50 mb-3">NEWSLETTER</h4>
-                 <p className="text-[0.85rem] font-medium text-cream-50/80 mb-5 leading-relaxed relative z-10">
-                   Stay updated with our latest offers, launches & beauty tips.
-                 </p>
-                 <div className="w-full flex flex-col gap-3 relative z-10">
-                   <input type="email" placeholder="Enter your email address" className="w-full bg-transparent border border-cream-50/30 rounded-md py-2 px-3 text-[0.85rem] text-cream-50 placeholder:text-cream-50/50 focus:outline-none focus:border-[#c8963c]" />
-                   <button className="w-full bg-[#c8963c] text-white font-bold uppercase tracking-widest text-[0.85rem] py-2 rounded-md hover:bg-[#a67c30] transition-colors">
-                     SUBSCRIBE
-                   </button>
-                 </div>
-                 <div className="flex items-center gap-2 mt-3 text-[0.75rem] font-medium text-cream-50/60 relative z-10">
-                   <Shield size={12} className="text-[#c8963c]" /> We respect your privacy.
-                 </div>
-              </div>
-           </div>
-        </div>
-
-        {/* Bottom Feature Bar */}
-        <div className="w-full bg-[#fdfbf9] py-5 px-6 border-t border-[#eaddce] relative z-10">
-          <div className="max-w-[1400px] mx-auto flex flex-wrap items-center justify-center">
-             {[
-               { icon: Lock, t1: "Secure", t2: "Payments" },
-               { icon: RefreshCcw, t1: "Easy", t2: "Returns" },
-               { icon: Truck, t1: "Free Shipping", t2: "Above ₹999" },
-               { icon: ShieldCheck, t1: "7 Days Easy", t2: "Return" },
-               { icon: Box, t1: "Packed with", t2: "Care" },
-               { icon: Heart, t1: "Dedicated", t2: "Support" },
-             ].map((f, i) => (
-               <div key={i} className="flex items-center gap-2 py-2 w-[45%] md:w-[30%] lg:w-auto px-2 lg:px-5 xl:px-6">
-                  <div className="size-12 lg:size-14 shrink-0 rounded-full border border-[#c8963c]/40 flex items-center justify-center">
-                     <f.icon className="text-[#c8963c]" size={24} strokeWidth={1.5} />
-                  </div>
-                  <div className="flex flex-col">
-                     <p className="text-[0.95rem] font-bold text-[#240b25] leading-tight">{f.t1}</p>
-                     <p className="text-[0.85rem] font-medium text-[#240b25]/70 leading-tight">{f.t2}</p>
-                  </div>
-               </div>
-             ))}
-          </div>
-        </div>
-
-        {/* Absolute Right Decorative Image */}
-        <div className="absolute right-0 bottom-0 lg:-right-2 xl:right-0 w-[160px] lg:w-[180px] xl:w-[200px] pointer-events-none z-20 hidden lg:block">
-           <img src="/images/privacy policy footer image.png" alt="Decor" className="w-full h-auto object-contain drop-shadow-2xl" />
+      {/* Trust Feature Bar */}
+      <section className="w-full bg-[#fdfbf9] py-5 border-t border-[#eaddce]">
+        <div className="container-vel flex flex-wrap items-center justify-center">
+           {[
+             { icon: Lock, t1: "Secure", t2: "Payments" },
+             { icon: RefreshCcw, t1: "Easy", t2: "Returns" },
+             { icon: Truck, t1: "Free Shipping", t2: "Above ₹999" },
+             { icon: ShieldCheck, t1: "7 Days Easy", t2: "Return" },
+             { icon: Box, t1: "Packed with", t2: "Care" },
+             { icon: Heart, t1: "Dedicated", t2: "Support" },
+           ].map((f, i) => (
+             <div key={i} className="flex items-center gap-2 py-2 w-[45%] md:w-[30%] lg:w-auto px-2 lg:px-5 xl:px-6">
+                <div className="size-12 lg:size-14 shrink-0 rounded-full border border-[#c8963c]/40 flex items-center justify-center">
+                   <f.icon className="text-[#c8963c]" size={24} strokeWidth={1.5} />
+                </div>
+                <div className="flex flex-col">
+                   <p className="text-[0.95rem] font-bold text-[#240b25] leading-tight">{f.t1}</p>
+                   <p className="text-[0.85rem] font-medium text-[#240b25]/70 leading-tight">{f.t2}</p>
+                </div>
+             </div>
+           ))}
         </div>
       </section>
 
