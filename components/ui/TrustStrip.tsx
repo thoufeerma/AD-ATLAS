@@ -32,9 +32,9 @@ export default function TrustStrip({
         className,
       )}
     >
-      <div className="container-vel grid grid-cols-2 gap-x-3 sm:gap-x-6 xl:gap-x-8 gap-y-6 sm:gap-y-7 py-7 sm:py-8 xl:py-10 2xl:py-11 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="container-vel flex flex-wrap items-center justify-center gap-x-6 gap-y-6 sm:gap-x-10 sm:gap-y-7 lg:grid lg:grid-cols-5 lg:gap-x-4 xl:gap-x-8 py-7 sm:py-8 xl:py-10 2xl:py-11">
         {ITEMS.map(({ Icon, title, note }) => (
-          <div key={title} className="flex items-center gap-2.5 sm:gap-4 xl:gap-4.5">
+          <div key={title} className="flex items-center gap-2.5 sm:gap-3.5 xl:gap-4.5 lg:justify-self-center first:lg:justify-self-start last:lg:justify-self-end">
             <span className="grid size-10 lg:size-12 xl:size-14 2xl:size-15 shrink-0 place-items-center rounded-full border border-gold-300/60 bg-gold-500/5">
               <Icon strokeWidth={1.25} className={cn("size-5 lg:size-6.5 xl:size-7.5 2xl:size-8 shrink-0", dark ? "text-gold-400" : "text-gold-600")} />
             </span>
