@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { pageMetadata } from "@/lib/seo";
 import { Ornament, ScriptHeart } from "@/components/ui/Ornament";
+import { TransparencyBadge } from "@/components/ingredients/TransparencyBadge";
 import {
   VogueLogo,
   ElleLogo,
@@ -253,15 +254,8 @@ export default function IngredientsPage() {
         </div>
 
         {/* Circular Transparency Badge */}
-        <div className="absolute top-6 right-6 sm:top-8 sm:right-10 min-[1000px]:top-[4vw] min-[1000px]:right-[4.5vw] z-10 grid size-24 sm:size-28 min-[1000px]:size-[9.8vw] place-items-center rounded-full border-[3px] border-double border-[#c8963c] bg-cream-50/90 text-center shadow-lg backdrop-blur-xs">
-          <div>
-            <p className="font-heading text-[0.68rem] font-bold uppercase leading-[1.3] sm:text-[0.76rem] min-[1000px]:text-[0.98vw] text-[#1d052b]">
-              Transparency
-              <span className="block text-[0.88em] font-medium">Is Our</span>
-              Promise
-            </p>
-            <Heart className="mx-auto mt-1 size-3.5 sm:size-4 min-[1000px]:size-[1.2vw] text-[#c8963c]" strokeWidth={1.4} />
-          </div>
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-7 min-[1000px]:top-[2.8vw] min-[1000px]:right-[3.6vw] z-10 pointer-events-auto">
+          <TransparencyBadge />
         </div>
       </section>
 
