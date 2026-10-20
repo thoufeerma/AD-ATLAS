@@ -290,38 +290,64 @@ export default async function CollabsPage() {
       )}
 
       {/* Let's create something beautiful together */}
-      <section className="relative overflow-hidden bg-[#220a22] px-6 py-10 text-cream-50 xl:h-[16.41vw] xl:p-0">
-        <OptionalPhoto src={PHOTOS.cta} alt="" sizes="100vw" placeholderClassName="bg-[linear-gradient(100deg,#2a0e2a,#1e091c_55%,#2a0e2a)]" />
-        <div className="relative xl:absolute xl:top-[2.2vw] xl:left-[5.22vw]">
-          <h2 className="font-heading text-[1.4rem] font-bold uppercase leading-[1.15] xl:text-[1.93vw]">
-            Let&apos;s Create Something Beautiful Together
-          </h2>
-          <p className="mt-3 text-[0.85rem] leading-[1.6] xl:mt-[0.94vw] xl:text-[1.04vw] xl:leading-[1.59vw]">
-            We are always looking for passionate, creative and inspiring individuals
-            <span className="xl:block"> to join the Velastia family.</span>
-          </p>
-        </div>
-        <ul className="relative mt-6 grid grid-cols-2 gap-y-4 text-center sm:grid-cols-4 xl:absolute xl:top-[10.21vw] xl:left-[1.7vw] xl:mt-0 xl:grid-cols-[repeat(4,10.74vw)] xl:gap-0">
-          {PROCESS.map(({ Icon, label }) => (
-            <li key={label} className="flex flex-col items-center">
-              <Icon className="size-6 text-[#d9a53f] xl:size-[1.9vw]" strokeWidth={1.2} />
-              <p className="mt-1 whitespace-pre-line text-[0.68rem] leading-[1.3] xl:mt-[0.54vw] xl:text-[0.86vw] xl:leading-[1.07vw]">{label}</p>
-            </li>
-          ))}
-        </ul>
-        <span className="absolute top-[2.7vw] left-[52.7vw] hidden h-[11.95vw] w-px bg-[#c8963c]/40 xl:block" aria-hidden="true" />
-        <div className="relative mt-8 xl:absolute xl:top-[3.98vw] xl:left-[54.93vw] xl:mt-0">
-          <h2 className="font-heading text-[1.1rem] font-bold uppercase xl:text-[1.37vw] xl:leading-none">Ready To Collaborate?</h2>
-          <p className="mt-2 text-[0.85rem] leading-[1.6] xl:mt-[0.78vw] xl:text-[1.05vw] xl:leading-[1.59vw]">
-            Tell us about yourself and your creative work.
-            <span className="block">Our team will get back to you!</span>
-          </p>
-          <ApplyDialog className="mt-5 inline-flex h-11 items-center gap-4 rounded-[4px] bg-[linear-gradient(90deg,#b8894c,#9a6c35)] pr-4 pl-6 text-[0.8rem] font-semibold uppercase text-cream-50 shadow-[0_0.2rem_0.6rem_rgba(0,0,0,0.3)] transition-opacity hover:opacity-90 xl:mt-[1.37vw] xl:h-[2.54vw] xl:w-[15.19vw] xl:justify-between xl:gap-0 xl:pr-[1.2vw] xl:pl-[1.46vw] xl:text-[0.95vw]">
-            Apply For Collab
-            <span className="flex items-center gap-3 border-l border-cream-50/40 pl-3 xl:gap-0 xl:pl-[1.07vw]">
-              <ArrowRight className="size-4 xl:size-[1.27vw]" strokeWidth={1.5} />
-            </span>
-          </ApplyDialog>
+      <section
+        className="relative overflow-hidden px-6 py-12 sm:py-16 text-cream-50"
+        style={{ backgroundColor: "#20052b" }}
+      >
+        {/* Subtle ambient gold auras */}
+        <div className="pointer-events-none absolute -top-24 -left-24 size-80 rounded-full bg-[#d4a038]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 size-80 rounded-full bg-[#d4a038]/10 blur-3xl" />
+
+        <div className="relative z-10 mx-auto max-w-[1440px] flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-12">
+          {/* Left Column: Heading, intro, and 4 process steps */}
+          <div className="flex-1 w-full lg:max-w-[58%]">
+            <h2 className="font-heading text-[1.45rem] sm:text-[1.75rem] lg:text-[1.95rem] font-bold uppercase leading-[1.2] tracking-wide text-cream-50">
+              Let&apos;s Create Something<br className="hidden sm:inline" /> Beautiful Together
+            </h2>
+            <p className="mt-2.5 text-[0.86rem] sm:text-[0.92rem] leading-relaxed text-cream-100/80 max-w-xl font-sans">
+              We are always looking for passionate, creative and inspiring individuals to join the Velastia family.
+            </p>
+
+            <ul className="mt-7 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-center">
+              {PROCESS.map(({ Icon, label }) => (
+                <li key={label} className="flex flex-col items-center group">
+                  <span className="grid size-11 place-items-center rounded-full border border-[#c8963c]/35 bg-white/5 text-[#d9a53f] transition-transform duration-300 group-hover:scale-105 shadow-2xs">
+                    <Icon className="size-5 text-[#d9a53f]" strokeWidth={1.4} />
+                  </span>
+                  <p className="mt-2 whitespace-pre-line text-[0.72rem] sm:text-[0.78rem] font-medium leading-[1.35] text-cream-100">
+                    {label}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Clean Vertical Divider (desktop) / Subtle Horizontal Divider (mobile) */}
+          <div
+            className="hidden lg:block w-px self-stretch bg-gradient-to-b from-transparent via-[#c8963c]/40 to-transparent my-2"
+            aria-hidden="true"
+          />
+          <div
+            className="block lg:hidden w-full h-px bg-gradient-to-r from-transparent via-[#c8963c]/30 to-transparent"
+            aria-hidden="true"
+          />
+
+          {/* Right Column: Ready to collaborate and apply button */}
+          <div className="w-full lg:w-auto lg:min-w-[340px] lg:max-w-md flex flex-col items-start lg:pl-2">
+            <h3 className="font-heading text-[1.2rem] sm:text-[1.35rem] font-bold uppercase tracking-wider text-cream-50 leading-tight">
+              Ready To Collaborate?
+            </h3>
+            <p className="mt-2 text-[0.85rem] sm:text-[0.92rem] leading-relaxed text-cream-100/80 font-sans">
+              Tell us about yourself and your creative work.
+              <span className="block">Our team will get back to you!</span>
+            </p>
+            <ApplyDialog className="mt-6 inline-flex h-11 items-center gap-4 rounded-[4px] bg-[linear-gradient(90deg,#b8894c,#9a6c35)] pr-4 pl-6 text-[0.82rem] font-semibold uppercase tracking-wider text-cream-50 shadow-[0_0.2rem_0.6rem_rgba(0,0,0,0.3)] transition-all duration-300 hover:brightness-110 hover:shadow-lg">
+              <span>Apply For Collab</span>
+              <span className="flex items-center border-l border-cream-50/40 pl-3">
+                <ArrowRight className="size-4" strokeWidth={1.8} />
+              </span>
+            </ApplyDialog>
+          </div>
         </div>
       </section>
     </div>

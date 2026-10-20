@@ -34,7 +34,7 @@ const INK = "text-[#1d052b]";
 const GOLD = "text-[#c8963c]";
 
 const PHOTOS = {
-  hero: "/images/reviews hero.png",
+  hero: "/images/contact hero banner.png",
   band: "/images/your trust our biggest reward banner.png",
 };
 
@@ -141,14 +141,16 @@ export default async function ReviewsPage() {
             ))}
           </ul>
         </div>
-        <div className="relative h-[60vw] xl:absolute xl:inset-0 xl:h-auto">
+        <div className="relative h-[60vw] xl:absolute xl:inset-0 xl:h-auto pointer-events-none z-0">
           <OptionalPhoto
             src={PHOTOS.hero}
             alt="Velastia lipstick, serum and cream on a marble stand with pink flowers"
             sizes="100vw"
             priority
-            className="object-[75%_center] xl:object-center"
+            className="object-[75%_center] xl:object-right"
           />
+          {/* Subtle gradient on the left to guarantee optimal text contrast across all desktop widths */}
+          <div className="hidden xl:block absolute inset-0 bg-gradient-to-r from-cream-50/95 via-cream-50/70 to-transparent w-[55%]" />
         </div>
       </section>
 

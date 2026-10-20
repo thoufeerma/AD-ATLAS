@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="192" height="192">
+  <g stroke="#d4a038" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Outer maternal teardrop / seed -->
+    <path d="M48 16c-16 20-22 30-22 40a22 22 0 0 0 44 0c0-10-6-20-22-40z" />
+    <!-- Mother silhouette: head -->
+    <circle cx="48" cy="38" r="4.5" />
+    <!-- Mother silhouette: gentle pregnant belly and loving arm embrace -->
+    <path d="M45 44c-5 2-8 7-8 13 0 7 5 12 12 12 6 0 10-4 10-9 0-4-3-8-8-9" />
+    <!-- Little heart over womb -->
+    <path d="M50 56a2 2 0 0 1 3 0 2 2 0 0 1 0 3l-3 3-3-3a2 2 0 0 1 0-3 2 2 0 0 1 3 0z" fill="#d4a038" stroke="none" />
+  </g>
+</svg>
