@@ -183,7 +183,7 @@ const CERTIFICATIONS = [
   { label: "IFRA\nCompliant", Icon: Sprout },
   { label: "FDA\nApproved Facility", text: "FDA" },
   { label: "GMP\nCertified", Icon: BadgeCheck },
-  { label: "Cruelty Free\n& Vegan", Icon: Heart },
+  { label: "Cruelty-Free\n& Vegan", Icon: Heart },
 ];
 
 const TRUST = [
@@ -262,7 +262,7 @@ export default function IngredientsPage() {
       {/* 2. We Promise No Compromises */}
       <section className="mt-8 sm:mt-10 px-4 sm:px-6 min-[1000px]:mt-[2.5vw] min-[1000px]:px-[3.6vw]">
         <div
-          className="relative overflow-hidden rounded-2xl min-[1000px]:rounded-[20px] px-6 py-8 sm:px-8 sm:py-10 min-[1000px]:py-[2.3vw] min-[1000px]:px-[3vw] flex flex-col min-[1000px]:flex-row min-[1000px]:items-center shadow-2xl"
+          className="relative overflow-hidden rounded-2xl min-[1000px]:rounded-[20px] px-6 py-8 sm:px-8 sm:py-10 min-[1000px]:py-[2.3vw] min-[1000px]:px-[3vw] flex flex-col min-[1000px]:flex-row min-[1000px]:items-center border border-gold-400/40 shadow-[0_16px_48px_rgba(32,5,43,0.38),0_4px_16px_rgba(32,5,43,0.18)] transition-all duration-300 hover:shadow-[0_22px_56px_rgba(32,5,43,0.48),0_6px_22px_rgba(193,136,62,0.25)] hover:border-gold-400/70"
           style={{ backgroundColor: "#20052b" }}
         >
           {/* Subtle gold aura */}
@@ -322,11 +322,11 @@ export default function IngredientsPage() {
         <Ornament bare className="mt-2 justify-center" markClassName="h-3 w-6" />
 
         {/* Responsive grid: strictly 5 per row on desktop (2 rows of 5), 2 per row on mobile/tablet (5 rows of 2) */}
-        <ul className="mt-8 grid grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-5">
+        <ul className="mt-8 grid grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-5 py-2">
           {POWER.map((p) => (
             <li
               key={p.name}
-              className="group flex flex-col rounded-2xl border border-[#ede2d5] bg-[#fffbf7] p-3 sm:p-3.5 shadow-2xs hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+              className="group flex flex-col rounded-2xl border border-gold-300/40 bg-[#fffbf7] p-3 sm:p-3.5 shadow-[0_4px_16px_rgba(32,8,45,0.12),0_1.5px_4px_rgba(32,8,45,0.06)] transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_16px_32px_rgba(32,8,45,0.2),0_4px_12px_rgba(193,136,62,0.18)] hover:border-gold-400/80"
             >
               <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-[#f0e6da]/40 mb-3 shrink-0">
                 <Image
@@ -381,7 +381,7 @@ export default function IngredientsPage() {
 
           {/* Column 2: Ingredients We Say No To */}
           <div
-            className="lg:col-span-4 rounded-2xl p-6 sm:p-7 flex flex-col justify-between shadow-xl"
+            className="lg:col-span-4 rounded-2xl p-6 sm:p-7 flex flex-col justify-between border border-gold-400/35 shadow-[0_10px_28px_rgba(32,8,45,0.28),0_2px_8px_rgba(32,8,45,0.12)] transition-all duration-300 hover:shadow-[0_16px_36px_rgba(32,8,45,0.38),0_4px_14px_rgba(193,136,62,0.22)] hover:border-gold-400/70"
             style={{ backgroundColor: "#20052b" }}
           >
             <div>
@@ -433,7 +433,7 @@ export default function IngredientsPage() {
             </div>
 
             {/* Beauty With Integrity card */}
-            <div className="relative overflow-hidden rounded-xl bg-[#f7e4ce] p-5 sm:p-6 shadow-sm border border-[#ebd2b9] min-h-[125px] flex items-center">
+            <div className="relative overflow-hidden rounded-xl bg-[#f7e4ce] p-5 sm:p-6 border border-gold-300/60 shadow-[0_8px_24px_rgba(32,8,45,0.16),0_2px_8px_rgba(32,8,45,0.08)] transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_18px_38px_rgba(32,8,45,0.22),0_6px_16px_rgba(193,136,62,0.2)] hover:border-gold-400/80 min-h-[125px] flex items-center">
               <Image
                 src={PHOTOS.integrity}
                 alt=""

@@ -13,7 +13,7 @@ const ITEMS: { Icon: LucideIcon; title: string; note?: string }[] = [
   { Icon: FlaskConical, title: "Science Backed", note: "Formulas" },
   { Icon: Leaf, title: "Clean & Safe", note: "Ingredients" },
   { Icon: ShieldCheck, title: "Dermatologically", note: "Tested" },
-  { Icon: Heart, title: "Cruelty Free", note: "& Vegan" },
+  { Icon: Heart, title: "Cruelty-Free", note: "& Vegan" },
   { Icon: Sparkles, title: "Designed For", note: "Indian Skin" },
 ];
 

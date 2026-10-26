@@ -14,12 +14,31 @@ export type CartLine = {
   shade?: string;
 };
 
+export type CartToastItem = {
+  id: string;
+  slug: string;
+  qty: number;
+  shade?: string;
+  name?: string;
+  pricePaise?: number;
+  image?: string;
+};
+
 type CartState = {
   lines: CartLine[];
   wishlist: string[];
   /** A code the API has accepted at least once. Re-checked on every quote. */
   coupon: string | null;
-  add: (slug: string, qty?: number, shade?: string) => void;
+  /** In-memory notification for the most recently added item. */
+  notification: CartToastItem | null;
+  add: (
+    slug: string,
+    qty?: number,
+    shade?: string,
+    meta?: { name?: string; pricePaise?: number; image?: string },
+  ) => void;
+  showNotification: (item: Omit<CartToastItem, "id">) => void;
+  dismissNotification: () => void;
   setQty: (slug: string, shade: string | undefined, qty: number) => void;
   remove: (slug: string, shade?: string) => void;
   clear: () => void;
@@ -41,19 +60,40 @@ export const useStore = create<CartState>()(
       lines: [],
       wishlist: [],
       coupon: null,
+      notification: null,
 
-      add: (slug, qty = 1, shade) =>
+      add: (slug, qty = 1, shade, meta) =>
         set((s) => {
           const existing = s.lines.find((l) => sameLine(l, slug, shade));
-          if (existing) {
-            return {
-              lines: s.lines.map((l) =>
+          const newLines = existing
+            ? s.lines.map((l) =>
                 sameLine(l, slug, shade) ? { ...l, qty: Math.min(MAX_QTY, l.qty + qty) } : l,
-              ),
-            };
-          }
-          return { lines: [...s.lines, { slug, qty: Math.min(MAX_QTY, qty), shade }] };
+              )
+            : [...s.lines, { slug, qty: Math.min(MAX_QTY, qty), shade }];
+
+          return {
+            lines: newLines,
+            notification: {
+              id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              slug,
+              qty,
+              shade,
+              name: meta?.name,
+              pricePaise: meta?.pricePaise,
+              image: meta?.image,
+            },
+          };
         }),
+
+      showNotification: (item) =>
+        set({
+          notification: {
+            ...item,
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          },
+        }),
+
+      dismissNotification: () => set({ notification: null }),
 
       setQty: (slug, shade, qty) =>
         set((s) => ({
@@ -90,7 +130,14 @@ export const useStore = create<CartState>()(
 
       removeCoupon: () => set({ coupon: null }),
     }),
-    { name: "velastia-store" },
+    {
+      name: "velastia-store",
+      partialize: (s) => ({
+        lines: s.lines,
+        wishlist: s.wishlist,
+        coupon: s.coupon,
+      }),
+    },
   ),
 );
 

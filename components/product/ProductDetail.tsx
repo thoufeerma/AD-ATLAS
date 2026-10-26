@@ -178,7 +178,11 @@ export default function ProductDetail({
 
   function handleBundleAdd() {
     selectedBundleItems.forEach((p) => {
-      add(p.slug, 1, p.slug === product.slug ? shade : p.shades[0]?.name);
+      add(p.slug, 1, p.slug === product.slug ? shade : p.shades[0]?.name, {
+        name: p.name,
+        pricePaise: p.pricePaise,
+        image: productImage(p),
+      });
     });
     setBundleAdded(true);
     setTimeout(() => setBundleAdded(false), 2000);
@@ -235,7 +239,11 @@ export default function ProductDetail({
   ].filter((n): n is string => !!n);
 
   function handleAdd() {
-    add(product.slug, qty, shade);
+    add(product.slug, qty, shade, {
+      name: product.name,
+      pricePaise: product.pricePaise,
+      image: productImage(product),
+    });
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   }
@@ -666,7 +674,7 @@ export default function ProductDetail({
               {INGREDIENTS.map((ing) => (
                 <li
                   key={ing.name}
-                  className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-50 p-5 text-center"
+                  className="rounded-[var(--radius-card)] border border-gold-300/40 bg-[#fffdf9] p-5 text-center shadow-[0_4px_14px_rgba(32,8,45,0.07)] transition-all duration-300 hover:shadow-[0_10px_22px_rgba(32,8,45,0.14)] hover:-translate-y-1"
                 >
                   <span className="mx-auto grid size-11 place-items-center rounded-full bg-blush-100">
                     <Leaf className="size-5 text-gold-600" />
@@ -687,7 +695,7 @@ export default function ProductDetail({
         </h2>
 
         <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6 text-center">
+          <div className="rounded-[var(--radius-card)] border border-gold-300/50 bg-[#fffdf9] p-6 text-center shadow-[0_6px_20px_rgba(32,8,45,0.08),0_2px_6px_rgba(32,8,45,0.04)] transition-all duration-300 hover:shadow-[0_12px_28px_rgba(32,8,45,0.14),0_4px_12px_rgba(193,136,62,0.12)]">
             {reviewSummary.total > 0 ? (
               <>
                 <p className="font-heading text-[3rem] font-bold leading-none text-plum-800">
@@ -720,7 +728,7 @@ export default function ProductDetail({
 
           <div className="space-y-4">
             {writing && (
-              <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-5 sm:p-6">
+              <div className="rounded-[var(--radius-card)] border border-gold-300/50 bg-[#fffdf9] p-5 sm:p-6 shadow-[0_6px_20px_rgba(32,8,45,0.08)]">
                 <ReviewForm productSlug={product.slug} />
               </div>
             )}
@@ -730,7 +738,7 @@ export default function ProductDetail({
                 {reviews.map((r) => (
                   <figure
                     key={r.id}
-                    className="flex flex-col rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-4"
+                    className="flex flex-col rounded-[var(--radius-card)] border border-gold-300/40 bg-[#fffdf9] p-4 shadow-[0_4px_16px_rgba(32,8,45,0.08),0_1.5px_4px_rgba(32,8,45,0.04)] transition-all duration-300 hover:shadow-[0_10px_24px_rgba(32,8,45,0.14),0_3px_8px_rgba(193,136,62,0.1)] hover:-translate-y-1"
                   >
                     <figcaption className="text-[0.75rem] font-medium text-plum-800">
                       {r.authorName}
@@ -802,7 +810,7 @@ export default function ProductDetail({
                         className={cn(
                           "group relative flex flex-col w-[200px] sm:w-[185px] md:w-[200px] lg:w-[210px] xl:w-[215px] overflow-hidden rounded-[var(--radius-card)] bg-white border transition-all duration-300",
                           isSelected
-                            ? "border-gold-300/70 shadow-[0_4px_14px_rgba(32,8,45,0.08)] hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(32,8,45,0.12)]"
+                            ? "border-gold-300/40 shadow-[0_4px_16px_rgba(32,8,45,0.12),0_1.5px_4px_rgba(32,8,45,0.06)] hover:-translate-y-1.5 hover:shadow-[0_16px_32px_rgba(32,8,45,0.2),0_4px_12px_rgba(193,136,62,0.18)] hover:border-gold-400/80"
                             : "border-gold-200/40 opacity-50 bg-cream-50/50 shadow-none",
                         )}
                       >
@@ -902,7 +910,7 @@ export default function ProductDetail({
               </div>
 
               {/* Bundle summary box */}
-              <div className="w-full sm:w-[320px] lg:w-[250px] xl:w-[270px] shrink-0 rounded-[var(--radius-card)] border border-gold-300/70 bg-gradient-to-b from-[#FFFDF9] via-[#FAF5EE] to-[#F5ECE1] p-5 sm:p-5.5 flex flex-col justify-between text-center shadow-[0_4px_16px_rgba(32,8,45,0.08)]">
+              <div className="w-full sm:w-[320px] lg:w-[250px] xl:w-[270px] shrink-0 rounded-[var(--radius-card)] border border-gold-300/70 bg-gradient-to-b from-[#FFFDF9] via-[#FAF5EE] to-[#F5ECE1] p-5 sm:p-5.5 flex flex-col justify-between text-center shadow-[0_4px_16px_rgba(32,8,45,0.12),0_1.5px_4px_rgba(32,8,45,0.06)] transition-all duration-300 hover:shadow-[0_12px_28px_rgba(32,8,45,0.18),0_4px_10px_rgba(193,136,62,0.15)]">
                 <div>
                   <span className="label-caps inline-block rounded-full bg-gold-500/15 border border-gold-400/40 px-3 py-0.5 text-[0.62rem] font-bold tracking-wider text-gold-800">
                     CURATED BUNDLE

@@ -31,7 +31,7 @@ const SLIDES = [
   },
   {
     headline: ["Pure.", "Potent.", "Perfect."],
-    copy: "Dermatologically tested, cruelty free and vegan. Made in India, for Indian skin.",
+    copy: "Dermatologically tested, cruelty-free and vegan. Made in India, for Indian skin.",
     cta: { label: "Our Ingredients", href: "/ingredients" },
     image: "/brand/hero-ingredients.webp",
     alt: "Velastia serum, face cream and lipstick on marble pedestal with botanical flask on cream silk",
@@ -40,10 +40,10 @@ const SLIDES = [
 ];
 
 const BADGES = [
-  { Icon: FlaskConical, line1: "PREMIUM", line2: "INGREDIENTS" },
-  { Icon: ShieldCheck, line1: "DERMATOLOGICALLY", line2: "TESTED" },
-  { Icon: Heart, line1: "CRUELTY FREE &", line2: "VEGAN" },
-  { Icon: Leaf, line1: "MADE IN", line2: "INDIA" },
+  { Icon: FlaskConical, label: "PREMIUM INGREDIENTS" },
+  { Icon: ShieldCheck, label: "DERMATOLOGICALLY TESTED" },
+  { Icon: Heart, label: "CRUELTY-FREE & VEGAN" },
+  { Icon: Leaf, label: "MADE IN INDIA" },
 ];
 
 /** How long each slide is shown, and how long the slide across takes. */
@@ -195,7 +195,7 @@ export default function Hero() {
             <Button
               href={slide.cta.href}
               size="lg"
-              className="mt-6 sm:mt-8 px-8 sm:px-10 h-12 sm:h-14 min-h-[44px] text-[0.82rem] sm:text-[0.85rem] bg-[#20082d] text-cream-50 hover:bg-[#2e0c40] border border-gold-400/40 shadow-[0_4px_16px_rgba(0,0,0,0.35)]"
+              className="mt-6 sm:mt-8 px-8 sm:px-10 h-12 sm:h-14 min-h-[44px] text-[0.82rem] sm:text-[0.85rem] bg-[#20082d] text-cream-50 hover:bg-[#2e0c40] border border-gold-400/50 shadow-[0_8px_24px_rgba(0,0,0,0.45),0_2px_8px_rgba(193,136,62,0.25)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.6),0_4px_16px_rgba(193,136,62,0.4)] hover:border-gold-400/80 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
             >
               {slide.cta.label}
             </Button>
@@ -262,24 +262,19 @@ export default function Hero() {
       ─────────────────────────────────────────────────────────────────── */}
       <div className="relative z-20 w-full bg-[#20082d] border-t border-gold-400/40 border-b border-black/20 shadow-md">
         <div className="container-vel py-3 sm:py-3.5 xl:py-4 2xl:py-5">
-          <ul className="grid grid-cols-2 gap-y-3.5 gap-x-3 sm:gap-x-4 sm:flex sm:items-center sm:justify-between px-2 sm:px-6 lg:px-8 xl:px-6 2xl:px-8">
-            {BADGES.map(({ Icon, line1, line2 }, idx) => (
-              <Fragment key={line1}>
-                <li className="flex items-center justify-start gap-2.5 sm:gap-3 xl:gap-4">
-                  <span className="grid size-8 sm:size-9 lg:size-10 xl:size-12 2xl:size-13 shrink-0 place-items-center rounded-full border border-gold-400/60 bg-gold-500/15 text-gold-300 shadow-inner">
-                    <Icon className="size-4 sm:size-4.5 lg:size-5 xl:size-6 2xl:size-6.5 text-[#fcedc7]" strokeWidth={1.5} />
+          <ul className="grid grid-cols-2 gap-y-3 gap-x-2.5 sm:gap-x-4 sm:flex sm:items-center sm:justify-between px-2 sm:px-4 lg:px-6 xl:px-8">
+            {BADGES.map(({ Icon, label }, idx) => (
+              <Fragment key={label}>
+                <li className="flex items-center justify-start gap-2 sm:gap-2.5 lg:gap-3 xl:gap-3.5 min-w-0">
+                  <span className="grid size-7 sm:size-8 lg:size-9.5 xl:size-11 2xl:size-12 shrink-0 place-items-center rounded-full border border-gold-400/60 bg-gold-500/15 text-gold-300 shadow-inner">
+                    <Icon className="size-3.5 sm:size-4 lg:size-4.5 xl:size-5.5 2xl:size-6 text-[#fcedc7]" strokeWidth={1.5} />
                   </span>
-                  <div className="flex flex-col text-left leading-[1.15]">
-                    <span className="font-heading text-[0.62rem] sm:text-[0.74rem] lg:text-[0.8rem] xl:text-[0.9rem] 2xl:text-[0.96rem] font-bold tracking-[0.06em] sm:tracking-[0.14em] uppercase text-cream-50">
-                      {line1}
-                    </span>
-                    <span className="font-heading text-[0.62rem] sm:text-[0.74rem] lg:text-[0.8rem] xl:text-[0.9rem] 2xl:text-[0.96rem] font-bold tracking-[0.06em] sm:tracking-[0.14em] uppercase text-cream-50">
-                      {line2}
-                    </span>
-                  </div>
+                  <span className="font-heading text-[0.58rem] sm:text-[0.66rem] md:text-[0.72rem] lg:text-[0.8rem] xl:text-[0.88rem] 2xl:text-[0.95rem] font-bold tracking-[0.04em] sm:tracking-[0.06em] lg:tracking-[0.09em] xl:tracking-[0.12em] uppercase text-cream-50 whitespace-nowrap">
+                    {label}
+                  </span>
                 </li>
                 {idx < BADGES.length - 1 && (
-                  <span className="hidden sm:block h-6 xl:h-8 w-px bg-gold-400/30 shrink-0" aria-hidden="true" />
+                  <span className="hidden sm:block h-5 lg:h-6 xl:h-7 w-px bg-gold-400/30 shrink-0 mx-1 lg:mx-2" aria-hidden="true" />
                 )}
               </Fragment>
             ))}

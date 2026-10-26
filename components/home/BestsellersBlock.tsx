@@ -76,7 +76,7 @@ export default function BestsellersBlock({
         <div className="flex flex-col gap-4 xl:gap-6 w-full min-w-0">
           <div className="flex flex-col md:flex-row items-stretch gap-4 sm:gap-5 xl:gap-6">
             {/* New arrivals promo */}
-            <div className="relative w-full md:flex-[1.28] flex flex-col justify-between overflow-hidden rounded-[var(--radius-card)] bg-plum-800 p-6 sm:p-7 xl:p-8 2xl:p-9 shadow-[0_6px_22px_-4px_rgba(32,8,45,0.22)] border border-plum-700/60">
+            <div className="relative w-full md:flex-[1.28] flex flex-col justify-between overflow-hidden rounded-[var(--radius-card)] bg-plum-800 p-6 sm:p-7 xl:p-8 2xl:p-9 border border-gold-400/35 shadow-[0_4px_16px_rgba(32,8,45,0.18),0_1.5px_4px_rgba(32,8,45,0.08)] transition-all duration-300 hover:shadow-[0_16px_32px_rgba(32,8,45,0.25),0_4px_12px_rgba(193,136,62,0.2)] hover:border-gold-400/60">
               <div className="pointer-events-none absolute inset-y-0 right-0 w-3/5">
                 <Image
                   src="/brand/coming-soon.webp"
@@ -106,7 +106,7 @@ export default function BestsellersBlock({
             </div>
 
             {/* Ratings */}
-            <div className="w-full md:flex-1 rounded-[var(--radius-card)] border border-gold-300/45 bg-white p-5 xl:p-7 2xl:p-8 flex flex-col shadow-[0_6px_20px_-4px_rgba(32,8,45,0.08),0_2px_6px_-1px_rgba(32,8,45,0.04)]">
+            <div className="w-full md:flex-1 rounded-[var(--radius-card)] border border-gold-300/40 bg-white p-5 xl:p-7 2xl:p-8 flex flex-col shadow-[0_4px_16px_rgba(32,8,45,0.12),0_1.5px_4px_rgba(32,8,45,0.06)] transition-all duration-300 hover:shadow-[0_12px_28px_rgba(32,8,45,0.18),0_4px_12px_rgba(193,136,62,0.15)] hover:border-gold-400/80">
               <h3 className="font-heading text-center text-[1rem] sm:text-[1.1rem] xl:text-[1.22rem] 2xl:text-[1.3rem] font-bold uppercase tracking-widest text-plum-800">
                 {ratingHeadline}
               </h3>

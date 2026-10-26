@@ -54,12 +54,22 @@ export default function AnnouncementBar({
 }) {
   const [copied, setCopied] = useState(false);
 
+  // Helper to ensure promotional spacing (e.g. 10% OFF, CODE: VEL10)
+  const normalizePromo = (t: string) =>
+    t
+      .replace(/10%OFF/gi, "10% OFF")
+      .replace(/(\d+%)OFF/gi, "$1 OFF")
+      .replace(/CODE:([A-Za-z0-9]+)/g, "CODE: $1");
+
   // Combine backend announcements with default offers while deduplicating
-  const baseOffers: OfferItem[] = [...DEFAULT_OFFERS];
+  const baseOffers: OfferItem[] = DEFAULT_OFFERS.map((o) => ({
+    ...o,
+    text: normalizePromo(o.text),
+  }));
 
   if (announcements && announcements.length > 0) {
     announcements.forEach((ann, idx) => {
-      const trimmed = ann.trim();
+      const trimmed = normalizePromo(ann.trim());
       const exists = baseOffers.some(
         (o) =>
           o.text.toLowerCase().includes(trimmed.toLowerCase()) ||

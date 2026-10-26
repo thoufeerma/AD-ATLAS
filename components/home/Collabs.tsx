@@ -95,7 +95,7 @@ export default function Collabs({ collaborators }: { collaborators: Collaborator
         </div>
 
         {/* self-end: keeps the card on the rule even if the left side grows taller */}
-        <div className="rounded-[18px] xl:rounded-[22px] border border-gold-200/50 bg-[#FCFAF8] p-6 sm:p-8 xl:p-9 2xl:p-10 shadow-[0_4px_16px_rgba(0,0,0,0.03)] lg:ml-6 xl:ml-8 lg:self-end">
+        <div className="rounded-[18px] xl:rounded-[22px] border border-gold-300/40 bg-[#FCFAF8] p-6 sm:p-8 xl:p-9 2xl:p-10 shadow-[0_4px_16px_rgba(32,8,45,0.12),0_1.5px_4px_rgba(32,8,45,0.06)] transition-all duration-300 hover:shadow-[0_16px_32px_rgba(32,8,45,0.2),0_4px_12px_rgba(193,136,62,0.18)] hover:border-gold-400/80 lg:ml-6 xl:ml-8 lg:self-end">
           <div className="flex items-center gap-3 xl:gap-4">
             <UserPlus className="size-8 sm:size-9 xl:size-11 2xl:size-12 text-gold-500 shrink-0" strokeWidth={1.5} />
             <h3 className="font-heading text-[1.25rem] sm:text-[1.4rem] xl:text-[1.65rem] 2xl:text-[1.85rem] font-bold uppercase tracking-widest text-plum-800">
@@ -106,7 +106,7 @@ export default function Collabs({ collaborators }: { collaborators: Collaborator
             Are you a creator or makeup artist?<br />
             Let&apos;s collaborate and create magic together.
           </p>
-          <Button href="/collabs" className="mt-6 sm:mt-7 xl:mt-8 px-8 py-3.5 xl:px-9 xl:py-4.5 min-h-[44px] text-[0.8rem] xl:text-[0.88rem] rounded-[6px] uppercase tracking-widest font-semibold">
+          <Button href="/collabs?apply=true" className="mt-6 sm:mt-7 xl:mt-8 px-8 py-3.5 xl:px-9 xl:py-4.5 min-h-[44px] text-[0.8rem] xl:text-[0.88rem] rounded-[6px] uppercase tracking-widest font-semibold">
             Apply for Collab
           </Button>
         </div>

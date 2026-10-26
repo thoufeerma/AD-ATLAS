@@ -242,28 +242,34 @@ export default function ReviewForm({
 
       <div className="sm:col-span-2">
         <p className="label-caps mb-1.5 block text-[0.6rem] text-gold-700">Photos (optional, up to {MAX_PHOTOS})</p>
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap gap-3 py-1">
           {photos.map((url) => (
-            <div key={url} className="relative size-20 overflow-hidden rounded-sm border border-gold-200">
+            <div
+              key={url}
+              className="group relative size-20 overflow-hidden rounded-lg border border-gold-300/60 shadow-[0_4px_14px_rgba(32,8,45,0.12),0_1.5px_4px_rgba(32,8,45,0.06)] transition-all duration-300 hover:shadow-[0_8px_20px_rgba(32,8,45,0.2),0_2px_8px_rgba(193,136,62,0.18)] hover:-translate-y-0.5 hover:border-gold-400"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element -- a just-uploaded preview */}
-              <img src={url} alt="" className="size-full object-cover" />
+              <img src={url} alt="" className="size-full object-cover transition-transform duration-300 group-hover:scale-105" />
               <button
                 type="button"
                 onClick={() => setPhotos((p) => p.filter((u) => u !== url))}
                 aria-label="Remove photo"
-                className="absolute top-1 right-1 grid size-5 place-items-center rounded-full bg-plum-900/75 text-cream-50"
+                className="absolute top-1 right-1 grid size-5 place-items-center rounded-full bg-plum-900/85 text-cream-50 shadow-sm transition-transform hover:scale-110"
               >
                 <X className="size-3" />
               </button>
             </div>
           ))}
           {Array.from({ length: uploading }, (_, i) => (
-            <div key={`up-${i}`} className="grid size-20 animate-pulse place-items-center rounded-sm border border-gold-200 bg-cream-200 text-[0.65rem] text-ink-soft">
+            <div
+              key={`up-${i}`}
+              className="grid size-20 animate-pulse place-items-center rounded-lg border border-gold-300/50 bg-cream-200 text-[0.65rem] text-ink-soft shadow-[0_2px_8px_rgba(32,8,45,0.08)]"
+            >
               Uploading…
             </div>
           ))}
           {photos.length + uploading < MAX_PHOTOS && (
-            <label className="grid size-20 cursor-pointer place-items-center rounded-sm border border-dashed border-gold-400 text-gold-700 hover:bg-cream-100">
+            <label className="grid size-20 cursor-pointer place-items-center rounded-lg border-2 border-dashed border-gold-400/80 bg-white/70 text-gold-700 shadow-[0_2px_8px_rgba(32,8,45,0.06)] transition-all duration-300 hover:bg-cream-100 hover:border-gold-500 hover:shadow-[0_6px_16px_rgba(32,8,45,0.14)] hover:-translate-y-0.5">
               <ImagePlus className="size-5" />
               <span className="sr-only">Add photos</span>
               <input

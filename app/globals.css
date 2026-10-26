@@ -47,6 +47,10 @@
 }
 
 @layer base {
+  html, body {
+    max-width: 100%;
+    overflow-x: clip;
+  }
   body {
     background-color: var(--color-cream-50);
     color: var(--color-ink);
@@ -139,6 +143,80 @@
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+  }
+}
+
+/* Dialog modal smooth popup animations */
+dialog {
+  border: none;
+}
+
+dialog[open] {
+  animation: modal-pop-in 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+dialog[open]::backdrop {
+  animation: modal-backdrop-in 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+dialog.dialog-closing {
+  animation: modal-pop-out 200ms cubic-bezier(0.4, 0, 1, 1) forwards !important;
+}
+
+dialog.dialog-closing::backdrop {
+  animation: modal-backdrop-out 200ms cubic-bezier(0.4, 0, 1, 1) forwards !important;
+}
+
+@keyframes modal-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modal-backdrop-in {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(6px);
+  }
+}
+
+@keyframes modal-pop-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+}
+
+@keyframes modal-backdrop-out {
+  0% {
+    opacity: 1;
+    backdrop-filter: blur(6px);
+  }
+  100% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog[open],
+  dialog[open]::backdrop,
+  dialog.dialog-closing,
+  dialog.dialog-closing::backdrop {
+    animation: none !important;
   }
 }
 

@@ -71,7 +71,7 @@ export default function ReviewsBrowser({
 
   const tabs = [{ slug: "", name: "All Reviews", count: total }, ...categories.filter((c) => c.count > 0)];
   const select =
-    "h-9 w-full appearance-none rounded-[4px] border border-[#ece3d9] bg-[#fefaf6] pr-8 pl-3 text-[0.8rem] text-[#1d052b]/85 focus:border-[#c8963c] focus:outline-none xl:h-[2.69vw] xl:pr-[2.2vw] xl:pl-[0.98vw] xl:text-[1.12vw]";
+    "h-9 w-full appearance-none rounded-[4px] border border-[#ece3d9] bg-[#fefaf6] pr-8 pl-3 text-[0.8rem] text-[#1d052b]/85 shadow-[0_2px_8px_0_rgba(45,15,46,0.08)] focus:border-[#c8963c] focus:shadow-[0_2px_12px_0_rgba(200,150,60,0.18)] focus:outline-none xl:h-[2.69vw] xl:pr-[2.2vw] xl:pl-[0.98vw] xl:text-[1.12vw]";
   const chevron =
     "pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-[#1d052b]/70 xl:right-[0.9vw] xl:size-[1.17vw]";
   const arrow =
@@ -197,14 +197,14 @@ export default function ReviewsBrowser({
               ref={row}
               className={
                 showAll
-                  ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-[1.37vw]"
-                  : "flex snap-x snap-mandatory gap-3 overflow-x-auto [scrollbar-width:none] xl:gap-[1.37vw] [&::-webkit-scrollbar]:hidden"
+                  ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-[1.37vw] py-2"
+                  : "flex snap-x snap-mandatory gap-3 overflow-x-auto [scrollbar-width:none] py-3 xl:gap-[1.37vw] [&::-webkit-scrollbar]:hidden"
               }
             >
               {shown.map((r) => (
                 <li
                   key={r.id}
-                  className={`flex flex-col rounded-md border border-[#efe5da] bg-[#fdf7f1] p-4 xl:min-h-[28.37vw] xl:px-[1.66vw] xl:pt-[1.66vw] xl:pb-[1.76vw] ${
+                  className={`flex flex-col rounded-[var(--radius-card)] border border-gold-300/40 bg-[#fdf7f1] p-4 shadow-[0_4px_16px_rgba(32,8,45,0.1),0_1.5px_4px_rgba(32,8,45,0.05)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(32,8,45,0.18),0_4px_12px_rgba(193,136,62,0.15)] hover:border-gold-400/80 xl:min-h-[28.37vw] xl:px-[1.66vw] xl:pt-[1.66vw] xl:pb-[1.76vw] ${
                     showAll ? "" : "w-[80vw] shrink-0 snap-start sm:w-[45vw] lg:w-[30vw] xl:w-[21.48vw]"
                   }`}
                 >
@@ -235,17 +235,17 @@ export default function ReviewsBrowser({
                     {r.body}
                   </p>
                   {r.images.length > 0 && (
-                    <div className="mt-4 grid grid-cols-3 gap-1 pt-0 xl:mt-auto xl:gap-[0.29vw] xl:pt-[1.86vw]">
+                    <div className="mt-4 grid grid-cols-3 gap-1.5 pt-0 xl:mt-auto xl:gap-[0.4vw] xl:pt-[1.86vw]">
                       {r.images.slice(0, 3).map((src) => (
                         <button
                           key={src}
                           type="button"
                           onClick={() => setPhoto({ src, kind: "image", caption: `${r.authorName} · ${shortName(r.product.name)}` })}
                           aria-label={`View ${r.authorName}'s photo`}
-                          className="aspect-[61.5/58.5] overflow-hidden rounded-[3px] bg-[#efdccb]"
+                          className="group/photo aspect-[61.5/58.5] overflow-hidden rounded-md border border-gold-300/40 bg-[#efdccb] shadow-[0_2px_8px_rgba(32,8,45,0.08)] transition-all duration-200 hover:scale-105 hover:border-gold-400 hover:shadow-[0_4px_12px_rgba(32,8,45,0.16)]"
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element -- customer photos come from storage at any size */}
-                          <img src={src} alt="" loading="lazy" className="size-full object-cover" />
+                          <img src={src} alt="" loading="lazy" className="size-full object-cover transition-transform duration-300 group-hover/photo:scale-105" />
                         </button>
                       ))}
                     </div>

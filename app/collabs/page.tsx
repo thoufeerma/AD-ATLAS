@@ -143,7 +143,7 @@ export default async function CollabsPage() {
             <span className="xl:block"> influencers, makeup artists, creators and dreamers</span>
             <span className="xl:block"> who share our belief in luxury, science and self-love.</span>
           </p>
-          <ApplyDialog className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-[4px] bg-[#260b26] px-6 text-[0.8rem] font-semibold uppercase text-cream-50 transition-colors hover:bg-[#45174a] xl:mt-[1.32vw] xl:h-[2.98vw] xl:w-[16.21vw] xl:gap-[0.6vw] xl:px-0 xl:text-[1.07vw]">
+          <ApplyDialog autoOpen className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-[4px] bg-[#260b26] px-6 text-[0.8rem] font-semibold uppercase text-cream-50 transition-colors hover:bg-[#45174a] xl:mt-[1.32vw] xl:h-[2.98vw] xl:w-[16.21vw] xl:gap-[0.6vw] xl:px-0 xl:text-[1.07vw]">
             Let&apos;s Create Magic <Sparkles className="size-4 text-[#e2b84f] xl:size-[1.2vw]" strokeWidth={1.6} />
           </ApplyDialog>
         </div>
@@ -185,11 +185,11 @@ export default async function CollabsPage() {
           Who Can Collaborate?
         </h2>
         <Ornament className="mx-auto mt-3 w-40 xl:mt-[0.78vw] xl:w-[13.57vw]" />
-        <ul className="mt-6 grid gap-4 text-center sm:grid-cols-2 lg:grid-cols-3 xl:mx-auto xl:mt-[1.07vw] xl:w-[91.3vw] xl:grid-cols-5 xl:gap-[1.46vw]">
+        <ul className="mt-6 grid gap-4 text-center sm:grid-cols-2 lg:grid-cols-3 py-2 xl:mx-auto xl:mt-[1.07vw] xl:w-[91.3vw] xl:grid-cols-5 xl:gap-[1.46vw]">
           {WHO.map(({ Icon, title, as, text, photo }) => (
             <li
               key={title}
-              className="flex flex-col overflow-hidden rounded-md border border-[#efe5da] bg-gradient-to-b from-[#fbf3ec] to-[#fdf7f1] xl:h-[24.9vw]"
+              className="group flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-gold-300/40 bg-gradient-to-b from-[#fbf3ec] to-[#fdf7f1] shadow-[0_4px_16px_rgba(32,8,45,0.12),0_1.5px_4px_rgba(32,8,45,0.06)] transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_16px_32px_rgba(32,8,45,0.2),0_4px_12px_rgba(193,136,62,0.18)] hover:border-gold-400/80 xl:h-[24.9vw]"
             >
               <div className="relative h-56 shrink-0 xl:h-[12.99vw]">
                 <OptionalPhoto src={photo} alt={title} sizes="(min-width: 1280px) 17vw, 50vw" />

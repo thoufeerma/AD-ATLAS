@@ -49,7 +49,7 @@ export default function IntroductoryOfferMedallion({ offer, className }: Props) 
       )}
     >
       {/* Outer 3D Polished Metallic Gold Ring */}
-      <div className="relative size-[140px] sm:size-[150px] xl:size-[160px] rounded-full p-[2.5px] bg-gradient-to-tr from-[#94611d] via-[#f7e2a4] via-[#dfb24e] to-[#7f4a13] shadow-[0_12px_28px_rgba(0,0,0,0.55),0_0_12px_rgba(212,175,55,0.2)]">
+      <div className="relative size-[165px] sm:size-[178px] xl:size-[192px] rounded-full p-[2.5px] bg-gradient-to-tr from-[#94611d] via-[#f7e2a4] via-[#dfb24e] to-[#7f4a13] shadow-[0_14px_32px_rgba(0,0,0,0.55),0_0_14px_rgba(212,175,55,0.25)]">
         
         {/* Subtle Outer Ring Glints / Flares */}
         <Flare className="top-[9%] left-[9%] size-3 sm:size-3.5 -translate-x-1/2 -translate-y-1/2" />
@@ -57,18 +57,18 @@ export default function IntroductoryOfferMedallion({ offer, className }: Props) 
         <Flare className="bottom-[3%] left-[45%] size-2 sm:size-2.5 opacity-80" />
 
         {/* Inner Velvet Plum Disc with Radial Depth */}
-        <div className="relative size-full rounded-full bg-[radial-gradient(circle_at_center,_#3e0a37_0%,_#280424_55%,_#170116_100%)] flex flex-col items-center justify-center px-2 py-1.5 overflow-hidden">
+        <div className="relative size-full rounded-full bg-[radial-gradient(circle_at_center,_#3e0a37_0%,_#280424_55%,_#170116_100%)] flex flex-col items-center justify-center px-3 py-2 overflow-hidden">
           
           {/* Concentric Inner Hairline Gold Ring */}
-          <div className="pointer-events-none absolute inset-[3.5px] rounded-full border border-[#d4af37]/45" />
+          <div className="pointer-events-none absolute inset-[4px] rounded-full border border-[#d4af37]/45" />
 
           {/* Top Line: INTRODUCTORY OFFER */}
-          <p className="font-heading text-[0.38rem] sm:text-[0.41rem] xl:text-[0.44rem] font-semibold uppercase tracking-[0.18em] text-[#edd5a6]">
+          <p className="font-heading text-[0.40rem] sm:text-[0.43rem] xl:text-[0.46rem] font-semibold uppercase tracking-[0.13em] text-[#edd5a6]">
             INTRODUCTORY OFFER
           </p>
 
           {/* Top Ornamental Star Divider */}
-          <div className="flex items-center justify-center gap-1 w-[62%] my-0.5 opacity-90">
+          <div className="flex items-center justify-center gap-1 w-[58%] my-0.5 opacity-90">
             <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#d4af37]/80 to-[#d4af37]" />
             <span className="text-[#f5e6c8] text-[0.38rem] select-none leading-none">✦</span>
             <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-[#d4af37]/80 to-[#d4af37]" />
@@ -80,7 +80,7 @@ export default function IntroductoryOfferMedallion({ offer, className }: Props) 
             <Flare className="top-0.5 left-0 size-2.5 sm:size-3" />
 
             <span
-              className="text-[2.35rem] sm:text-[2.55rem] xl:text-[2.8rem] font-normal tracking-tight leading-[0.85] bg-gradient-to-b from-[#fffbe8] via-[#e8b654] via-[#dba23b] to-[#996214] bg-clip-text text-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+              className="text-[2.65rem] sm:text-[2.9rem] xl:text-[3.15rem] font-normal tracking-tight leading-[0.85] bg-gradient-to-b from-[#fffbe8] via-[#e8b654] via-[#dba23b] to-[#996214] bg-clip-text text-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
               style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}
             >
               {offer.percent}%
@@ -88,7 +88,7 @@ export default function IntroductoryOfferMedallion({ offer, className }: Props) 
 
             {/* OFF */}
             <span
-              className="text-[1.05rem] sm:text-[1.15rem] xl:text-[1.25rem] font-normal tracking-[0.06em] leading-[0.9] uppercase bg-gradient-to-b from-[#fffbe8] via-[#e8b654] to-[#996214] bg-clip-text text-transparent -mt-0.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+              className="text-[1.15rem] sm:text-[1.25rem] xl:text-[1.35rem] font-normal tracking-[0.06em] leading-[0.9] uppercase bg-gradient-to-b from-[#fffbe8] via-[#e8b654] to-[#996214] bg-clip-text text-transparent -mt-0.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
               style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}
             >
               OFF
@@ -96,23 +96,23 @@ export default function IntroductoryOfferMedallion({ offer, className }: Props) 
           </div>
 
           {/* Middle Line: ON YOUR FIRST ORDER */}
-          <p className="font-heading text-[0.34rem] sm:text-[0.37rem] xl:text-[0.4rem] font-semibold uppercase tracking-[0.14em] text-[#edd5a6] mt-0.5">
+          <p className="font-heading text-[0.36rem] sm:text-[0.39rem] xl:text-[0.42rem] font-semibold uppercase tracking-[0.12em] text-[#edd5a6] mt-0.5">
             {offer.firstOrderOnly ? "ON YOUR FIRST ORDER" : "ON YOUR ORDER"}
           </p>
 
           {/* Bottom Ornamental Star Divider */}
-          <div className="flex items-center justify-center gap-1 w-[62%] my-0.5 opacity-90">
+          <div className="flex items-center justify-center gap-1 w-[58%] my-0.5 opacity-90">
             <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#d4af37]/80 to-[#d4af37]" />
             <span className="text-[#f5e6c8] text-[0.38rem] select-none leading-none">✦</span>
             <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-[#d4af37]/80 to-[#d4af37]" />
           </div>
 
           {/* Bottom Coupon Pill: CODE: VEL10 */}
-          <div className="mt-0.5 px-2 py-0.5 rounded-full border border-[#d4af37]/80 bg-[#160216]/70 flex items-center justify-center gap-1 shadow-inner">
-            <span className="font-heading text-[0.38rem] sm:text-[0.42rem] font-medium tracking-[0.1em] text-[#edd5a6]">
+          <div className="mt-0.5 px-2.5 py-0.5 rounded-full border border-[#d4af37]/80 bg-[#160216]/70 flex items-center justify-center gap-1 shadow-inner">
+            <span className="font-heading text-[0.4rem] sm:text-[0.44rem] font-medium tracking-[0.1em] text-[#edd5a6]">
               CODE:
             </span>
-            <span className="font-heading text-[0.48rem] sm:text-[0.52rem] font-bold tracking-[0.08em] text-[#ffe6a4] drop-shadow-[0_1px_3px_rgba(255,230,164,0.4)]">
+            <span className="font-heading text-[0.52rem] sm:text-[0.56rem] font-bold tracking-[0.08em] text-[#ffe6a4] drop-shadow-[0_1px_3px_rgba(255,230,164,0.4)]">
               {offer.code}
             </span>
           </div>

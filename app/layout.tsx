@@ -7,6 +7,7 @@ import Footer from "@/components/layout/Footer";
 import FooterSwitch from "@/components/layout/FooterSwitch";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
 import AccountLoader from "@/components/providers/AccountLoader";
+import CartNotification from "@/components/cart/CartNotification";
 import { bannerHeadlines, getSettings } from "@/lib/api/server";
 import { siteMetadata } from "@/lib/seo";
 
@@ -69,6 +70,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-cream-50 text-ink font-sans">
         <SettingsProvider settings={settings}>
           <AccountLoader />
+          <CartNotification />
           <Header announcements={announcements} />
           <main className="flex-1">{children}</main>
           <FooterSwitch standard={<Footer />} />

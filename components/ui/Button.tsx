@@ -5,11 +5,13 @@ type Variant = "primary" | "gold" | "outline" | "ghost";
 type Size = "sm" | "md" | "lg";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-[#20082d] text-cream-50 hover:bg-[#2e0c40]",
-  gold: "bg-gold-600 text-white hover:bg-gold-500",
+  primary:
+    "bg-[#20082d] text-cream-50 border border-gold-400/40 shadow-[0_4px_14px_rgba(32,8,45,0.22)] hover:bg-[#2e0c40] hover:border-gold-400/70 hover:shadow-[0_8px_22px_rgba(32,8,45,0.32),0_2px_8px_rgba(193,136,62,0.2)] hover:-translate-y-0.5 active:translate-y-0",
+  gold:
+    "bg-gradient-to-r from-[#ca9d4c] to-[#a27334] text-white border border-gold-300/40 shadow-[0_4px_14px_rgba(193,136,62,0.3)] hover:brightness-110 hover:border-gold-300/80 hover:shadow-[0_8px_24px_rgba(193,136,62,0.45)] hover:-translate-y-0.5 active:translate-y-0",
   outline:
-    "border border-[#20082d]/25 text-[#20082d] hover:border-[#20082d] hover:bg-[#20082d] hover:text-cream-50",
-  ghost: "text-[#20082d] hover:text-gold-600",
+    "border border-[#20082d]/30 text-[#20082d] bg-white/60 backdrop-blur-xs shadow-[0_2px_8px_rgba(32,8,45,0.08)] hover:border-[#20082d] hover:bg-[#20082d] hover:text-cream-50 hover:shadow-[0_6px_18px_rgba(32,8,45,0.2)] hover:-translate-y-0.5 active:translate-y-0",
+  ghost: "text-[#20082d] hover:text-gold-600 transition-colors",
 };
 
 const SIZES: Record<Size, string> = {
@@ -35,7 +37,7 @@ export default function Button({
   ...rest
 }: Props) {
   const classes = cn(
-    "label-caps inline-flex items-center justify-center gap-2 rounded-sm transition-colors disabled:cursor-not-allowed disabled:opacity-45",
+    "label-caps inline-flex items-center justify-center gap-2 rounded-sm transition-all duration-300 ease-out disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 disabled:hover:shadow-none",
     VARIANTS[variant],
     SIZES[size],
     className,

@@ -87,7 +87,7 @@ export default function ReturnsPage() {
 
       {/* 2. OUR PROMISE TO YOU (Dark Banner) */}
       <div className="container-vel">
-        <section className="bg-[#240b25] w-full text-cream-50 py-10 px-6 lg:px-12 border-t border-[#f3eadf] relative z-20 lg:-mt-6 rounded-xl shadow-2xl">
+        <section className="bg-[#240b25] w-full text-cream-50 py-10 px-6 lg:px-12 border border-[#c8963c]/35 relative z-20 lg:-mt-6 rounded-xl shadow-[0_12px_36px_rgba(32,8,45,0.3),0_4px_12px_rgba(32,8,45,0.15)] transition-all duration-300 hover:shadow-[0_18px_44px_rgba(32,8,45,0.4),0_6px_16px_rgba(193,136,62,0.22)]">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-6">
            {/* Left side */}
            <div className="flex items-start gap-6 lg:w-[40%]">
@@ -288,7 +288,7 @@ export default function ReturnsPage() {
       <section className="w-full py-4 bg-transparent">
         <div className="container-vel">
           <div 
-            className="rounded-[1.5rem] shadow-sm flex flex-col lg:flex-row items-stretch overflow-hidden bg-cover bg-center"
+            className="rounded-[1.5rem] border border-gold-300/40 shadow-[0_4px_16px_rgba(32,8,45,0.12),0_1.5px_4px_rgba(32,8,45,0.06)] transition-all duration-300 hover:shadow-[0_12px_28px_rgba(32,8,45,0.18),0_4px_10px_rgba(193,136,62,0.15)] flex flex-col lg:flex-row items-stretch overflow-hidden bg-cover bg-center"
             style={{ backgroundImage: "url('/images/REFUND INFORMATION products.png')" }}
           >
            
@@ -318,7 +318,7 @@ export default function ReturnsPage() {
            
            {/* Right Light Pink Box */}
            <div className="w-full lg:w-[30%] p-4 lg:p-5 flex flex-col justify-center">
-             <div className="bg-[#fcf5f7] rounded-2xl w-full h-full py-6 px-5 flex flex-row items-center gap-4">
+             <div className="bg-[#fcf5f7] rounded-2xl border border-gold-300/40 shadow-[0_4px_14px_rgba(32,8,45,0.08)] w-full h-full py-6 px-5 flex flex-row items-center gap-4">
                 <div className="w-[30%] flex-shrink-0 flex items-center justify-center">
                    <img src="https://placehold.co/200x200/fcf5f7/c8963c?text=Icon" alt="Icon" className="w-full h-auto object-contain" />
                 </div>

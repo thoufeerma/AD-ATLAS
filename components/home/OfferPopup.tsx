@@ -190,7 +190,7 @@ export default function OfferPopup({ welcomeOffer }: OfferPopupProps) {
               >
                 Limited Time
                 <span className="block text-gold-300 font-bold mt-1">
-                  {percent}% Off
+                  {percent}% OFF
                 </span>
               </h2>
 
@@ -287,7 +287,7 @@ export default function OfferPopup({ welcomeOffer }: OfferPopupProps) {
                     Coupon Code
                   </span>
                   <span className="font-mono text-base font-bold text-cream-50">
-                    {couponCode}
+                    CODE: {couponCode}
                   </span>
                 </div>
                 <button

@@ -14,7 +14,7 @@ export default async function OurStory() {
   return (
     <section className="bg-cream-50 pt-0 pb-6 xl:pb-8">
       <div className="container-vel grid items-center gap-8 lg:grid-cols-[1.1fr_1fr_auto] xl:grid-cols-[1.2fr_1fr_auto] lg:gap-10 xl:gap-14 2xl:gap-18">
-        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[20px] xl:rounded-[24px] shadow-sm">
+        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[20px] xl:rounded-[24px] border border-gold-300/40 shadow-[0_10px_32px_rgba(32,8,45,0.14),0_2px_8px_rgba(32,8,45,0.06)] transition-all duration-300 hover:shadow-[0_16px_40px_rgba(32,8,45,0.2),0_4px_12px_rgba(193,136,62,0.15)]">
           <Image
             src="/images/our story image.png"
             alt="Velastia lipstick and its box beside laboratory glassware and pink flowers"
@@ -43,6 +43,7 @@ export default async function OurStory() {
           {stats.map((s, i) => (
             <li
               key={s.label}
+              aria-label={`${s.value} ${s.label}`}
               className={`flex flex-col items-center justify-center py-2 sm:py-6 xl:py-7 2xl:py-8 px-1.5 sm:px-3 ${
                 i !== stats.length - 1
                   ? "border-r lg:border-r-0 lg:border-b border-gold-200/50"

@@ -27,6 +27,7 @@ import {
 import Button from "@/components/ui/Button";
 import { api, ApiError } from "@/lib/api/client";
 import { safeNext, setSignedIn, useAccount, type Me } from "@/lib/account";
+import { useStore, useHydrated } from "@/lib/store";
 import { cn, looksLikeEmail } from "@/lib/utils";
 
 const PASSWORD_MIN = 8;
@@ -36,6 +37,11 @@ export default function AuthPanel() {
   const params = useSearchParams();
   const next = safeNext(params.get("next"));
   const status = useAccount((s) => s.status);
+
+  const hydrated = useHydrated();
+  const lines = useStore((s) => s.lines);
+  const wishlist = useStore((s) => s.wishlist);
+  const cartCount = lines.reduce((n, l) => n + l.qty, 0);
 
   const leftBadges = [
     { Icon: Leaf, title: "Clean Beauty", note: "Safe & Effective" },
@@ -83,14 +89,56 @@ export default function AuthPanel() {
           />
           
           <div className="relative z-10 flex flex-col items-center w-full">
+            {/* Mobile Top Header on Dark Aside */}
+            <div className="lg:hidden flex items-center justify-between w-full pb-6 mb-2 text-cream-50 z-20">
+              <Link href="/" className="font-heading text-lg font-bold uppercase tracking-wider text-cream-50 hover:text-[#c8963c] transition-colors">
+                Velastia
+              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/search"
+                  aria-label="Search"
+                  className="grid size-9 place-items-center text-cream-100 hover:text-[#c8963c] transition-colors"
+                >
+                  <Search className="size-[1.15rem]" strokeWidth={1.5} />
+                </Link>
+                <Link
+                  href="/wishlist"
+                  aria-label="Wishlist"
+                  className="relative grid size-9 place-items-center text-cream-100 hover:text-[#c8963c] transition-colors"
+                >
+                  <Heart className="size-[1.15rem]" strokeWidth={1.5} />
+                  {hydrated && wishlist.length > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 grid min-w-4 h-4 px-1 place-items-center rounded-full bg-[#c8963c] text-[0.55rem] font-bold text-white leading-none">
+                      {wishlist.length}
+                    </span>
+                  )}
+                </Link>
+                <Link
+                  href="/cart"
+                  aria-label="Cart"
+                  className="relative grid size-9 place-items-center text-cream-100 hover:text-[#c8963c] transition-colors"
+                >
+                  <ShoppingBag className="size-[1.15rem]" strokeWidth={1.5} />
+                  {hydrated && cartCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 grid min-w-4 h-4 px-1 place-items-center rounded-full bg-[#c8963c] text-[0.55rem] font-bold text-white leading-none">
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
+              </div>
+            </div>
+
             <div className="mb-8 flex flex-col items-center">
-              <Image
-                src="/brand/footer-logo-light.png"
-                alt="Velastia"
-                width={200}
-                height={66}
-                className="h-[4.5rem] w-auto mb-2"
-              />
+              <Link href="/" className="transition-opacity hover:opacity-90">
+                <Image
+                  src="/brand/footer-logo-light.png"
+                  alt="Velastia"
+                  width={200}
+                  height={66}
+                  className="h-[4.5rem] w-auto mb-2"
+                />
+              </Link>
             </div>
 
             <h1 className="font-heading text-[2.5rem] xl:text-[2.8rem] leading-tight text-cream-50 font-bold tracking-wide">
@@ -122,8 +170,9 @@ export default function AuthPanel() {
         {/* Right Cream Panel */}
         <div className="bg-[#fcf9f5] flex flex-col relative px-8 py-10 lg:px-12 xl:px-16">
           {/* Header Navigation */}
-          <div className="hidden lg:flex items-center justify-between pb-12 w-full max-w-[65rem] mx-auto">
-            <ul className="flex items-center gap-6 xl:gap-9 text-[0.7rem] font-bold uppercase tracking-[0.05em] text-[#20082d]">
+          <div className="flex items-center justify-between pb-8 lg:pb-12 w-full max-w-[65rem] mx-auto">
+            {/* Desktop Navigation Links */}
+            <ul className="hidden lg:flex items-center gap-6 xl:gap-9 text-[0.7rem] font-bold uppercase tracking-[0.05em] text-[#20082d]">
               <li><Link href="/" className="hover:text-[#c8963c] transition-colors">Home</Link></li>
               <li><Link href="/shop" className="hover:text-[#c8963c] transition-colors">Shop</Link></li>
               <li><Link href="/about" className="hover:text-[#c8963c] transition-colors">About Us</Link></li>
@@ -132,17 +181,54 @@ export default function AuthPanel() {
               <li><Link href="/collabs" className="hover:text-[#c8963c] transition-colors">Collabs</Link></li>
               <li><Link href="/shop?category=offers" className="hover:text-[#c8963c] transition-colors">Offers</Link></li>
             </ul>
-            <div className="flex items-center gap-5 text-[#20082d]">
-              <Search className="size-[1.15rem] cursor-pointer hover:text-[#c8963c] transition-colors" strokeWidth={1.5} />
-              <User className="size-[1.15rem] cursor-pointer hover:text-[#c8963c] transition-colors" strokeWidth={1.5} />
-              <div className="relative">
-                <Heart className="size-[1.15rem] cursor-pointer hover:text-[#c8963c] transition-colors" strokeWidth={1.5} />
-                <span className="absolute -top-1.5 -right-2 grid size-3.5 place-items-center rounded-full bg-[#c8963c] text-[0.55rem] font-bold text-white">2</span>
-              </div>
-              <div className="relative">
-                <ShoppingBag className="size-[1.15rem] cursor-pointer hover:text-[#c8963c] transition-colors" strokeWidth={1.5} />
-                <span className="absolute -top-1.5 -right-2 grid size-3.5 place-items-center rounded-full bg-[#c8963c] text-[0.55rem] font-bold text-white">3</span>
-              </div>
+
+            {/* Mobile Brand Link */}
+            <div className="lg:hidden flex items-center">
+              <Link href="/" className="font-heading text-lg font-bold uppercase tracking-wider text-[#20082d] hover:text-[#c8963c] transition-colors">
+                Velastia
+              </Link>
+            </div>
+
+            {/* Action Icons: Search, User, Wishlist, Cart */}
+            <div className="flex items-center gap-2 sm:gap-4 lg:gap-5 text-[#20082d]">
+              <Link
+                href="/search"
+                aria-label="Search"
+                className="grid size-9 place-items-center hover:text-[#c8963c] transition-colors"
+              >
+                <Search className="size-[1.15rem]" strokeWidth={1.5} />
+              </Link>
+              <Link
+                href={status === "signed-in" ? "/account" : "/login"}
+                aria-label={status === "signed-in" ? "Your account" : "Sign in"}
+                className="grid size-9 place-items-center hover:text-[#c8963c] transition-colors"
+              >
+                <User className="size-[1.15rem]" strokeWidth={1.5} />
+              </Link>
+              <Link
+                href="/wishlist"
+                aria-label="Wishlist"
+                className="relative grid size-9 place-items-center hover:text-[#c8963c] transition-colors"
+              >
+                <Heart className="size-[1.15rem]" strokeWidth={1.5} />
+                {hydrated && wishlist.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 grid min-w-4 h-4 px-1 place-items-center rounded-full bg-[#c8963c] text-[0.55rem] font-bold text-white leading-none shadow-xs">
+                    {wishlist.length}
+                  </span>
+                )}
+              </Link>
+              <Link
+                href="/cart"
+                aria-label="Cart"
+                className="relative grid size-9 place-items-center hover:text-[#c8963c] transition-colors"
+              >
+                <ShoppingBag className="size-[1.15rem]" strokeWidth={1.5} />
+                {hydrated && cartCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 grid min-w-4 h-4 px-1 place-items-center rounded-full bg-[#c8963c] text-[0.55rem] font-bold text-white leading-none shadow-xs">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
             </div>
           </div>
 
@@ -344,7 +430,7 @@ function LoginForm({ className, onDone }: { className?: string; onDone: (me: Me)
         </Link>
       </div>
 
-      <Button type="submit" size="lg" className="mt-6 w-full bg-[#20082d] text-white hover:bg-[#371938] font-bold uppercase tracking-widest text-[0.85rem] h-12" disabled={busy}>
+      <Button type="submit" size="lg" className="mt-6 w-full bg-[#20082d] text-white hover:bg-[#371938] font-bold uppercase tracking-widest text-[0.85rem] h-12 border border-gold-400/40 shadow-[0_4px_16px_rgba(32,8,45,0.25)] hover:shadow-[0_8px_24px_rgba(32,8,45,0.38),0_2px_8px_rgba(193,136,62,0.2)] hover:border-gold-400/70 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300" disabled={busy}>
         {busy && <Loader2 className="size-3.5 animate-spin" />}
         {busy ? "Signing in…" : "LOGIN"}
       </Button>
@@ -433,7 +519,7 @@ function RegisterForm({ className, onDone }: { className?: string; onDone: (me: 
         <Field id="reg-confirm" label="Confirm Password" Icon={Lock} type={show ? "text" : "password"} autoComplete="new-password" value={confirm} onChange={setConfirm} error={fields.confirm} placeholder="Confirm your password" />
       </div>
 
-      <Button type="submit" size="lg" className="mt-8 w-full bg-[#20082d] text-white hover:bg-[#371938] font-bold uppercase tracking-widest text-[0.85rem] h-12" disabled={busy}>
+      <Button type="submit" size="lg" className="mt-8 w-full bg-[#20082d] text-white hover:bg-[#371938] font-bold uppercase tracking-widest text-[0.85rem] h-12 border border-gold-400/40 shadow-[0_4px_16px_rgba(32,8,45,0.25)] hover:shadow-[0_8px_24px_rgba(32,8,45,0.38),0_2px_8px_rgba(193,136,62,0.2)] hover:border-gold-400/70 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300" disabled={busy}>
         {busy && <Loader2 className="size-3.5 animate-spin" />}
         {busy ? "Creating account…" : "REGISTER"}
       </Button>

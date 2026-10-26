@@ -19,7 +19,7 @@ export default function WriteReviewDialog({
       <button
         type="button"
         onClick={() => dialog.current?.showModal()}
-        className={`inline-flex items-center justify-center gap-2.5 rounded-[3px] bg-[#260b26] text-[0.78rem] font-semibold uppercase text-cream-50 transition-colors hover:bg-[#45174a] ${className}`}
+        className={`inline-flex items-center justify-center gap-2.5 rounded-[4px] bg-[#260b26] text-[0.78rem] font-semibold uppercase text-cream-50 border border-gold-400/40 shadow-[0_4px_16px_rgba(32,8,45,0.25)] hover:bg-[#45174a] hover:border-gold-400/70 hover:shadow-[0_8px_24px_rgba(32,8,45,0.38),0_2px_8px_rgba(193,136,62,0.2)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 ${className}`}
       >
         <SquarePen className="size-4 text-[#d9a53f] xl:size-[1.25vw]" strokeWidth={1.5} />
         Write a Review

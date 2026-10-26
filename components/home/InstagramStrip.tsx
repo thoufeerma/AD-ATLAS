@@ -28,14 +28,14 @@ export default function InstagramStrip({ href, handle }: { href: string; handle:
   const post = (src: string, key: string | number) => (
     <li
       key={key}
-      className="shrink-0"
+      className="shrink-0 py-2"
       style={{ width: "calc((100% - (var(--visible) - 1) * var(--strip-gap,1rem)) / var(--visible))" }}
     >
       <a
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="group relative block aspect-square overflow-hidden rounded-[var(--radius-card)]"
+        className="group relative block aspect-square overflow-hidden rounded-[var(--radius-card)] border border-gold-300/40 shadow-[0_4px_16px_rgba(32,8,45,0.12),0_1.5px_4px_rgba(32,8,45,0.06)] transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_16px_32px_rgba(32,8,45,0.2),0_4px_12px_rgba(193,136,62,0.18)] hover:border-gold-400/80"
       >
         <Image
           src={src}

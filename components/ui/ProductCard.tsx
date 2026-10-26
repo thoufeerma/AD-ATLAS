@@ -116,7 +116,13 @@ export default function ProductCard({
             </span>
           ) : (
             <button
-              onClick={() => add(product.slug, 1, product.shades[0]?.name)}
+              onClick={() =>
+                add(product.slug, 1, product.shades[0]?.name, {
+                  name: product.name,
+                  pricePaise: product.pricePaise,
+                  image: productImage(product),
+                })
+              }
               className="label-caps relative z-10 block w-full rounded-md bg-[#20082d] py-2.5 xl:py-3.5 2xl:py-4 text-[0.62rem] xl:text-[0.74rem] 2xl:text-[0.78rem] font-semibold text-cream-50 shadow-sm transition-all hover:bg-[#340d4a] hover:shadow active:scale-[0.99]"
             >
               Add to Cart

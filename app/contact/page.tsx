@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { Mail, Phone, MapPin, MessageCircle, Heart, Headset, Droplets, RefreshCcw, Users, MessagesSquare, Lock, RotateCcw, Truck, CreditCard, Gift, ChevronLeft, ChevronRight, Play } from "lucide-react";
-import { Facebook, Youtube, Instagram, XIcon, Pinterest } from "@/components/ui/SocialIcons";
+import { socialProfiles } from "@/components/ui/SocialIcons";
+import { telHref, whatsappHref } from "@/lib/utils";
 import OptionalPhoto from "@/components/ui/OptionalPhoto";
 import ContactForm from "@/components/forms/ContactForm";
 import { Ornament, ScriptHeart } from "@/components/ui/Ornament";
-import { getHomeContent } from "@/lib/api/server";
+import { getHomeContent, getSettings } from "@/lib/api/server";
 
 export async function generateMetadata(): Promise<Metadata> {
   return pageMetadata("contact");
@@ -15,8 +16,13 @@ const INK = "text-[#1d052b]";
 const GOLD = "text-[#c8963c]";
 
 export default async function ContactPage() {
-  const content = await getHomeContent();
+  const [content, settings] = await Promise.all([getHomeContent(), getSettings()]);
   const testimonials = content.testimonials;
+  const socials = socialProfiles(settings.store.social, ["instagram", "youtube", "facebook", "x", "pinterest"]);
+  const supportEmail = settings.store.supportEmail || "hello@velastia.com";
+  const supportPhone = settings.store.supportPhone || "+91 98765 43210";
+  const supportHours = settings.store.supportHours || "Mon – Sat | 10AM – 7PM";
+  const instagramUrl = settings.store.social.instagram || "https://www.instagram.com/velastiaofficial";
   return (
     <div className="bg-[#fcf9f5] w-full overflow-hidden flex flex-col">
       {/* 1. Hero Section */}
@@ -79,7 +85,7 @@ export default async function ContactPage() {
             <Ornament className="mx-auto mt-2 w-28" />
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-5 py-2">
             {[
               { icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#c8963c]"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>, title: "Order Support", text: "Help with orders,\npayments & delivery" },
               { icon: <Droplets className="size-6 text-[#c8963c]" strokeWidth={2} />, title: "Product Queries", text: "Find the right product\nfor your skin" },
@@ -87,7 +93,7 @@ export default async function ContactPage() {
               { icon: <Users className="size-6 text-[#c8963c]" strokeWidth={2} />, title: "Collaborations", text: "Influencer, brand &\ncreator partnerships" },
               { icon: <MessagesSquare className="size-6 text-[#c8963c]" strokeWidth={2} />, title: "General Queries", text: "Any other questions?\nWe're all ears!" },
             ].map((item, i) => (
-              <div key={i} className="flex flex-col items-center text-center px-4 py-6 lg:py-8 border border-[#eaddce] bg-[#fbf8f4] rounded hover:shadow-md transition-shadow h-full">
+              <div key={i} className="flex flex-col items-center text-center px-4 py-6 lg:py-8 rounded-[var(--radius-card)] border border-gold-300/40 bg-[#fbf8f4] shadow-[0_4px_16px_rgba(32,8,45,0.1),0_1.5px_4px_rgba(32,8,45,0.05)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(32,8,45,0.18),0_4px_12px_rgba(193,136,62,0.15)] hover:border-gold-400/80 h-full">
                 <span className="grid size-[60px] place-items-center rounded-full border border-[#c8963c] bg-white mb-5 shadow-sm">
                   {item.icon}
                 </span>
@@ -102,7 +108,7 @@ export default async function ContactPage() {
       {/* 3. Get In Touch 3-Column Block */}
       <section className="pb-16 pt-0 w-full">
         <div className="container-vel">
-          <div className="flex flex-col lg:flex-row w-full rounded-md overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-[#eaddce]">
+          <div className="flex flex-col lg:flex-row w-full rounded-xl overflow-hidden shadow-[0_18px_50px_rgba(32,8,45,0.2),0_6px_18px_rgba(193,136,62,0.12)] border border-gold-300/60 transition-shadow duration-300 hover:shadow-[0_24px_60px_rgba(32,8,45,0.26),0_8px_24px_rgba(193,136,62,0.18)]">
           
           {/* Left: Contact Form */}
           <div className="bg-[#1f0b24] p-8 lg:p-10 lg:w-[38%] flex flex-col justify-center">
@@ -123,7 +129,7 @@ export default async function ContactPage() {
                 </span>
                 <div className="pt-1">
                   <h3 className={`text-[0.85rem] font-extrabold uppercase tracking-wider ${INK}`}>Email Us</h3>
-                  <a href="mailto:hello@velastia.com" className="text-[0.85rem] text-[#1d052b] hover:text-[#c8963c] font-medium transition-colors mt-0.5 inline-block">hello@velastia.com</a>
+                  <a href={`mailto:${supportEmail}`} className="text-[0.85rem] text-[#1d052b] hover:text-[#c8963c] font-medium transition-colors mt-0.5 inline-block">{supportEmail}</a>
                 </div>
               </div>
               
@@ -133,8 +139,8 @@ export default async function ContactPage() {
                 </span>
                 <div className="pt-1">
                   <h3 className={`text-[0.85rem] font-extrabold uppercase tracking-wider ${INK}`}>Call Us</h3>
-                  <a href="tel:+919876543210" className="text-[0.85rem] text-[#1d052b] font-medium hover:text-[#c8963c] transition-colors mt-0.5 inline-block">+91 98765 43210</a>
-                  <p className="text-[0.75rem] text-[#1d052b]/80 mt-0.5 font-medium">(Mon &ndash; Sat | 10AM &ndash; 7PM)</p>
+                  <a href={telHref(supportPhone)} className="text-[0.85rem] text-[#1d052b] font-medium hover:text-[#c8963c] transition-colors mt-0.5 inline-block">{supportPhone}</a>
+                  <p className="text-[0.75rem] text-[#1d052b]/80 mt-0.5 font-medium">({supportHours})</p>
                 </div>
               </div>
               
@@ -144,7 +150,7 @@ export default async function ContactPage() {
                 </span>
                 <div className="pt-1">
                   <h3 className={`text-[0.85rem] font-extrabold uppercase tracking-wider ${INK}`}>Whatsapp Us</h3>
-                  <a href="https://wa.me/919876543210" className="text-[0.85rem] text-[#1d052b] font-medium hover:text-[#c8963c] transition-colors mt-0.5 inline-block">+91 98765 43210</a>
+                  <a href={whatsappHref(supportPhone)} target="_blank" rel="noopener noreferrer" className="text-[0.85rem] text-[#1d052b] font-medium hover:text-[#c8963c] transition-colors mt-0.5 inline-block">{supportPhone}</a>
                   <p className="text-[0.75rem] text-[#1d052b]/80 mt-0.5 font-medium">(Quick replies on WhatsApp)</p>
                 </div>
               </div>
@@ -181,8 +187,15 @@ export default async function ContactPage() {
               Beauty tips, product updates, offers and a whole lot of inspiration &ndash; only for you!
             </p>
             <div className="flex items-center justify-center lg:justify-start gap-3">
-              {[Instagram, Youtube, Facebook, XIcon, Pinterest].map((Icon, i) => (
-                <a key={i} href="#" className="grid size-9 place-items-center rounded-full border border-gold-300 text-plum-800 hover:text-gold-600 transition-colors bg-white">
+              {socials.map(({ Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={`Velastia on ${label}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="grid size-9 place-items-center rounded-full border border-gold-300 text-plum-800 hover:text-gold-600 hover:border-gold-500 hover:scale-105 active:scale-95 transition-all bg-white shadow-2xs"
+                >
                   <Icon className="w-4 h-4" />
                 </a>
               ))}
@@ -193,13 +206,19 @@ export default async function ContactPage() {
             <button className="absolute left-2 top-1/2 -translate-y-1/2 z-10 grid size-8 place-items-center rounded-full bg-white/90 border border-[#eaddce] shadow-sm text-plum-800"><ChevronLeft size={18} strokeWidth={1.5} /></button>
             <div className="flex gap-4 min-w-max">
                {["Beauty Tips & Tutorials", "New Launches", "Real Stories", "Special Offers", "Behind The Glow"].map((lbl, i) => (
-                 <div key={i} className="flex flex-col items-center w-[160px] lg:w-[200px]">
+                 <a
+                   key={i}
+                   href={instagramUrl}
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   className="flex flex-col items-center w-[160px] lg:w-[200px] group transition-transform hover:-translate-y-1"
+                 >
                    <div className="aspect-square w-full rounded-md overflow-hidden relative bg-[#240b25]">
-                      <OptionalPhoto src={`/images/contact_ig_${i}.png`} alt={lbl} sizes="200px" className="object-cover w-full h-full opacity-90" />
+                      <OptionalPhoto src={`/images/contact_ig_${i}.png`} alt={lbl} sizes="200px" className="object-cover w-full h-full opacity-90 transition-transform duration-500 group-hover:scale-105" />
                       {i === 0 && <span className="absolute inset-0 m-auto grid size-10 place-items-center rounded-full bg-black/40 text-white"><Play size={16} fill="white" /></span>}
                    </div>
-                   <p className={`text-[0.7rem] font-medium mt-3 ${INK}`}>{lbl}</p>
-                 </div>
+                   <p className={`text-[0.7rem] font-medium mt-3 ${INK} group-hover:text-[#c8963c] transition-colors`}>{lbl}</p>
+                 </a>
                ))}
             </div>
             <button className="absolute right-2 top-1/2 -translate-y-1/2 z-10 grid size-8 place-items-center rounded-full bg-white/90 border border-[#eaddce] shadow-sm text-plum-800"><ChevronRight size={18} strokeWidth={1.5} /></button>

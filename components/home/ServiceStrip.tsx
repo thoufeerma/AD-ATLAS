@@ -20,19 +20,19 @@ export default async function ServiceStrip() {
   return (
     <section className="border-b border-gold-200/60 bg-cream-50">
       <div className="container-vel py-5 lg:py-6 xl:py-7 2xl:py-8">
-        <div className="flex flex-col gap-y-6 lg:flex-row lg:items-center lg:justify-between lg:gap-x-8 xl:gap-x-12 2xl:gap-x-16">
+        <div className="flex flex-col gap-y-6 lg:flex-row lg:items-center lg:justify-between lg:gap-x-6 xl:gap-x-10 2xl:gap-x-14">
           {/* The 4 service perks */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-4 sm:gap-x-6 lg:flex-1 lg:gap-x-4 xl:gap-x-8 2xl:gap-x-10">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-4 sm:gap-x-4 lg:flex lg:flex-1 lg:items-center lg:justify-between lg:gap-x-3 xl:gap-x-6 2xl:gap-x-8">
             {services.map(({ Icon, title, note }) => (
-              <div key={title} className="flex items-center gap-2.5 sm:gap-3 lg:gap-3.5 xl:gap-4">
-                <span className="grid size-9 sm:size-10 lg:size-11 xl:size-13 2xl:size-14 shrink-0 place-items-center rounded-full border border-gold-400/70 bg-gold-500/5">
-                  <Icon strokeWidth={1.3} className="size-4.5 sm:size-5 lg:size-5.5 xl:size-6.5 2xl:size-7 text-gold-600" />
+              <div key={title} aria-label={`${title} ${note}`} className="flex items-center gap-2 sm:gap-2.5 lg:gap-2.5 xl:gap-3.5 2xl:gap-4 shrink-0">
+                <span className="grid size-9 sm:size-9.5 lg:size-10 xl:size-12 2xl:size-13 shrink-0 place-items-center rounded-full border border-gold-400/70 bg-gold-500/5">
+                  <Icon strokeWidth={1.3} className="size-4.5 sm:size-5 lg:size-5 xl:size-6 2xl:size-6.5 text-gold-600" />
                 </span>
-                <div className="flex flex-col text-left leading-tight">
-                  <span className="font-heading text-[0.82rem] sm:text-[0.88rem] lg:text-[0.92rem] xl:text-[1.05rem] 2xl:text-[1.12rem] font-bold text-plum-900 tracking-[-0.01em]">
+                <div className="flex flex-col text-left leading-tight shrink-0">
+                  <span className="font-heading text-[0.8rem] sm:text-[0.86rem] lg:text-[0.88rem] xl:text-[1.02rem] 2xl:text-[1.1rem] font-bold text-plum-900 tracking-[-0.01em] whitespace-nowrap">
                     {title}
                   </span>
-                  <span className="font-heading text-[0.72rem] sm:text-[0.76rem] lg:text-[0.8rem] xl:text-[0.88rem] 2xl:text-[0.94rem] font-medium text-plum-800/80 mt-0.5">
+                  <span className="font-heading text-[0.7rem] sm:text-[0.75rem] lg:text-[0.78rem] xl:text-[0.86rem] 2xl:text-[0.92rem] font-medium text-plum-800/80 mt-0.5 whitespace-nowrap">
                     {note}
                   </span>
                 </div>
@@ -41,7 +41,7 @@ export default async function ServiceStrip() {
           </div>
 
           {/* Behind The Beauty */}
-          <div className="flex flex-row items-center gap-4 sm:gap-5 xl:gap-6 pt-4 border-t border-gold-200/50 lg:border-t-0 lg:pt-0 lg:border-l lg:border-gold-200/60 lg:pl-8 xl:pl-10 2xl:pl-12 shrink-0">
+          <div className="flex flex-row items-center gap-4 sm:gap-5 xl:gap-6 pt-4 border-t border-gold-200/50 lg:border-t-0 lg:pt-0 lg:border-l lg:border-gold-200/60 lg:pl-6 xl:pl-8 2xl:pl-12 shrink-0">
             <Link
               href="/about"
               className="group relative h-[4.75rem] w-[8.5rem] sm:h-[5.25rem] sm:w-[9.5rem] lg:h-[5.5rem] lg:w-[10rem] xl:h-[6.5rem] xl:w-[12rem] 2xl:h-[7.25rem] 2xl:w-[13.5rem] shrink-0 overflow-hidden rounded-[10px] bg-plum-800 shadow-sm block"

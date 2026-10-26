@@ -38,12 +38,12 @@ export default function CollaboratorQuotes({ people }: { people: (Collaborator &
       )}
       <ul
         ref={row}
-        className="flex snap-x snap-mandatory gap-3 overflow-x-auto [scrollbar-width:none] xl:gap-[0.92vw] [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x snap-mandatory gap-3 overflow-x-auto [scrollbar-width:none] py-3 xl:gap-[0.92vw] [&::-webkit-scrollbar]:hidden"
       >
         {people.map((p) => (
           <li
             key={p.id}
-            className="flex w-[78vw] shrink-0 snap-start flex-col rounded-md border border-[#efe5da] bg-[#fdf7f1] p-3 sm:w-[44vw] lg:w-[30vw] xl:h-[10.66vw] xl:w-[16.85vw] xl:px-[0.9vw] xl:pt-[0.78vw] xl:pb-0"
+            className="flex w-[78vw] shrink-0 snap-start flex-col rounded-[var(--radius-card)] border border-gold-300/40 bg-[#fdf7f1] p-3 shadow-[0_4px_16px_rgba(32,8,45,0.1),0_1.5px_4px_rgba(32,8,45,0.05)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(32,8,45,0.18),0_4px_12px_rgba(193,136,62,0.15)] hover:border-gold-400/80 sm:w-[44vw] lg:w-[30vw] xl:h-[10.66vw] xl:w-[16.85vw] xl:px-[0.9vw] xl:pt-[0.78vw] xl:pb-0"
           >
             <div className="flex gap-3 xl:gap-[1.09vw]">
               <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-full bg-[#efdccb] font-heading font-bold text-lg text-[#6b3b5e] xl:size-[4.79vw] xl:text-[1.6vw]">

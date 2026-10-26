@@ -157,7 +157,11 @@ export default function WishlistView({ products }: { products: Product[] }) {
                       <button
                         disabled={!buyable(p)}
                         onClick={() => {
-                          add(p.slug, 1, p.shades[0]?.name);
+                          add(p.slug, 1, p.shades[0]?.name, {
+                            name: p.name,
+                            pricePaise: p.pricePaise,
+                            image: productImage(p),
+                          });
                           toggleWish(p.slug);
                         }}
                         className="flex-1 border border-[#c8963c]/50 bg-transparent text-[#240b25] font-bold uppercase tracking-widest text-[0.7rem] py-2 rounded-lg text-center flex items-center justify-center gap-2 hover:bg-[#fcf9f5] transition-colors disabled:opacity-50 disabled:hover:bg-transparent"

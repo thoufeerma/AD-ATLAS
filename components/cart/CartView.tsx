@@ -260,7 +260,7 @@ export default function CartView({
           {/* Coupon */}
           <form
             onSubmit={handleCoupon}
-            className="mt-6 rounded-[var(--radius-card)] bg-plum-800 p-5"
+            className="mt-6 rounded-[var(--radius-card)] bg-plum-800 p-5 border border-gold-400/35 shadow-[0_6px_20px_rgba(32,8,45,0.2)] transition-shadow duration-300 hover:shadow-[0_12px_28px_rgba(32,8,45,0.28)]"
           >
             <div className="flex flex-wrap items-center gap-4">
               <Tag className="size-6 shrink-0 text-gold-400" />
@@ -330,7 +330,7 @@ export default function CartView({
 
         {/* Summary */}
         <aside className="space-y-5 lg:sticky lg:top-28 lg:self-start">
-          <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6">
+          <div className="rounded-[var(--radius-card)] border border-gold-300/50 bg-cream-100 p-6 shadow-[0_6px_20px_rgba(32,8,45,0.08),0_2px_6px_rgba(32,8,45,0.04)] transition-all duration-300 hover:shadow-[0_12px_28px_rgba(32,8,45,0.14),0_4px_12px_rgba(193,136,62,0.12)]">
             <h2 className="font-heading text-xl font-bold text-plum-800">Order Summary</h2>
 
             {items.length > 0 ? (

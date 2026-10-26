@@ -41,7 +41,7 @@ const SORTS: { id: Sort; label: string }[] = [
 
 const CLAIMS = [
   { Icon: ShieldCheck, label: "Dermatologically Tested" },
-  { Icon: Heart, label: "Cruelty Free & Vegan" },
+  { Icon: Heart, label: "Cruelty-Free & Vegan" },
   { Icon: FlaskConical, label: "Science Backed" },
   { Icon: MapPin, label: "Made In India" },
   { Icon: Leaf, label: "Premium Ingredients" },
@@ -375,14 +375,14 @@ export default function ShopBrowser({
         <aside>
           <button
             onClick={() => setFiltersOpen((o) => !o)}
-            className="mb-4 flex w-full items-center justify-between rounded-sm border border-gold-200 bg-cream-100 px-4 py-3 lg:hidden"
+            className="mb-4 flex w-full items-center justify-between rounded-sm border border-gold-300/60 bg-[#fffdf9] px-4 py-3 shadow-[0_4px_12px_rgba(32,8,45,0.08)] transition-all duration-300 hover:shadow-[0_8px_20px_rgba(32,8,45,0.14)] hover:border-gold-400/70 lg:hidden"
           >
             <span className="font-heading text-[1.15rem] font-bold uppercase tracking-wide text-plum-800">Filters</span>
             <SlidersHorizontal className="size-4 text-gold-600" />
           </button>
 
           <div className={cn("space-y-7", filtersOpen ? "block" : "hidden lg:block")}>
-            <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-5">
+            <div className="rounded-[var(--radius-card)] border border-gold-300/50 bg-[#fffdf9] p-5 shadow-[0_6px_20px_rgba(32,8,45,0.09),0_2px_6px_rgba(32,8,45,0.04)] transition-all duration-300 hover:shadow-[0_12px_28px_rgba(32,8,45,0.15),0_4px_12px_rgba(193,136,62,0.12)] hover:border-gold-400/70">
               <div className="mb-5 flex items-center justify-between border-b border-gold-200/70 pb-3">
                 <h2 className="font-heading text-[1.3rem] font-bold uppercase tracking-wide text-plum-800">Filters</h2>
                 <SlidersHorizontal className="size-5 text-gold-600" />
@@ -781,10 +781,10 @@ function ShopAdCard({ ad }: { ad: ShopAd }) {
         {/* Action Button */}
         <div
           className={cn(
-            "mt-6 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[0.75rem] xl:text-[0.8rem] font-bold uppercase tracking-[0.12em] transition-all duration-300 shadow-md group-hover:gap-3",
+            "mt-6 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[0.75rem] xl:text-[0.8rem] font-bold uppercase tracking-[0.12em] transition-all duration-300 shadow-[0_4px_14px_rgba(32,8,45,0.22)] group-hover:gap-3 group-hover:shadow-[0_8px_20px_rgba(32,8,45,0.35)] group-hover:-translate-y-0.5",
             isLuxury
-              ? "bg-plum-900 text-cream-50 hover:bg-plum-950 shadow-plum-900/20"
-              : "border border-gold-400/80 bg-gold-500 text-plum-950 hover:bg-gold-400 shadow-gold-500/20",
+              ? "bg-plum-900 text-cream-50 hover:bg-plum-950 border border-gold-300/40"
+              : "border border-gold-400/80 bg-gold-500 text-plum-950 hover:bg-gold-400",
           )}
         >
           <span>{ad.cta}</span>
@@ -815,7 +815,9 @@ function SidebarPromoCards({
     }
   };
 
-  const promoHeadline = promo ?? "Get 10% OFF on your first order";
+  const promoHeadline = (promo ?? "Get 10% OFF on your first order")
+    .replace(/10%OFF/gi, "10% OFF")
+    .replace(/CODE:([A-Za-z0-9]+)/g, "CODE: $1");
 
   return (
     <div className="space-y-6 pt-1">
@@ -859,8 +861,8 @@ function SidebarPromoCards({
             <span className="text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-gold-300/75">
               Promo Code
             </span>
-            <span className="font-heading text-[1.1rem] font-black tracking-widest text-cream-50 select-all">
-              {welcomeCode}
+            <span className="font-heading text-[1.05rem] font-black tracking-wider text-cream-50 select-all">
+              CODE: {welcomeCode}
             </span>
           </div>
 

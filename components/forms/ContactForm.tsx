@@ -115,7 +115,11 @@ export default function ContactForm() {
       </div>
 
       <div className="mt-6">
-        <button type="submit" disabled={sending} className="inline-flex items-center justify-center gap-2 rounded-md bg-gradient-to-r from-[#ca9d4c] to-[#a27334] px-7 py-3 text-[0.85rem] font-bold uppercase tracking-wider text-cream-50 transition-all hover:brightness-110 disabled:opacity-70 shadow-sm">
+        <button
+          type="submit"
+          disabled={sending}
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-gradient-to-r from-[#ca9d4c] to-[#a27334] px-8 py-3.5 text-[0.85rem] font-bold uppercase tracking-wider text-cream-50 border border-gold-300/40 shadow-[0_4px_16px_rgba(193,136,62,0.35)] transition-all duration-300 hover:brightness-110 hover:shadow-[0_8px_24px_rgba(193,136,62,0.5)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:hover:translate-y-0 cursor-pointer"
+        >
           {sending ? "Sending…" : "Send Message"}
           <Send className="size-4" strokeWidth={2} />
         </button>

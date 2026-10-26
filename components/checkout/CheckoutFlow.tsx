@@ -325,7 +325,7 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
       </ol>
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6 sm:p-8">
+        <div className="rounded-[var(--radius-card)] border border-gold-300/50 bg-cream-100 p-6 sm:p-8 shadow-[0_6px_20px_rgba(32,8,45,0.08),0_2px_6px_rgba(32,8,45,0.04)] transition-shadow duration-300 hover:shadow-[0_12px_28px_rgba(32,8,45,0.12)]">
           {step === "Shipping" && (
             <>
               <h2 className="font-heading text-xl font-bold text-plum-800">Shipping Details</h2>
@@ -681,7 +681,7 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
 
         {/* Summary */}
         <aside className="lg:sticky lg:top-28 lg:self-start">
-          <div className="rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-100 p-6">
+          <div className="rounded-[var(--radius-card)] border border-gold-300/50 bg-cream-100 p-6 shadow-[0_6px_20px_rgba(32,8,45,0.08),0_2px_6px_rgba(32,8,45,0.04)] transition-shadow duration-300 hover:shadow-[0_12px_28px_rgba(32,8,45,0.14),0_4px_12px_rgba(193,136,62,0.12)]">
             <h2 className="font-heading text-xl font-bold text-plum-800">Order Summary</h2>
             <QuoteSummary quote={quote} stale={stale || !!error} totalLabel="Total" />
             {(error || couponProblem) && (

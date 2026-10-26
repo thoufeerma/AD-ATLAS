@@ -46,7 +46,7 @@ export default function MediaStrip({ items }: { items: MediaItem[] }) {
 
       <ul
         ref={row}
-        className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto [scrollbar-width:none] xl:mt-[0.83vw] xl:gap-[0.83vw] [&::-webkit-scrollbar]:hidden"
+        className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto [scrollbar-width:none] py-3 xl:mt-[0.83vw] xl:gap-[0.83vw] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((item) => (
           <li key={item.src} className="w-[40vw] shrink-0 snap-start sm:w-[24vw] xl:w-[14.06vw]">
@@ -54,13 +54,13 @@ export default function MediaStrip({ items }: { items: MediaItem[] }) {
               type="button"
               onClick={() => setOpen(item)}
               aria-label={item.kind === "video" ? "Play customer video" : "View customer photo"}
-              className="relative block h-[44vw] w-full overflow-hidden rounded-md bg-[#efdccb] sm:h-[26vw] xl:h-[15.43vw]"
+              className="group relative block h-[44vw] w-full overflow-hidden rounded-[var(--radius-card)] bg-[#efdccb] sm:h-[26vw] xl:h-[15.43vw] border border-gold-300/40 shadow-[0_4px_16px_rgba(32,8,45,0.12),0_1.5px_4px_rgba(32,8,45,0.06)] transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_16px_32px_rgba(32,8,45,0.2),0_4px_12px_rgba(193,136,62,0.18)] hover:border-gold-400/80"
             >
               {item.kind === "video" ? (
-                <video src={`${item.src}#t=0.1`} muted playsInline preload="metadata" className="size-full object-cover" />
+                <video src={`${item.src}#t=0.1`} muted playsInline preload="metadata" className="size-full object-cover transition-transform duration-500 group-hover:scale-105" />
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element -- customer photos come from storage at any size
-                <img src={item.src} alt="" loading="lazy" className="size-full object-cover" />
+                <img src={item.src} alt="" loading="lazy" className="size-full object-cover transition-transform duration-500 group-hover:scale-105" />
               )}
               {item.kind === "video" && (
                 <span className="absolute inset-0 grid place-items-center">
