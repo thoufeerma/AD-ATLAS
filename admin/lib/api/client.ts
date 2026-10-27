@@ -106,14 +106,34 @@ async function handle<T>(res: Response, path: string): Promise<T> {
 
   if (res.status === 204) return undefined as T;
 
-  const json = await res.json().catch(() => null);
+  const text = await res.text();
+  let json: { error?: { code?: string; message?: string; details?: unknown }; data?: unknown } | null = null;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    // Response was not JSON (e.g. plain text 429 or 502 from Render/Vercel)
+  }
+
   if (!res.ok) {
+    let msg = json?.error?.message;
+    if (!msg) {
+      if (res.status === 429) {
+        msg = "The backend service is sleeping or waking up on Render. Please wait 30-60 seconds and try again.";
+      } else if (res.status === 502 || res.status === 503) {
+        msg = "The backend server is temporarily unavailable. It may be starting up.";
+      } else if (text && text.length < 150 && !text.includes("<html")) {
+        msg = text.trim();
+      } else {
+        msg = `Request failed (${res.status})`;
+      }
+    }
+
     throw new ApiError(
       res.status,
       json?.error?.code ?? "UNKNOWN",
-      json?.error?.message ?? `Request failed (${res.status})`,
+      msg,
       json?.error?.details,
     );
   }
-  return json.data as T;
+  return (json?.data ?? undefined) as T;
 }

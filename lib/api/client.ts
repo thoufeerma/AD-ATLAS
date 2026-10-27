@@ -56,6 +56,9 @@ export function fieldError(err: unknown, field: string) {
 }
 
 function friendly(status: number, message?: string) {
+  if (status === 429) {
+    return "The service is temporarily busy or waking up. Please wait a moment and try again.";
+  }
   if (status >= 500 || status === 0 || !message) {
     return "Something went wrong on our side. Please try again in a moment.";
   }
