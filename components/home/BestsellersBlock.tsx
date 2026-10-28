@@ -139,10 +139,10 @@ export default function BestsellersBlock({
           </div>
 
           {/* Testimonials */}
-          <div className="relative mt-2 xl:mt-3 px-2">
+          <div className="relative mt-2 xl:mt-3 rounded-[var(--radius-card)] border border-gold-300/40 bg-white p-4 sm:p-5 xl:p-6 shadow-[0_4px_16px_rgba(32,8,45,0.12),0_1.5px_4px_rgba(32,8,45,0.06)] transition-all duration-300 hover:shadow-[0_12px_28px_rgba(32,8,45,0.18),0_4px_12px_rgba(193,136,62,0.15)] hover:border-gold-400/80">
             <div
               ref={reviewsRef}
-              className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar py-2 divide-x divide-gold-200/40"
+              className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar py-1 divide-x divide-gold-200/40"
             >
               {testimonials.map((t) => (
                 <figure
@@ -166,10 +166,10 @@ export default function BestsellersBlock({
             </div>
             
             {/* Arrows for testimonials */}
-            <button onClick={() => scrollReviews("left")} aria-label="Previous reviews" className="absolute -left-2 sm:-left-3 xl:-left-4 top-1/2 -translate-y-1/2 z-10 grid size-11 xl:size-12 place-items-center rounded-full bg-white border border-gold-200 shadow-[0_4px_12px_rgba(0,0,0,0.08)] text-gold-600 hover:text-gold-500 active:scale-95">
+            <button onClick={() => scrollReviews("left")} aria-label="Previous reviews" className="absolute -left-3 sm:-left-4 xl:-left-5 top-1/2 -translate-y-1/2 z-10 grid size-10 xl:size-11 place-items-center rounded-full bg-white border border-gold-200 shadow-[0_4px_12px_rgba(0,0,0,0.08)] text-gold-600 hover:text-gold-500 active:scale-95">
               <ChevronLeft className="size-5 xl:size-6" />
             </button>
-            <button onClick={() => scrollReviews("right")} aria-label="Next reviews" className="absolute -right-2 sm:-right-3 xl:-right-4 top-1/2 -translate-y-1/2 z-10 grid size-11 xl:size-12 place-items-center rounded-full bg-white border border-gold-200 shadow-[0_4px_12px_rgba(0,0,0,0.08)] text-gold-600 hover:text-gold-500 active:scale-95">
+            <button onClick={() => scrollReviews("right")} aria-label="Next reviews" className="absolute -right-3 sm:-right-4 xl:-right-5 top-1/2 -translate-y-1/2 z-10 grid size-10 xl:size-11 place-items-center rounded-full bg-white border border-gold-200 shadow-[0_4px_12px_rgba(0,0,0,0.08)] text-gold-600 hover:text-gold-500 active:scale-95">
               <ChevronRight className="size-5 xl:size-6" />
             </button>
           </div>
