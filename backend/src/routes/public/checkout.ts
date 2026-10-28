@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../../db.js";
 import { gstInside, quoteCart } from "../../lib/pricing.js";
-import { findState, stateForGstin } from "../../lib/gst.js";
+import { findState, stateForGstin, taxLines } from "../../lib/gst.js";
 import { invoiceLink, taxSettings } from "../../lib/invoices.js";
 import {
   createGatewayOrder,
@@ -46,6 +46,7 @@ checkoutRouter.post("/cart/quote", async (req, res) => {
 const OrderBody = z.object({
   items: z.array(CartItem).min(1).max(50),
   couponCode: z.string().trim().max(40).nullish(),
+  referralCode: z.string().trim().max(50).nullish(),
   email: z.email().transform((e) => e.toLowerCase()),
   name: z.string().trim().min(2).max(100),
   phone: IndianMobile,
@@ -214,7 +215,7 @@ checkoutRouter.post("/orders", orderLimit, async (req, res) => {
     const sellerState = gstin ? stateForGstin(gstin) : null;
     const interState = !sellerState || sellerState.code !== findState(body.shipping.state)?.code;
 
-    return tx.order.create({
+    const newOrder = await tx.order.create({
       data: {
         number: await uniqueOrderNumber(tx),
         email: body.email,
@@ -259,6 +260,57 @@ checkoutRouter.post("/orders", orderLimit, async (req, res) => {
       },
       include: { items: { include: { product: { select: { slug: true } } } } },
     });
+
+    // Validate referral code and create referral record if not self-referral
+    if (body.referralCode) {
+      const collaborator = await tx.collaborator.findFirst({
+        where: {
+          referralCode: { equals: body.referralCode, mode: "insensitive" },
+          userId: { not: null },
+        },
+        include: { user: true },
+      });
+
+      const isSelfReferral =
+        collaborator &&
+        ((collaborator.userId && (collaborator.userId === customer.id || (session && collaborator.userId === session.customer.id))) ||
+          (collaborator.user?.email && collaborator.user.email.toLowerCase() === body.email.toLowerCase()));
+
+      if (collaborator && !isSelfReferral) {
+        const tax = taxLines(
+          {
+            items: quote.lines.map((l) => ({ ...l, productName: l.name })),
+            discountPaise: quote.discountPaise,
+            shippingPaise: quote.shippingPaise,
+            shippingMethod: quote.shipping?.name ?? null,
+          },
+          interState,
+        );
+
+        // Eligible amount excludes shipping and tax and is after discounts
+        const eligibleAmountPaise = Math.max(
+          0,
+          tax.lines
+            .filter((l) => l.key !== "delivery")
+            .reduce((sum, l) => sum + l.taxablePaise, 0),
+        );
+        const commissionPaise = Math.round((eligibleAmountPaise * collaborator.commissionRate) / 100);
+
+        if (eligibleAmountPaise > 0 && commissionPaise > 0) {
+          await tx.referral.create({
+            data: {
+              collaboratorId: collaborator.id,
+              orderId: newOrder.id,
+              orderAmountPaise: eligibleAmountPaise,
+              commissionPaise,
+              status: "PENDING",
+            },
+          });
+        }
+      }
+    }
+
+    return newOrder;
   });
 
   // Online payment: the gateway needs an order of its own for the browser to

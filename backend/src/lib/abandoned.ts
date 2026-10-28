@@ -48,6 +48,10 @@ export async function releaseAbandonedOrders(now = new Date()) {
           note: `Payment wasn't completed within ${MINUTES} minutes`,
         },
       });
+      await tx.referral.updateMany({
+        where: { orderId: order.id, status: { not: "REVERSED" } },
+        data: { status: "REVERSED" },
+      });
       return true;
     });
     if (done) released += 1;

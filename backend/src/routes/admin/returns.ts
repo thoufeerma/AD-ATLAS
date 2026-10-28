@@ -222,6 +222,12 @@ adminReturnsRouter.patch("/:number", allow(...ROLES.ordersWrite), async (req, re
       items: saved.items.map((i) => ({ orderItemId: i.orderItem.id, quantity: i.quantity })),
     });
 
+    // Returned/refunded orders reverse the referral
+    await tx.referral.updateMany({
+      where: { orderId: order.id, status: { not: "REVERSED" } },
+      data: { status: "REVERSED" },
+    });
+
     // When everything in the order has come back and been refunded, the order
     // itself is refunded — so the dashboard and reports stop counting it as
     // revenue. A partial return leaves the order as it is.

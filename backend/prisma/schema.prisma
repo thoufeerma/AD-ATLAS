@@ -130,6 +130,7 @@ model Customer {
   orders       Order[]
   reviews      Review[]
   wishlist     WishlistItem[]
+  collaborator Collaborator?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
@@ -247,6 +248,7 @@ model Order {
   events     OrderEvent[]
   returns    ReturnRequest[]
   creditNotes CreditNote[]
+  referral   Referral?
 
   placedAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -562,17 +564,81 @@ model Testimonial {
   @@map("testimonials")
 }
 
+enum ReferralStatus {
+  PENDING
+  APPROVED
+  REVERSED
+}
+
+enum RedeemStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+}
+
 model Collaborator {
-  id        String  @id @default(cuid())
-  name      String
-  role      String
-  avatarUrl String?
+  id             String          @id @default(cuid())
+  userId         String?         @unique
+  user           Customer?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name           String
+  role           String
+  handle         String?
+  bio            String?
+  avatarUrl      String?
+  referralCode   String?         @unique
+  commissionRate Float           @default(10)
   /// Shown on the Collabs page under "What our collaborators say".
-  quote     String?
-  sortOrder Int     @default(0)
+  quote          String?
+  sortOrder      Int             @default(0)
+  referrals      Referral[]
+  redeemRequests RedeemRequest[]
+  clicks         ReferralClick[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @default(now()) @updatedAt
 
   @@map("collaborators")
 }
+
+model Referral {
+  id               String         @id @default(cuid())
+  collaboratorId   String
+  collaborator     Collaborator   @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+  orderId          String         @unique
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderAmountPaise Int
+  commissionPaise  Int
+  status           ReferralStatus @default(PENDING)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([collaboratorId])
+  @@map("referrals")
+}
+
+model RedeemRequest {
+  id             String       @id @default(cuid())
+  collaboratorId String
+  collaborator   Collaborator @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+  amountPaise    Int
+  status         RedeemStatus @default(REQUESTED)
+  note           String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([collaboratorId])
+  @@map("redeem_requests")
+}
+
+model ReferralClick {
+  id             String       @id @default(cuid())
+  collaboratorId String
+  collaborator   Collaborator @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@index([collaboratorId])
+  @@map("referral_clicks")
+}
+
 
 model Faq {
   id          String  @id @default(cuid())

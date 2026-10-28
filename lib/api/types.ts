@@ -303,3 +303,58 @@ export type TrackedOrder = Omit<PlacedOrder, "taxPaise" | "items"> & {
   tracking: { courier: string | null; number: string; url: string | null } | null;
   invoice: InvoiceLink;
 };
+
+export type CollaboratorProfile = {
+  id: string;
+  name: string;
+  role: string;
+  handle: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
+  referralCode: string | null;
+  commissionRate: number;
+  quote: string | null;
+  createdAt: string;
+};
+
+export type CollaboratorStats = {
+  orderCount: number;
+  clicks: number;
+  pendingEarningsPaise: number;
+  approvedEarningsPaise: number;
+  reversedEarningsPaise: number;
+  requestedRedeemPaise: number;
+  approvedRedeemPaise: number;
+  netBalancePaise: number;
+  availableBalancePaise: number;
+  commissionRate: number;
+  minRedeemPaise: number;
+};
+
+export type CollaboratorReferralItem = {
+  id: string;
+  orderNumber: string;
+  orderStatus: OrderStatus;
+  orderAmountPaise: number;
+  commissionPaise: number;
+  status: "PENDING" | "APPROVED" | "REVERSED";
+  createdAt: string;
+};
+
+export type CollaboratorReferralsResponse = {
+  data: CollaboratorReferralItem[];
+  pagination: {
+    total: number;
+    take: number;
+    skip: number;
+  };
+};
+
+export type RedeemRequestItem = {
+  id: string;
+  amountPaise: number;
+  status: "REQUESTED" | "APPROVED" | "REJECTED";
+  createdAt: string;
+  updatedAt: string;
+};
+

@@ -34,6 +34,8 @@ import {
   ScrollText,
   MailCheck,
   DatabaseBackup,
+  Wallet,
+  TrendingUp,
   type LucideIcon,
 } from "lucide-react";
 
@@ -83,6 +85,8 @@ export const NAV: NavGroup[] = [
       { href: "/banners", label: "Banners", Icon: GalleryHorizontal },
       { href: "/testimonials", label: "Testimonials", Icon: MessageSquareQuote },
       { href: "/collaborators", label: "Collaborators", Icon: Handshake },
+      { href: "/collaborators/redeems", label: "Redeem Requests", Icon: Wallet },
+      { href: "/collaborators/referrals", label: "Referrals", Icon: TrendingUp },
       { href: "/faqs", label: "FAQs", Icon: HelpCircle },
     ],
   },

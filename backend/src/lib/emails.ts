@@ -567,3 +567,49 @@ export function alertReturnRequest(r: ReturnMail, o: Order, store: Store, to: st
     replyTo: o.email,
   };
 }
+
+export function collabApprovedEmail(
+  collaborator: { name: string; referralCode: string; email: string },
+  store: Store,
+): Email {
+  const link = `${env.STORE_URL}/account`;
+  const html = layout(
+    store,
+    "Your creator application has been approved!",
+    [
+      h1(`Welcome to the ${esc(store.name)} Family, ${esc(firstName(collaborator.name))}!`),
+      p(
+        `We are thrilled to let you know that your creator collaboration application has been <strong>approved</strong>.`,
+      ),
+      p(
+        `Your unique referral code is: <strong style="font-size:16px;color:#8a5a26;background:#fbf3ec;padding:4px 10px;border-radius:4px;letter-spacing:1px">${esc(collaborator.referralCode)}</strong>`,
+      ),
+      p(
+        `You can now access your dedicated <strong>Collaborator</strong> section inside your account profile to generate product links, track referrals, monitor earnings, and request redemptions.`,
+      ),
+      button(link, "View Collaborator Dashboard"),
+      p(
+        `<span style="color:${SOFT};font-size:12px">Sign in at ${esc(store.name)} with ${esc(collaborator.email)} to view your dashboard.</span>`,
+      ),
+    ].join(""),
+  );
+  const text = [
+    `Welcome to the ${store.name} Family, ${firstName(collaborator.name)}!`,
+    "",
+    "Your creator collaboration application has been approved.",
+    `Your unique referral code is: ${collaborator.referralCode}`,
+    "",
+    `Sign in with ${collaborator.email} to access the Collaborator section in your profile:`,
+    link,
+  ].join("\n");
+
+  return {
+    to: collaborator.email,
+    subject: `You're approved! Welcome to the ${store.name} Creator Family`,
+    html,
+    text,
+    kind: "collab.approved",
+    replyTo: store.supportEmail || undefined,
+  };
+}
+

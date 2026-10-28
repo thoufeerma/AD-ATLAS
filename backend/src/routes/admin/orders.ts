@@ -262,6 +262,10 @@ adminOrdersRouter.patch("/:number/status", allow(...ROLES.ordersWrite), async (r
     // invoice returns haven't already credited.
     if (body.status === "CANCELLED" || body.status === "REFUNDED") {
       await issueCreditNote(tx, order, body.status === "CANCELLED" ? "CANCELLATION" : "REFUND");
+      await tx.referral.updateMany({
+        where: { orderId: order.id, status: { not: "REVERSED" } },
+        data: { status: "REVERSED" },
+      });
     }
 
     return tx.order.update({

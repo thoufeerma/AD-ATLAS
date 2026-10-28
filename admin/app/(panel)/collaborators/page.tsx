@@ -1,20 +1,28 @@
 import type { Metadata } from "next";
 import PageHeader from "@/components/ui/PageHeader";
-import { CollaboratorsManager } from "@/components/content/Managers";
-import { apiGet } from "@/lib/api/server";
-import type { Collaborator } from "@/lib/api/types";
+import CollaboratorNav from "@/components/collaborators/CollaboratorNav";
+import CollaboratorsList from "@/components/collaborators/CollaboratorsList";
+import { apiGet, requireAdmin } from "@/lib/api/server";
+import { can, type Collaborator } from "@/lib/api/types";
 
 export const metadata: Metadata = { title: "Collaborators" };
 
 export default async function Page() {
-  const collaborators = await apiGet<Collaborator[]>("/admin/collaborators");
+  const [admin, collaborators] = await Promise.all([
+    requireAdmin(),
+    apiGet<Collaborator[]>("/admin/collaborators"),
+  ]);
+
+  const isSuperAdmin = can.manageCollaboratorMoney(admin.role);
+
   return (
     <>
       <PageHeader
-        title="Collaborators"
-        subtitle="Shown on the homepage, and with their quotes on the Collabs page"
+        title="Collaborator & Partner Program"
+        subtitle="Manage approved creators, commission rates, and track live referral performance"
       />
-      <CollaboratorsManager collaborators={collaborators} />
+      <CollaboratorNav />
+      <CollaboratorsList initial={collaborators} isSuperAdmin={isSuperAdmin} />
     </>
   );
 }

@@ -12,6 +12,7 @@ import { setSignedIn, signOut, useAccount, type Me } from "@/lib/account";
 import type { InvoiceLink, OrderStatus, Product } from "@/lib/api/types";
 import { cn, inrPaise, productImage } from "@/lib/utils";
 import { INDIAN_STATES, listedState } from "@/lib/states";
+import CollaboratorSection from "@/components/account/CollaboratorSection";
 
 type AccountOrder = {
   number: string;
@@ -81,6 +82,8 @@ export default function AccountView({ products }: { products: Product[] }) {
       </div>
 
       {!me.emailVerified && <VerifyBanner email={me.email} />}
+
+      <CollaboratorSection products={products} />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">

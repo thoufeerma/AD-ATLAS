@@ -287,8 +287,68 @@ export type Collaborator = {
   name: string;
   role: string;
   avatarUrl: string | null;
+  handle: string | null;
+  bio: string | null;
+  referralCode: string | null;
+  commissionRate: number;
   quote: string | null;
   sortOrder: number;
+  userId: string | null;
+  user?: { id: string; name: string; email: string } | null;
+  clicks?: number;
+  orders?: number;
+  pendingPaise?: number;
+  approvedPaise?: number;
+  reversedPaise?: number;
+  redeemedPaise?: number;
+  requestedRedeemPaise?: number;
+  netBalancePaise?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type AdminRedeemRequest = {
+  id: string;
+  collaboratorId: string;
+  amountPaise: number;
+  status: "REQUESTED" | "APPROVED" | "REJECTED";
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+  collaborator: {
+    id: string;
+    name: string;
+    referralCode: string | null;
+    commissionRate: number;
+    user?: { id: string; name: string; email: string } | null;
+  };
+};
+
+export type AdminReferral = {
+  id: string;
+  collaboratorId: string;
+  orderId: string;
+  orderAmountPaise: number;
+  commissionPaise: number;
+  status: "PENDING" | "APPROVED" | "REVERSED";
+  createdAt: string;
+  collaborator: {
+    id: string;
+    name: string;
+    referralCode: string | null;
+    commissionRate: number;
+    user?: { email: string } | null;
+  };
+  order: {
+    id: string;
+    number: string;
+    placedAt: string;
+    status: OrderStatus;
+    paymentStatus: PaymentStatus;
+    totalPaise: number;
+    email: string;
+    shipName: string;
+  };
 };
 
 export type Testimonial = {
@@ -566,6 +626,7 @@ export const can = {
   readOrders: (role: AdminRole) => role !== "CONTENT_MANAGER",
   editContent: (role: AdminRole) => role === "SUPER_ADMIN" || role === "CONTENT_MANAGER",
   editStore: (role: AdminRole) => role === "SUPER_ADMIN",
+  manageCollaboratorMoney: (role: AdminRole) => role === "SUPER_ADMIN",
 };
 
 /* ── Inbox & subscribers ── */
@@ -590,6 +651,7 @@ export type CollabApplication = {
   about: string;
   isReviewed: boolean;
   createdAt: string;
+  collaborator?: { id: string; name: string; referralCode: string | null } | null;
 };
 
 export type InboxCounts = { messages: number; applications: number; total: number };

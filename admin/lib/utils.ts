@@ -17,6 +17,14 @@ export function inr(n: number) {
   );
 }
 
+/** ₹ formatted from integer paise. Handles negative values correctly (e.g. -₹500). */
+export function inrPaise(paise: number) {
+  const isNeg = paise < 0;
+  const abs = Math.abs(paise) / 100;
+  const formatted = inr(abs);
+  return isNeg ? `-${formatted}` : formatted;
+}
+
 /** Compact Indian notation used on axis ticks: 50K, 1L, 2L. */
 export function inrShort(n: number) {
   if (n >= 10_000_000) return `${(n / 10_000_000).toFixed(n % 10_000_000 ? 1 : 0)}Cr`;
@@ -62,7 +70,6 @@ export function imageSrc(url: string) {
   if (!url || url.startsWith("/uploads/") || !url.startsWith("/")) return url;
   return STORE_URL + url;
 }
-
 
 /** "2026-09" → "Sep" for a chart axis. */
 export function monthShort(iso: string) {

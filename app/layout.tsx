@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Jost, Dancing_Script, Montserrat } from "next/font/google";
 import localFont from "next/font/local";
@@ -8,6 +9,7 @@ import FooterSwitch from "@/components/layout/FooterSwitch";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
 import AccountLoader from "@/components/providers/AccountLoader";
 import CartNotification from "@/components/cart/CartNotification";
+import ReferralTracker from "@/components/referral/ReferralTracker";
 import { bannerHeadlines, getSettings } from "@/lib/api/server";
 import { siteMetadata } from "@/lib/seo";
 
@@ -69,6 +71,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-cream-50 text-ink font-sans">
         <SettingsProvider settings={settings}>
+          <Suspense fallback={null}>
+            <ReferralTracker />
+          </Suspense>
           <AccountLoader />
           <CartNotification />
           <Header announcements={announcements} />

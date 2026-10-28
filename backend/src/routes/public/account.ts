@@ -27,6 +27,7 @@ import { afterResponse } from "../../lib/mail.js";
 import { alreadyRegistered, mailContext, passwordResetEmail, verifyEmail } from "../../lib/emails.js";
 import { rateLimit } from "../../middleware/rateLimit.js";
 import { AddressFields, IndianMobile } from "../../lib/validate.js";
+import { collaboratorRouter } from "./collaborator.js";
 
 /**
  * Storefront customer accounts: sign-up, sign-in, profile, saved addresses and
@@ -37,6 +38,8 @@ import { AddressFields, IndianMobile } from "../../lib/validate.js";
  * never be enough to read their orders and home address.
  */
 export const accountRouter = Router();
+
+accountRouter.use("/me/collaborator", collaboratorRouter);
 
 const tenMinutes = 10 * 60_000;
 const registerLimit = rateLimit({ name: "sign-up", max: 10, windowMs: tenMinutes });

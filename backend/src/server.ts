@@ -5,11 +5,14 @@ import { storageName } from "./lib/media.js";
 import { emailServiceConnected } from "./lib/mail.js";
 import { gatewayStatus } from "./lib/payments.js";
 import { startAbandonedSweep } from "./lib/abandoned.js";
+import { startReferralApprovalSweep } from "./lib/referral.js";
 
 const app = createApp();
 
 // Puts back the stock held by online orders whose payment never arrived.
 startAbandonedSweep();
+// Periodically moves PENDING referrals to APPROVED once the return window closes.
+startReferralApprovalSweep();
 
 const server = app.listen(env.PORT, () => {
   console.log(`Velastia API listening on http://localhost:${env.PORT} (${env.NODE_ENV})`);

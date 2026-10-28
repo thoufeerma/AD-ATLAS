@@ -18,6 +18,7 @@ import { LAST_ORDER_KEY, type LastOrder } from "./lastOrder";
 import { INDIAN_STATES, listedState } from "@/lib/states";
 import { useAccount } from "@/lib/account";
 import type { SavedAddress } from "@/components/account/AccountView";
+import { getReferralCookie } from "@/lib/referral";
 
 /**
  * No full checkout design exists in the reference set — only the small
@@ -211,6 +212,7 @@ export default function CheckoutFlow({ products }: { products: Product[] }) {
         // Only send a code the latest quote actually applied; the API refuses
         // an order whose entered code no longer applies.
         couponCode: quote.coupon ? coupon : null,
+        referralCode: getReferralCookie() ?? undefined,
         // The option this total was priced with; the API refuses to swap it.
         shippingMethodId: quote.shipping?.id ?? null,
         email: addr.email.trim(),

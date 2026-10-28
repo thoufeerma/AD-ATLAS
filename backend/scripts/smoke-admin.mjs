@@ -41,10 +41,10 @@ async function call(method, path, body, headers = {}) {
   let json; try { json = text ? JSON.parse(text) : null; } catch { json = text; }
   return { status: res.status, json, headers: res.headers };
 }
-const pub = (method, path, body) => fetch(API + path, {
-  method, headers: { "content-type": "application/json" },
+const pub = (method, path, body, headers = {}) => fetch(API + path, {
+  method, headers: { "content-type": "application/json", ...headers },
   body: body === undefined ? undefined : JSON.stringify(body),
-}).then(async (r) => ({ status: r.status, json: await r.json().catch(() => null) }));
+}).then(async (r) => ({ status: r.status, json: await r.json().catch(() => null), headers: r.headers }));
 const timed = async (fn) => { const t = performance.now(); const r = await fn(); return [r, performance.now() - t]; };
 const shipTo = { phone: "9876543210", shipping: { line1: "12 MG Road", city: "Pune", state: "Maharashtra", pincode: "411001" } };
 
@@ -304,7 +304,9 @@ console.log("\n[Inbox & subscribers]");
   // A shopper writes in through the storefront…
   const subject = `Where is my order ${RUN}`;
   await pub("POST", "/contact", { name: "Inbox Tester", email: `inbox.${RUN}@example.com`, subject, message: "Smoke test message, safe to delete." });
-  await pub("POST", "/collab-applications", { name: "Collab Tester", email: `collab.${RUN}@example.com`, handle: `@tester${RUN}`, about: "Smoke test application, safe to delete." });
+  const collabCust = await pub("POST", "/account/register", { name: "Collab Tester", email: `collab.${RUN}@example.com`, password: `collab-pass-${RUN}` });
+  const collabCookie = collabCust.headers.get("set-cookie")?.split(";")[0] ?? "";
+  await pub("POST", "/collab-applications", { name: "Collab Tester", handle: `@tester${RUN}`, about: "Smoke test application, safe to delete." }, { cookie: collabCookie });
   await pub("POST", "/newsletter", { email: `news.${RUN}@example.com`, source: "footer" });
 
   const counts0 = (await call("GET", "/admin/inbox/counts")).json.data;

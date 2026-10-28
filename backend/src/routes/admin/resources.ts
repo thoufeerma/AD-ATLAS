@@ -224,22 +224,6 @@ export const adminBannersRouter = crudRouter({
   remove: (id) => prisma.banner.delete({ where: { id } }),
 });
 
-export const adminCollaboratorsRouter = crudRouter({
-  entity: "Collaborator",
-  roles: ROLES.content,
-  schema: z.object({
-    name: z.string().trim().min(2).max(100),
-    role: z.string().trim().min(2).max(100),
-    avatarUrl: z.string().max(500).nullish(),
-    quote: z.string().trim().max(400).nullish(),
-    sortOrder: z.number().int().default(0),
-  }),
-  label: (r) => r.name,
-  list: () => prisma.collaborator.findMany({ orderBy: { sortOrder: "asc" } }),
-  create: (data) => prisma.collaborator.create({ data }),
-  update: (id, data) => prisma.collaborator.update({ where: { id }, data }),
-  remove: (id) => prisma.collaborator.delete({ where: { id } }),
-});
 
 export const adminOffersRouter = crudRouter({
   entity: "Offer",

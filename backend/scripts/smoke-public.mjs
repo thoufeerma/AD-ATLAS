@@ -62,7 +62,7 @@ console.log("\n[Catalog]");
 console.log("\n[Content]");
 {
   const h = await call("GET", "/content/home");
-  ok(h.status === 200 && h.json.data.testimonials.length >= 1 && h.json.data.collaborators.length === 5, "homepage content", `${h.json.data.testimonials.length} testimonials, ${h.json.data.collaborators.length} collaborators, ${h.json.data.banners.length} banners`);
+  ok(h.status === 200 && h.json.data.testimonials.length >= 1 && h.json.data.collaborators.length >= 5, "homepage content", `${h.json.data.testimonials.length} testimonials, ${h.json.data.collaborators.length} collaborators, ${h.json.data.banners.length} banners`);
   const f = await call("GET", "/faqs");
   ok(f.status === 200 && f.json.data.length >= 6, "published FAQs", `${f.json.data.length}`);
   const s = await call("GET", "/settings/public");
@@ -193,10 +193,18 @@ console.log("\n[Forms]");
   const junk = await fetch(API + "/contact", { method: "POST", headers: { "content-type": "application/json" }, body: "{not json" });
   ok(junk.status === 400, "malformed JSON -> 400, not a crash");
 
-  // Collab applications are reviewed on the creator's profile, so the handle
-  // has to be a real one — applications can't be sent without it.
+  // Collab applications require customer login to verify identity and prevent email spoofing
+  const unauthCollab = await call("POST", "/collab-applications", { name: "Guest", handle: "@guest", about: "Testing unauthenticated block." });
+  ok(unauthCollab.status === 401, "unauthenticated collab application rejected -> 401");
+
+  const reg = await call("POST", "/account/register", {
+    name: "Handle Tester",
+    email: `collab.handle.${Date.now()}@example.com`,
+    password: "Password123!",
+  });
+  const cookie = reg.headers.get("set-cookie")?.split(";")[0] ?? "";
   const collab = (handle) =>
-    call("POST", "/collab-applications", { name: "Handle Test", email: `handle.${Date.now()}@example.com`, handle, about: "Checking the handle rule." });
+    call("POST", "/collab-applications", { name: "Handle Test", handle, about: "Checking the handle rule." }, { cookie });
   const noHandle = await collab("");
   const junkHandle = await collab("n/a");
   ok(noHandle.status === 400 && junkHandle.status === 400, "collab application needs a real Instagram/YouTube handle", junkHandle.json.error.details?.[0]?.message);

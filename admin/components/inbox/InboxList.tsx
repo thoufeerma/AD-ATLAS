@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Mail, Phone, RotateCcw, Search, Trash2, Users } from "lucide-react";
+import { Check, Mail, Phone, RotateCcw, Search, Sparkles, Trash2, Users } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import { api, ApiError } from "@/lib/api/client";
 import type { CollabApplication, ContactMessage } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import ApproveCollabModal from "./ApproveCollabModal";
 
 type Item =
   | { kind: "message"; row: ContactMessage }
@@ -91,27 +92,64 @@ function MessageCard({ m }: { m: ContactMessage }) {
 }
 
 function ApplicationCard({ a }: { a: CollabApplication }) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const router = useRouter();
+  const isApproved = Boolean(a.collaborator);
+
   return (
-    <Shell
-      done={a.isReviewed}
-      title={`Collab application · ${a.handle}`}
-      date={a.createdAt}
-      from={a.name}
-      email={a.email}
-      extra={
-        a.audienceSize ? (
-          <span className="inline-flex items-center gap-1">
-            <Users className="size-3" /> {a.audienceSize} audience
+    <>
+      <Shell
+        done={a.isReviewed}
+        title={`Collab application · ${a.handle}`}
+        date={a.createdAt}
+        from={a.name}
+        email={a.email}
+        extra={
+          <span className="inline-flex items-center gap-2">
+            {a.audienceSize && (
+              <span className="inline-flex items-center gap-1">
+                <Users className="size-3" /> {a.audienceSize} audience
+              </span>
+            )}
+            {a.collaborator && (
+              <Badge tone="good">
+                Referral: {a.collaborator.referralCode ?? "Active"}
+              </Badge>
+            )}
           </span>
-        ) : null
-      }
-      replySubject="Your Velastia collab application"
-      body={a.about}
-      endpoint={`/admin/inbox/applications/${a.id}`}
-      doneField="isReviewed"
-      doneLabel="Mark reviewed"
-      what={`the application from ${a.name}`}
-    />
+        }
+        replySubject="Your Velastia collab application"
+        body={a.about}
+        endpoint={`/admin/inbox/applications/${a.id}`}
+        doneField="isReviewed"
+        doneLabel="Mark reviewed"
+        what={`the application from ${a.name}`}
+        customAction={
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[0.72rem] font-medium transition-colors",
+              isApproved
+                ? "border-good/40 bg-good/10 text-good hover:bg-good/20"
+                : "border-series-1/40 bg-series-1/10 text-series-1 hover:bg-series-1/20",
+            )}
+          >
+            <Sparkles className="size-3.5" />
+            {isApproved ? "Approved Creator" : "Approve"}
+          </button>
+        }
+      />
+      {modalOpen && (
+        <ApproveCollabModal
+          application={a}
+          onClose={() => setModalOpen(false)}
+          onApproved={() => {
+            router.refresh();
+          }}
+        />
+      )}
+    </>
   );
 }
 
@@ -129,6 +167,7 @@ function Shell({
   doneField,
   doneLabel,
   what,
+  customAction,
 }: {
   done: boolean;
   title: string;
@@ -143,6 +182,7 @@ function Shell({
   doneField: "isHandled" | "isReviewed";
   doneLabel: string;
   what: string;
+  customAction?: React.ReactNode;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -202,6 +242,7 @@ function Shell({
       <p className="mt-3.5 whitespace-pre-line text-[0.8rem] leading-relaxed text-ink">{body}</p>
 
       <footer className="mt-4 flex flex-wrap items-center gap-2">
+        {customAction}
         <a
           href={`mailto:${email}?subject=${encodeURIComponent(replySubject)}`}
           className={cn(action, "border-series-1/40 text-series-1 hover:bg-series-1/5")}

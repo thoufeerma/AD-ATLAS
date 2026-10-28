@@ -10,6 +10,7 @@ import { catalogRouter } from "./routes/public/catalog.js";
 import { checkoutRouter } from "./routes/public/checkout.js";
 import { contentRouter } from "./routes/public/content.js";
 import { accountRouter } from "./routes/public/account.js";
+import { collaboratorRouter } from "./routes/public/collaborator.js";
 import { adminAuthRouter } from "./routes/admin/auth.js";
 import { adminProductsRouter } from "./routes/admin/products.js";
 import { adminOrdersRouter } from "./routes/admin/orders.js";
@@ -22,9 +23,9 @@ import {
   adminFaqsRouter,
   adminTestimonialsRouter,
   adminBannersRouter,
-  adminCollaboratorsRouter,
   adminOffersRouter,
 } from "./routes/admin/resources.js";
+import { adminCollaboratorsRouter } from "./routes/admin/collaborators.js";
 import { adminSettingsRouter, adminPagesRouter } from "./routes/admin/settings.js";
 import { adminInboxRouter, adminSubscribersRouter } from "./routes/admin/inbox.js";
 import { adminUsersRouter } from "./routes/admin/users.js";
@@ -38,6 +39,7 @@ import { invoicesRouter } from "./routes/public/invoices.js";
 import { blogRouter } from "./routes/public/blog.js";
 import { webhooksRouter } from "./routes/public/webhooks.js";
 import { adminBlogRouter } from "./routes/admin/blog.js";
+import { referralsRouter } from "./routes/public/referrals.js";
 import { UPLOAD_ROOT } from "./lib/media.js";
 
 export function createApp() {
@@ -90,6 +92,8 @@ export function createApp() {
   v1.use(checkoutRouter);
   v1.use(contentRouter);
   v1.use("/account", accountRouter);
+  v1.use("/me/collaborator", collaboratorRouter);
+  v1.use("/referrals", referralsRouter);
   v1.use(returnsRouter);
   v1.use(invoicesRouter);
   v1.use(blogRouter);

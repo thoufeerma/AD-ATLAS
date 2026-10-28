@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../db.js";
-import { notFound, param, parse } from "../../lib/http.js";
+import { conflict, notFound, param, parse, unauthorized } from "../../lib/http.js";
+import { currentCustomer } from "../../lib/customerAuth.js";
 import { rateLimit } from "../../middleware/rateLimit.js";
 import { readCopy, readPayments, readReturns, readSeo, readStore } from "../../lib/settings.js";
 import { gatewayStatus } from "../../lib/payments.js";
@@ -215,24 +216,55 @@ const HANDLE = /^@?[A-Za-z0-9._-]{2,30}$/;
 const PROFILE_URL = /^(https?:\/\/)?(www\.)?(instagram\.com|youtube\.com|youtu\.be)\/[A-Za-z0-9@._\-/]+$/i;
 
 const CollabBody = z.object({
-  name: z.string().trim().min(2).max(100),
-  email: z.email(),
-  // Applications are reviewed on the creator's profile, so this is required.
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
+  email: z.string().trim().email().optional(),
   handle: z
     .string()
     .trim()
     .min(2)
     .max(100)
     .refine((h) => HANDLE.test(h) || PROFILE_URL.test(h), {
-      error: "Use your handle (e.g. @velastiaofficial) or a link to your profile.",
+      message: "Use your handle (e.g. @velastiaofficial) or a link to your profile.",
     }),
   audienceSize: z.string().trim().max(40).nullish(),
-  about: z.string().trim().min(10).max(5000),
+  about: z.string().trim().min(10, "Please tell us at least 10 characters").max(5000),
 });
 
 contentRouter.post("/collab-applications", formLimit("application"), async (req, res) => {
+  const session = await currentCustomer(req);
+  if (!session?.customer) {
+    throw unauthorized("Please sign in or create an account to apply for our collaborator program.");
+  }
+
+  // 1. Prevent duplicate application if customer is already an approved collaborator
+  const existingCollab = await prisma.collaborator.findFirst({
+    where: { userId: session.customer.id },
+  });
+  if (existingCollab) {
+    throw conflict("You already have an approved collaborator account linked to this profile.");
+  }
+
+  // 2. Prevent spamming if customer already has a pending application under review
+  const pendingApp = await prisma.collabApplication.findFirst({
+    where: {
+      email: { equals: session.customer.email, mode: "insensitive" },
+      isReviewed: false,
+    },
+  });
+  if (pendingApp) {
+    throw conflict("You already have a collaborator application under review. We'll be in touch soon!");
+  }
+
   const body = parse(CollabBody, req.body);
-  await prisma.collabApplication.create({ data: body });
-  alertTeam((store, to) => alertCollabApplication(body, store, to));
+  const data = {
+    name: body.name,
+    email: session.customer.email,
+    handle: body.handle,
+    audienceSize: body.audienceSize ?? null,
+    about: body.about,
+  };
+
+  await prisma.collabApplication.create({ data });
+  alertTeam((store, to) => alertCollabApplication(data, store, to));
   res.status(201).json({ data: { received: true } });
 });
