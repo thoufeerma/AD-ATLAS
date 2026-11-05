@@ -11,7 +11,7 @@ const VISIBLE = 6;
 const STEP_MS = 3000;
 
 const ARROW =
-  "grid size-11 xl:size-12 2xl:size-13 shrink-0 place-items-center rounded-full border border-gold-200/60 bg-white text-gold-600 shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all hover:border-gold-400 active:scale-95";
+  "grid size-8.5 sm:size-10 xl:size-12 2xl:size-13 shrink-0 place-items-center rounded-full border border-gold-200/60 bg-white text-gold-600 shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all hover:border-gold-400 active:scale-95";
 
 /**
  * Links out to the store's Instagram; the home page skips it until one is set.

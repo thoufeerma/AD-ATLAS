@@ -226,20 +226,22 @@ export default async function AboutPage() {
           </p>
         </div>
 
-        <ul className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5 bg-[#fdf6ec] p-6 sm:p-8 lg:p-10 xl:p-12 items-stretch py-8 sm:py-10 lg:py-12">
-          {SCIENCE.map((s) => (
+        <ul className="grid grid-cols-2 gap-3 sm:gap-3.5 sm:grid-cols-3 lg:grid-cols-5 bg-[#fdf6ec] p-4 sm:p-8 lg:p-10 xl:p-12 items-center py-6 sm:py-10 lg:py-12">
+          {SCIENCE.map((s, idx) => (
             <li
               key={s.name}
-              className="group overflow-hidden rounded-xl border border-gold-300/40 bg-[#fef4ea] shadow-[0_4px_16px_rgba(32,8,45,0.12),0_1.5px_4px_rgba(32,8,45,0.06)] transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_16px_32px_rgba(32,8,45,0.2),0_4px_12px_rgba(193,136,62,0.18)] hover:border-gold-400/80 flex flex-col"
+              className={`group overflow-hidden rounded-xl border border-gold-300/40 bg-[#fef4ea] shadow-[0_4px_16px_rgba(32,8,45,0.12),0_1.5px_4px_rgba(32,8,45,0.06)] transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_16px_32px_rgba(32,8,45,0.2),0_4px_12px_rgba(193,136,62,0.18)] hover:border-gold-400/80 flex flex-col ${
+                idx === 4 ? "col-span-2 sm:col-span-1 max-w-[220px] sm:max-w-none mx-auto w-full" : ""
+              }`}
             >
               <div className="relative aspect-square w-full overflow-hidden">
                 <Image src={s.image} alt={s.name} fill sizes="(min-width: 1280px) 11vw, (min-width: 1024px) 13vw, 45vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
               </div>
-              <div className="p-3 sm:p-3.5 flex flex-col flex-1 justify-between text-center">
-                <h3 className="font-sans text-[0.82rem] sm:text-[0.88rem] font-bold uppercase tracking-[0.02em] text-plum-900">
+              <div className="p-3 sm:p-3.5 flex flex-col items-center text-center">
+                <h3 className="font-sans text-[0.82rem] sm:text-[0.88rem] font-bold uppercase tracking-[0.02em] text-plum-900 min-h-[2.4rem] flex items-center justify-center leading-tight">
                   {s.name}
                 </h3>
-                <p className="mt-1 whitespace-pre-line text-[0.74rem] sm:text-[0.8rem] leading-snug text-ink/80">
+                <p className="mt-1.5 whitespace-pre-line text-[0.74rem] sm:text-[0.8rem] leading-snug text-ink/80">
                   {s.note}
                 </p>
               </div>

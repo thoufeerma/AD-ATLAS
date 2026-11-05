@@ -14,7 +14,7 @@ const STEP_MS = 3500;
 const ARROW =
   // Level with the middle of the 85px photos, not the whole row — the names
   // underneath would pull them down.
-  "mt-[20px] grid size-11 shrink-0 place-items-center rounded-full border border-gold-200/60 bg-white text-gold-600 shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all hover:border-gold-400 active:scale-95";
+  "mt-[24px] grid size-8 sm:size-10 xl:size-11 shrink-0 place-items-center rounded-full border border-gold-200/60 bg-white text-gold-600 shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all hover:border-gold-400 active:scale-95";
 
 /** The collaborators, one at a time, round and round (see lib/loop.ts). */
 function CollabCarousel({ collaborators }: { collaborators: Collaborator[] }) {

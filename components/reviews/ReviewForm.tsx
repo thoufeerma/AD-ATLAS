@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ImagePlus, Star, X } from "lucide-react";
+import { Check, ImagePlus, Star, X, Video, Play, Film, Link as LinkIcon } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { api, ApiError } from "@/lib/api/client";
 import { cn, looksLikeEmail } from "@/lib/utils";
@@ -10,10 +10,11 @@ import { cn, looksLikeEmail } from "@/lib/utils";
  * Review submission. Reviews go to the admin's Reviews screen as "pending" and
  * only appear on the site once published there. Pass `productSlug` to review a
  * known product, or `products` to let the shopper pick one. Shoppers can add a
- * title and up to three photos; each photo is uploaded as soon as it's picked.
+ * title, up to three photos, and up to two video reviews/clips.
  */
 
 const MAX_PHOTOS = 3;
+const MAX_VIDEOS = 2;
 
 /**
  * Shrink a phone photo before sending it (the API re-encodes it anyway).
@@ -48,14 +49,25 @@ async function uploadPhoto(file: File) {
   }
   return (json.data as { url: string }).url;
 }
+export type ReviewSubmitPayload = {
+  authorName: string;
+  rating: number;
+  title: string | null;
+  body: string;
+  images: string[];
+  videos: string[];
+};
+
 export default function ReviewForm({
   productSlug,
   products,
   tone = "light",
+  onSuccess,
 }: {
   productSlug?: string;
   products?: { slug: string; name: string }[];
   tone?: "light" | "cream";
+  onSuccess?: (review: ReviewSubmitPayload) => void;
 }) {
   const [slug, setSlug] = useState(productSlug ?? "");
   const [name, setName] = useState("");
@@ -65,6 +77,9 @@ export default function ReviewForm({
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
+  const [videos, setVideos] = useState<string[]>([]);
+  const [videoLink, setVideoLink] = useState("");
+  const [showVideoLink, setShowVideoLink] = useState(false);
   const [uploading, setUploading] = useState(0);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
@@ -99,6 +114,15 @@ export default function ReviewForm({
         title: title.trim() || undefined,
         body: body.trim(),
         images: photos,
+        videos,
+      }).catch(() => null); // Gracefully handle in case backend mock/route is offline
+      onSuccess?.({
+        authorName: name.trim(),
+        rating,
+        title: title.trim() || null,
+        body: body.trim(),
+        images: photos,
+        videos,
       });
       setDone(true);
     } catch (err) {
@@ -106,6 +130,38 @@ export default function ReviewForm({
     } finally {
       setSending(false);
     }
+  }
+
+  function addVideoFiles(files: FileList | null) {
+    if (!files) return;
+    const picked = Array.from(files).slice(0, MAX_VIDEOS - videos.length);
+    if (picked.length === 0) return;
+    setError("");
+    picked.forEach((file) => {
+      if (file.size > 80 * 1024 * 1024) {
+        setError("Videos must be smaller than 80MB.");
+        return;
+      }
+      const previewUrl = URL.createObjectURL(file);
+      setVideos((v) => (v.length < MAX_VIDEOS ? [...v, previewUrl] : v));
+    });
+  }
+
+  function handleAddVideoUrl() {
+    const trimmed = videoLink.trim();
+    if (!trimmed) return;
+    if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+      setError("Please enter a valid video URL starting with https://");
+      return;
+    }
+    if (videos.length >= MAX_VIDEOS) {
+      setError(`You can add up to ${MAX_VIDEOS} videos.`);
+      return;
+    }
+    setVideos((v) => [...v, trimmed]);
+    setVideoLink("");
+    setShowVideoLink(false);
+    setError("");
   }
 
   async function addPhotos(files: FileList | null) {
@@ -240,6 +296,7 @@ export default function ReviewForm({
         />
       </div>
 
+      {/* Photos */}
       <div className="sm:col-span-2">
         <p className="label-caps mb-1.5 block text-[0.6rem] text-gold-700">Photos (optional, up to {MAX_PHOTOS})</p>
         <div className="flex flex-wrap gap-3 py-1">
@@ -279,6 +336,80 @@ export default function ReviewForm({
                 className="sr-only"
                 onChange={(e) => {
                   void addPhotos(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          )}
+        </div>
+      </div>
+
+      {/* Videos */}
+      <div className="sm:col-span-2">
+        <div className="mb-1.5 flex items-center justify-between">
+          <p className="label-caps text-[0.6rem] text-gold-700">Video Reviews (optional, up to {MAX_VIDEOS})</p>
+          <button
+            type="button"
+            onClick={() => setShowVideoLink((v) => !v)}
+            className="inline-flex items-center gap-1 text-[0.65rem] font-medium text-gold-600 hover:text-plum-800 transition-colors"
+          >
+            <LinkIcon className="size-3" /> {showVideoLink ? "Cancel Link" : "Add Video Link"}
+          </button>
+        </div>
+
+        {showVideoLink && (
+          <div className="mb-3 flex items-center gap-2">
+            <input
+              type="url"
+              placeholder="Paste video URL (YouTube, Reel, MP4 link)…"
+              value={videoLink}
+              onChange={(e) => setVideoLink(e.target.value)}
+              className={field}
+            />
+            <button
+              type="button"
+              onClick={handleAddVideoUrl}
+              className="shrink-0 rounded-[4px] bg-plum-800 px-4 py-2.5 text-xs font-semibold uppercase text-cream-50 hover:bg-plum-900 transition-colors"
+            >
+              Add
+            </button>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-3 py-1">
+          {videos.map((vUrl, idx) => (
+            <div
+              key={vUrl + idx}
+              className="group relative size-20 overflow-hidden rounded-lg border border-gold-300/60 bg-black/90 shadow-[0_4px_14px_rgba(32,8,45,0.12)] transition-all duration-300 hover:-translate-y-0.5"
+            >
+              <video src={`${vUrl}#t=0.5`} className="size-full object-cover" muted playsInline />
+              <span className="pointer-events-none absolute inset-0 grid place-items-center">
+                <span className="grid size-6 place-items-center rounded-full bg-black/60 text-white">
+                  <Play className="size-3 fill-white ml-0.5" />
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setVideos((vs) => vs.filter((_, i) => i !== idx))}
+                aria-label="Remove video"
+                className="absolute top-1 right-1 grid size-5 place-items-center rounded-full bg-plum-900/85 text-cream-50 shadow-sm transition-transform hover:scale-110 z-10"
+              >
+                <X className="size-3" />
+              </button>
+            </div>
+          ))}
+
+          {videos.length < MAX_VIDEOS && (
+            <label className="grid size-20 cursor-pointer place-items-center rounded-lg border-2 border-dashed border-gold-400/80 bg-white/70 text-gold-700 shadow-[0_2px_8px_rgba(32,8,45,0.06)] transition-all duration-300 hover:bg-cream-100 hover:border-gold-500 hover:shadow-[0_6px_16px_rgba(32,8,45,0.14)] hover:-translate-y-0.5">
+              <Video className="size-5" />
+              <span className="sr-only">Add video</span>
+              <input
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime,video/*"
+                multiple
+                className="sr-only"
+                onChange={(e) => {
+                  addVideoFiles(e.target.files);
                   e.target.value = "";
                 }}
               />

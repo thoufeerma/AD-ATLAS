@@ -73,9 +73,9 @@ export default function Header({ announcements }: { announcements: string[] }) {
 
       {/* Main bar */}
       <div className="border-b border-gold-200/50 bg-cream-50/95 backdrop-blur">
-        <div className="container-vel flex h-[72px] items-center justify-between gap-2 sm:gap-6">
+        <div className="container-vel flex h-[64px] sm:h-[72px] items-center justify-between gap-1.5 sm:gap-6">
           <button
-            className="grid size-11 shrink-0 place-items-center text-plum-800 hover:text-gold-600 transition-colors lg:hidden -ml-2"
+            className="grid size-10 sm:size-11 shrink-0 place-items-center text-plum-800 hover:text-gold-600 transition-colors lg:hidden -ml-1.5"
             onClick={() => setOpen(true)}
             aria-label="Open menu"
             aria-expanded={open}
@@ -107,33 +107,33 @@ export default function Header({ announcements }: { announcements: string[] }) {
             })}
           </nav>
 
-          <div className="flex items-center gap-0.5 sm:gap-1.5 text-plum-800">
+          <div className="flex items-center gap-0 sm:gap-1.5 text-plum-800">
             <button
               type="button"
               onClick={() => setSearching((s) => !s)}
               aria-label="Search"
               aria-expanded={searching}
               aria-controls="site-search"
-              className="grid size-11 shrink-0 place-items-center hover:text-gold-600 transition-colors"
+              className="grid size-9 sm:size-11 shrink-0 place-items-center hover:text-gold-600 transition-colors"
             >
-              <Search className="size-[19px]" />
+              <Search className="size-[18px] sm:size-[19px]" />
             </button>
             <Link
               href={account.status === "signed-in" ? "/account" : "/login"}
               aria-label={account.status === "signed-in" ? "Your account" : "Sign in"}
               title={account.me ? `Signed in as ${account.me.name}` : undefined}
-              className="relative grid size-11 shrink-0 place-items-center hover:text-gold-600 transition-colors"
+              className="relative grid size-9 sm:size-11 shrink-0 place-items-center hover:text-gold-600 transition-colors"
             >
-              <User className="size-[19px]" />
+              <User className="size-[18px] sm:size-[19px]" />
               {account.status === "signed-in" && (
-                <span className="absolute right-2 top-2 size-2 rounded-full bg-success ring-2 ring-cream-50" />
+                <span className="absolute right-1.5 top-1.5 sm:right-2 sm:top-2 size-2 rounded-full bg-success ring-2 ring-cream-50" />
               )}
             </Link>
             <IconWithCount href="/wishlist" label="Wishlist" count={hydrated ? wishlist.length : 0}>
-              <Heart className="size-[19px]" />
+              <Heart className="size-[18px] sm:size-[19px]" />
             </IconWithCount>
             <IconWithCount href="/cart" label="Cart" count={hydrated ? cartCount : 0}>
-              <ShoppingBag className="size-[19px]" />
+              <ShoppingBag className="size-[18px] sm:size-[19px]" />
             </IconWithCount>
           </div>
         </div>
@@ -227,11 +227,11 @@ function IconWithCount({
     <Link
       href={href}
       aria-label={label}
-      className="relative grid size-11 shrink-0 place-items-center hover:text-gold-600 transition-colors"
+      className="relative grid size-9 sm:size-11 shrink-0 place-items-center hover:text-gold-600 transition-colors"
     >
       {children}
       {count > 0 && (
-        <span className="absolute right-1.5 top-1.5 grid size-[15px] place-items-center rounded-full bg-gold-600 text-[9px] font-semibold text-white">
+        <span className="absolute right-1 top-1 sm:right-1.5 sm:top-1.5 grid size-[15px] place-items-center rounded-full bg-gold-600 text-[9px] font-semibold text-white">
           {count}
         </span>
       )}

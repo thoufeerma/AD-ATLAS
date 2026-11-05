@@ -49,6 +49,8 @@ export type ProductReview = {
   body: string;
   /** Customer photos, up to three. */
   images: string[];
+  /** Customer videos, if uploaded. */
+  videos?: string[];
   isVerified: boolean;
   createdAt: string;
 };

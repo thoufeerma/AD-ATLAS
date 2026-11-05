@@ -22,17 +22,17 @@ export default async function ServiceStrip() {
       <div className="container-vel py-5 lg:py-6 xl:py-7 2xl:py-8">
         <div className="flex flex-col gap-y-6 lg:flex-row lg:items-center lg:justify-between lg:gap-x-6 xl:gap-x-10 2xl:gap-x-14">
           {/* The 4 service perks */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-4 sm:gap-x-4 lg:flex lg:flex-1 lg:items-center lg:justify-between lg:gap-x-3 xl:gap-x-6 2xl:gap-x-8">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-3.5 sm:grid-cols-4 sm:gap-x-4 lg:flex lg:flex-1 lg:items-center lg:justify-between lg:gap-x-3 xl:gap-x-6 2xl:gap-x-8">
             {services.map(({ Icon, title, note }) => (
-              <div key={title} aria-label={`${title} ${note}`} className="flex items-center gap-2 sm:gap-2.5 lg:gap-2.5 xl:gap-3.5 2xl:gap-4 shrink-0">
-                <span className="grid size-9 sm:size-9.5 lg:size-10 xl:size-12 2xl:size-13 shrink-0 place-items-center rounded-full border border-gold-400/70 bg-gold-500/5">
-                  <Icon strokeWidth={1.3} className="size-4.5 sm:size-5 lg:size-5 xl:size-6 2xl:size-6.5 text-gold-600" />
+              <div key={title} aria-label={`${title} ${note}`} className="flex items-center gap-2 sm:gap-2.5 lg:gap-2.5 xl:gap-3.5 2xl:gap-4 min-w-0">
+                <span className="grid size-8.5 sm:size-9.5 lg:size-10 xl:size-12 2xl:size-13 shrink-0 place-items-center rounded-full border border-gold-400/70 bg-gold-500/5">
+                  <Icon strokeWidth={1.3} className="size-4 sm:size-5 lg:size-5 xl:size-6 2xl:size-6.5 text-gold-600" />
                 </span>
-                <div className="flex flex-col text-left leading-tight shrink-0">
-                  <span className="font-heading text-[0.8rem] sm:text-[0.86rem] lg:text-[0.88rem] xl:text-[1.02rem] 2xl:text-[1.1rem] font-bold text-plum-900 tracking-[-0.01em] whitespace-nowrap">
+                <div className="flex flex-col text-left leading-tight min-w-0">
+                  <span className="font-heading text-[0.78rem] sm:text-[0.86rem] lg:text-[0.88rem] xl:text-[1.02rem] 2xl:text-[1.1rem] font-bold text-plum-900 tracking-[-0.01em] sm:whitespace-nowrap">
                     {title}
                   </span>
-                  <span className="font-heading text-[0.7rem] sm:text-[0.75rem] lg:text-[0.78rem] xl:text-[0.86rem] 2xl:text-[0.92rem] font-medium text-plum-800/80 mt-0.5 whitespace-nowrap">
+                  <span className="font-heading text-[0.68rem] sm:text-[0.75rem] lg:text-[0.78rem] xl:text-[0.86rem] 2xl:text-[0.92rem] font-medium text-plum-800/80 mt-0.5 sm:whitespace-nowrap">
                     {note}
                   </span>
                 </div>

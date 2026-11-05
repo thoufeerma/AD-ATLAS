@@ -39,7 +39,7 @@ export default function GoldBand() {
               <span className="grid size-12 sm:size-14 lg:size-[4.25rem] xl:size-[4.85rem] 2xl:size-[5.25rem] place-items-center rounded-full border border-gold-400/80 bg-[#160420]/85 shadow-[0_4px_12px_rgba(0,0,0,0.5)] backdrop-blur-sm">
                 <Icon className="size-6 lg:size-[28px] xl:size-[32px] 2xl:size-[36px] text-gold-300" />
               </span>
-              <span className="whitespace-nowrap text-[0.76rem] sm:text-[0.82rem] xl:text-[0.92rem] 2xl:text-[0.96rem] font-semibold leading-snug text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] bg-[#160420]/75 px-2.5 xl:px-4 py-1 xl:py-1.5 rounded-full border border-gold-400/25">
+              <span className="text-[0.72rem] sm:text-[0.82rem] xl:text-[0.92rem] 2xl:text-[0.96rem] font-semibold leading-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] bg-[#160420]/75 px-2.5 xl:px-4 py-1 xl:py-1.5 rounded-full border border-gold-400/25 max-w-full sm:whitespace-nowrap">
                 {label}
               </span>
             </li>

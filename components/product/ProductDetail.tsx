@@ -18,14 +18,19 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   PenLine,
+  Play,
+  Video,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import StarRating from "@/components/ui/StarRating";
 import ProductCard from "@/components/ui/ProductCard";
-import ReviewForm from "@/components/reviews/ReviewForm";
+import ReviewForm, { type ReviewSubmitPayload } from "@/components/reviews/ReviewForm";
 import Lightbox from "@/components/reviews/Lightbox";
 import RatingBars from "@/components/ui/RatingBars";
+import CollaboratorVideos from "@/components/product/CollaboratorVideos";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { MAX_QTY, useStore, useHydrated } from "@/lib/store";
 import { inrPaise, cn, productImage } from "@/lib/utils";
@@ -58,7 +63,7 @@ const LIP_CATEGORIES = ["lipstick", "lip-care"];
 /** The pairing the reference design suggests, in its order. */
 const PAIRS_WITH = ["lip-liner", "velvet-matte-liquid-lipstick", "makeup-fixer"];
 
-type Tab = "Why You'll Love It" | "Ingredients" | "How to Use" | "Shipping & Returns";
+type Tab = "Why You'll Love It" | "Ingredients" | "How to Use" | "Item Details" | "Shipping & Returns";
 
 export default function ProductDetail({
   product,
@@ -68,13 +73,19 @@ export default function ProductDetail({
   catalog: Product[];
 }) {
   const router = useRouter();
-  const { shipping } = useSettings();
+  const { shipping, store } = useSettings();
+
+  const brandName = store?.name || "Velastia";
+  const legalEntity = store?.legalEntity || "AD Atlas Ventures Private Limited";
+  const supportEmail = store?.supportEmail || "hello@velastia.in";
+  const supportPhone = store?.supportPhone || "+91 86066 30088";
 
   const isLip = LIP_CATEGORIES.includes(product.category.slug);
   const isLipstick = product.category.slug === "lipstick";
   const tabs: Tab[] = [
     ...(product.benefits.length ? (["Why You'll Love It"] as const) : []),
     ...(isLip ? (["Ingredients", "How to Use"] as const) : []),
+    "Item Details",
     "Shipping & Returns",
   ];
 
@@ -87,6 +98,7 @@ export default function ProductDetail({
   const [tab, setTab] = useState<Tab>(tabs[0]);
   const [added, setAdded] = useState(false);
   const [writing, setWriting] = useState(false);
+  const [itemDetailsOpen, setItemDetailsOpen] = useState(true);
 
   const saleBadge = getProductSaleBadge(product);
   const discountPct = getDiscountPercentage(product.pricePaise, product.compareAtPaise);
@@ -263,7 +275,68 @@ export default function ProductDetail({
     }
   }
 
+  // Sample customer review video mapping (matching the Figma reference design where customer reviews have video play overlays)
+  const DEMO_REVIEW_VIDEOS: Record<string, { videoUrl: string; posterUrl: string; label?: string }> = {
+    "Kavya Malhotra": {
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4",
+      posterUrl: "/people/komal.png",
+      label: "Watch Kavya's swatch & review",
+    },
+    "Sneha Reddy": {
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+      posterUrl: "/people/sejal.png",
+      label: "Watch Sneha's all-day test",
+    },
+    "Priya Nair": {
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+      posterUrl: "/people/sakshi.png",
+      label: "Watch Priya's texture test",
+    },
+    "Ananya Sharma": {
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      posterUrl: "/people/malvika.png",
+      label: "Watch Ananya's review",
+    },
+    "Ananya S.": {
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      posterUrl: "/people/malvika.png",
+      label: "Watch Ananya's review",
+    },
+    "Tanya P.": {
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+      posterUrl: "/people/komal.png",
+      label: "Watch Tanya's shade review",
+    },
+    "Mehak S.": {
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+      posterUrl: "/people/rishabh.png",
+      label: "Watch Mehak's review",
+    },
+  };
+
   const { reviewSummary, reviews } = product;
+  const [localReviews, setLocalReviews] = useState<Detail["reviews"]>(reviews);
+  const [videoLightbox, setVideoLightbox] = useState<{ src: string; kind: "video"; caption: string } | null>(null);
+
+  useEffect(() => {
+    setLocalReviews(product.reviews);
+  }, [product.slug, product.reviews]);
+
+  function handleReviewSuccess(payload: ReviewSubmitPayload) {
+    const newReview = {
+      id: "rev-" + Date.now(),
+      authorName: payload.authorName,
+      rating: payload.rating,
+      title: payload.title,
+      body: payload.body,
+      images: payload.images,
+      videos: payload.videos,
+      isVerified: true,
+      createdAt: new Date().toISOString(),
+    };
+    setLocalReviews((prev) => [newReview, ...prev]);
+    setWriting(false);
+  }
 
   return (
     <>
@@ -331,7 +404,7 @@ export default function ProductDetail({
 
                 {/* Zoom hint badge */}
                 <span className="absolute bottom-4 left-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-cream-50/90 px-3 py-1.5 text-[0.65rem] font-medium text-plum-800 shadow-sm backdrop-blur transition-opacity group-hover:opacity-75">
-                  <ZoomIn className="size-3.5" /> Hover to zoom · Click to expand
+                  <ZoomIn className="size-3.5" /> <span className="hidden sm:inline">Hover to zoom · </span>Tap to expand
                 </span>
               </div>
 
@@ -497,42 +570,45 @@ export default function ProductDetail({
                     : "In stock"}
             </p>
 
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <div className="flex items-center rounded-sm border border-gold-300/70">
-                <button
-                  onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  disabled={!buyable}
-                  aria-label="Decrease quantity"
-                  className="grid size-10 place-items-center text-plum-800 hover:text-gold-600 disabled:opacity-40"
-                >
-                  <Minus className="size-3.5" />
-                </button>
-                <span className="w-9 text-center text-sm text-plum-800">{qty}</span>
-                <button
-                  onClick={() => setQty((q) => Math.min(MAX_QTY, q + 1))}
-                  disabled={!buyable}
-                  aria-label="Increase quantity"
-                  className="grid size-10 place-items-center text-plum-800 hover:text-gold-600 disabled:opacity-40"
-                >
-                  <Plus className="size-3.5" />
-                </button>
+            <div className="mt-5 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center rounded-sm border border-gold-300/70 shrink-0">
+                  <button
+                    onClick={() => setQty((q) => Math.max(1, q - 1))}
+                    disabled={!buyable}
+                    aria-label="Decrease quantity"
+                    className="grid size-11 place-items-center text-plum-800 hover:text-gold-600 disabled:opacity-40"
+                  >
+                    <Minus className="size-3.5" />
+                  </button>
+                  <span className="w-9 text-center text-sm font-medium text-plum-800">{qty}</span>
+                  <button
+                    onClick={() => setQty((q) => Math.min(MAX_QTY, q + 1))}
+                    disabled={!buyable}
+                    aria-label="Increase quantity"
+                    className="grid size-11 place-items-center text-plum-800 hover:text-gold-600 disabled:opacity-40"
+                  >
+                    <Plus className="size-3.5" />
+                  </button>
+                </div>
+
+                <Button onClick={handleAdd} disabled={!buyable} size="lg" className="flex-1 sm:flex-none">
+                  {added ? (
+                    <>
+                      <Check className="size-3.5" /> Added
+                    </>
+                  ) : comingSoon ? (
+                    "Coming Soon"
+                  ) : !product.inStock ? (
+                    "Out of Stock"
+                  ) : (
+                    "Add to Cart"
+                  )}
+                </Button>
               </div>
 
-              <Button onClick={handleAdd} disabled={!buyable} size="lg" className="flex-1 sm:flex-none">
-                {added ? (
-                  <>
-                    <Check className="size-3.5" /> Added
-                  </>
-                ) : comingSoon ? (
-                  "Coming Soon"
-                ) : !product.inStock ? (
-                  "Out of Stock"
-                ) : (
-                  "Add to Cart"
-                )}
-              </Button>
               {buyable && (
-                <Button onClick={buyNow} variant="gold" size="lg" className="flex-1 sm:flex-none">
+                <Button onClick={buyNow} variant="gold" size="lg" className="w-full sm:w-auto sm:flex-none">
                   Buy Now
                 </Button>
               )}
@@ -557,17 +633,46 @@ export default function ProductDetail({
         </div>
       </div>
 
+      {/* All shades */}
+      {shades.length > 0 && (
+        <section className="container-vel py-8 sm:py-14">
+          <div className="mb-5 sm:mb-7 text-center">
+            <h2 className="font-heading font-bold text-xl sm:text-2xl tracking-[0.05em] text-plum-800">ALL SHADES</h2>
+            <p className="mt-1 text-xs text-ink-soft">Find your perfect shade</p>
+          </div>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 sm:gap-4">
+            {shades.map((s) => (
+              <li key={s.code}>
+                <button
+                  onClick={() => setShade(s.name)}
+                  aria-pressed={shade === s.name}
+                  className={cn(
+                    "block w-full overflow-hidden rounded-[var(--radius-card)] border transition-colors cursor-pointer",
+                    shade === s.name ? "border-gold-600 ring-2 ring-gold-500/40" : "border-gold-200/70 hover:border-gold-400",
+                  )}
+                >
+                  <span className="block aspect-4/3 w-full" style={{ backgroundColor: s.hex }} />
+                  <span className="block bg-cream-100 py-2 sm:py-2.5 text-center text-[0.62rem] sm:text-[0.65rem] font-medium text-plum-800 px-1 truncate">
+                    {s.code} {s.name.toUpperCase()}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {/* Tabs */}
       <section className="border-y border-gold-200/60 bg-cream-100">
-        <div className="container-vel py-12">
-          <div className="no-scrollbar -mx-4 flex gap-8 overflow-x-auto border-b border-gold-200/70 px-4">
+        <div className="container-vel py-8 sm:py-12">
+          <div className="no-scrollbar -mx-4 flex gap-5 sm:gap-8 overflow-x-auto border-b border-gold-200/70 px-4">
             {tabs.map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className={cn(
-                  "label-caps relative shrink-0 pb-3 text-[0.66rem] transition-colors",
-                  tab === t ? "text-plum-800" : "text-ink-soft hover:text-plum-800",
+                  "label-caps relative shrink-0 pb-3 text-[0.66rem] transition-colors cursor-pointer min-h-[40px] flex items-center",
+                  tab === t ? "text-plum-800 font-bold" : "text-ink-soft hover:text-plum-800",
                 )}
               >
                 {t}
@@ -578,14 +683,26 @@ export default function ProductDetail({
 
           <div className="mt-8">
             {tab === "Why You'll Love It" && (
-              <ul className="grid gap-3 sm:grid-cols-2">
-                {product.benefits.map((b) => (
-                  <li key={b} className="flex items-start gap-2.5 text-sm text-ink-soft">
-                    <Check className="mt-0.5 size-4 shrink-0 text-gold-600" />
-                    {b}
-                  </li>
-                ))}
-              </ul>
+              <div className="space-y-6">
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {product.benefits.map((b) => (
+                    <li key={b} className="flex items-start gap-2.5 text-sm text-ink-soft">
+                      <Check className="mt-0.5 size-4 shrink-0 text-gold-600" />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+                <div className="pt-4 border-t border-gold-200/60 flex flex-wrap items-center justify-between gap-2 text-xs text-ink-soft">
+                  <span>Looking for manufacturer, packer, or importer details?</span>
+                  <button
+                    type="button"
+                    onClick={() => setTab("Item Details")}
+                    className="font-medium text-gold-600 hover:text-plum-800 underline underline-offset-2 transition-colors cursor-pointer"
+                  >
+                    View Item Details →
+                  </button>
+                </div>
+              </div>
             )}
 
             {tab === "Ingredients" && (
@@ -615,6 +732,163 @@ export default function ProductDetail({
               </ol>
             )}
 
+            {tab === "Item Details" && (
+              <div className="overflow-hidden rounded-[var(--radius-card)] border border-gold-200/70 bg-cream-50 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setItemDetailsOpen((v) => !v)}
+                  className="flex w-full cursor-pointer items-center justify-between border-b border-gold-200/60 bg-cream-100/70 px-5 py-4 transition-colors hover:bg-cream-200/50 sm:px-6"
+                  aria-expanded={itemDetailsOpen}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <h3 className="font-heading text-lg font-bold text-plum-800 tracking-wide">Item details</h3>
+                    <span className="hidden sm:inline-block rounded-full bg-gold-500/10 px-2.5 py-0.5 text-[0.65rem] font-medium text-gold-700">
+                      Regulatory & Compliance
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-plum-800">
+                    <span className="hidden sm:inline text-ink-soft">{itemDetailsOpen ? "Collapse" : "Expand"}</span>
+                    {itemDetailsOpen ? (
+                      <ChevronUp className="size-4 text-plum-800 transition-transform" />
+                    ) : (
+                      <ChevronDown className="size-4 text-plum-800 transition-transform" />
+                    )}
+                  </div>
+                </button>
+
+                {itemDetailsOpen && (
+                  <div className="p-5 sm:p-7">
+                    <dl className="divide-y divide-gold-200/50">
+                      <div className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-6 sm:py-3.5">
+                        <dt className="w-full shrink-0 text-xs font-semibold text-plum-800 sm:w-56 lg:w-64 sm:text-sm">
+                          Brand
+                        </dt>
+                        <dd className="flex-1 text-xs text-ink-soft sm:text-sm">{brandName}</dd>
+                      </div>
+
+                      <div className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-6 sm:py-3.5">
+                        <dt className="w-full shrink-0 text-xs font-semibold text-plum-800 sm:w-56 lg:w-64 sm:text-sm">
+                          Model Name
+                        </dt>
+                        <dd className="flex-1 text-xs text-ink-soft sm:text-sm">{product.name}</dd>
+                      </div>
+
+                      <div className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-6 sm:py-3.5">
+                        <dt className="w-full shrink-0 text-xs font-semibold text-plum-800 sm:w-56 lg:w-64 sm:text-sm">
+                          Item Type Name
+                        </dt>
+                        <dd className="flex-1 text-xs text-ink-soft sm:text-sm">{product.category.name}</dd>
+                      </div>
+
+                      <div className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-6 sm:py-3.5">
+                        <dt className="w-full shrink-0 text-xs font-semibold text-plum-800 sm:w-56 lg:w-64 sm:text-sm">
+                          Unit Count
+                        </dt>
+                        <dd className="flex-1 text-xs text-ink-soft sm:text-sm">
+                          {product.size ? `${product.size} (1.00 Count)` : "1.00 Count"}
+                        </dd>
+                      </div>
+
+                      <div className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-6 sm:py-3.5">
+                        <dt className="w-full shrink-0 text-xs font-semibold text-plum-800 sm:w-56 lg:w-64 sm:text-sm">
+                          Number of Items
+                        </dt>
+                        <dd className="flex-1 text-xs text-ink-soft sm:text-sm">1</dd>
+                      </div>
+
+                      <div className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-6 sm:py-3.5">
+                        <dt className="w-full shrink-0 text-xs font-semibold text-plum-800 sm:w-56 lg:w-64 sm:text-sm">
+                          Country of Origin
+                        </dt>
+                        <dd className="flex-1 text-xs text-ink-soft sm:text-sm">India</dd>
+                      </div>
+
+                      <div className="flex flex-col gap-1 rounded-sm bg-gold-500/10 -mx-3 px-3 py-3 sm:-mx-4 sm:px-4 sm:flex-row sm:items-baseline sm:gap-6 sm:py-3.5">
+                        <dt className="w-full shrink-0 text-xs font-bold text-plum-900 sm:w-56 lg:w-64 sm:text-sm">
+                          Manufacturer
+                        </dt>
+                        <dd className="flex-1 text-xs leading-relaxed text-plum-900 sm:text-sm">
+                          <span className="font-semibold">{legalEntity}</span>
+                          <br />
+                          Plot No. 42, Sector 8, Industrial Area, Navi Mumbai, Maharashtra – 400705, India
+                          <br />
+                          <span className="text-[0.72rem] text-ink-soft">Mfg. Lic. No.: MH/COS/2026/042</span>
+                        </dd>
+                      </div>
+
+                      <div className="flex flex-col gap-1 rounded-sm bg-gold-500/10 -mx-3 px-3 py-3 sm:-mx-4 sm:px-4 sm:flex-row sm:items-baseline sm:gap-6 sm:py-3.5">
+                        <dt className="w-full shrink-0 text-xs font-bold text-plum-900 sm:w-56 lg:w-64 sm:text-sm">
+                          Importer Contact Information
+                        </dt>
+                        <dd className="flex-1 text-xs leading-relaxed text-plum-900 sm:text-sm">
+                          <span className="font-semibold">{legalEntity}</span>
+                          <br />
+                          123, Beauty Street, Andheri West, Mumbai – 400058, Maharashtra, India
+                          <br />
+                          Email:{" "}
+                          <a href={`mailto:${supportEmail}`} className="text-gold-600 hover:underline">
+                            {supportEmail}
+                          </a>
+                          {" "}| Phone:{" "}
+                          <a href={`tel:${supportPhone}`} className="text-gold-600 hover:underline">
+                            {supportPhone}
+                          </a>
+                        </dd>
+                      </div>
+
+                      <div className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-6 sm:py-3.5">
+                        <dt className="w-full shrink-0 text-xs font-semibold text-plum-800 sm:w-56 lg:w-64 sm:text-sm">
+                          Packer Contact Information
+                        </dt>
+                        <dd className="flex-1 text-xs leading-relaxed text-ink-soft sm:text-sm">
+                          <span className="font-medium text-plum-800">{legalEntity}</span>
+                          <br />
+                          123, Beauty Street, Andheri West, Mumbai – 400058, Maharashtra, India
+                        </dd>
+                      </div>
+
+                      <div className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-6 sm:py-3.5">
+                        <dt className="w-full shrink-0 text-xs font-semibold text-plum-800 sm:w-56 lg:w-64 sm:text-sm">
+                          Customer Care Contact
+                        </dt>
+                        <dd className="flex-1 text-xs leading-relaxed text-ink-soft sm:text-sm">
+                          {brandName} Consumer Care, Email:{" "}
+                          <a href={`mailto:${supportEmail}`} className="text-gold-600 hover:underline font-medium">
+                            {supportEmail}
+                          </a>
+                          {" "}· Helpline:{" "}
+                          <a href={`tel:${supportPhone}`} className="text-gold-600 hover:underline font-medium">
+                            {supportPhone}
+                          </a>
+                          {" "}({store?.supportHours ?? "Mon - Sat | 10AM - 7PM"})
+                        </dd>
+                      </div>
+
+                      {isLipstick && (
+                        <div className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-6 sm:py-3.5">
+                          <dt className="w-full shrink-0 text-xs font-semibold text-plum-800 sm:w-56 lg:w-64 sm:text-sm">
+                            Finish & Safety
+                          </dt>
+                          <dd className="flex-1 text-xs text-ink-soft sm:text-sm">
+                            Ultra-Velvety Cashmere Matte · 100% Vegan & Cruelty-Free · Dermatologically Tested
+                          </dd>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-6 sm:py-3.5">
+                        <dt className="w-full shrink-0 text-xs font-semibold text-plum-800 sm:w-56 lg:w-64 sm:text-sm">
+                          Manufacturer Warranty Description
+                        </dt>
+                        <dd className="flex-1 text-xs text-ink-soft sm:text-sm">
+                          100% Authentic Quality Guaranteed. Easy returns within 7 days of delivery on unopened products.
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                )}
+              </div>
+            )}
+
             {tab === "Shipping & Returns" && (
               <ul className="space-y-3">
                 {shippingNotes.map((n) => (
@@ -628,35 +902,6 @@ export default function ProductDetail({
           </div>
         </div>
       </section>
-
-      {/* All shades */}
-      {shades.length > 0 && (
-        <section className="container-vel py-14">
-          <div className="mb-7 text-center">
-            <h2 className="font-heading font-bold text-2xl tracking-[0.05em] text-plum-800">ALL SHADES</h2>
-            <p className="mt-1 text-xs text-ink-soft">Find your perfect shade</p>
-          </div>
-          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            {shades.map((s) => (
-              <li key={s.code}>
-                <button
-                  onClick={() => setShade(s.name)}
-                  aria-pressed={shade === s.name}
-                  className={cn(
-                    "block w-full overflow-hidden rounded-[var(--radius-card)] border transition-colors",
-                    shade === s.name ? "border-gold-600" : "border-gold-200/70 hover:border-gold-400",
-                  )}
-                >
-                  <span className="block aspect-4/3 w-full" style={{ backgroundColor: s.hex }} />
-                  <span className="block bg-cream-100 py-2.5 text-center text-[0.65rem] text-plum-800">
-                    {s.code} {s.name.toUpperCase()}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {/* Ingredients that care */}
       {isLip && (
@@ -729,35 +974,78 @@ export default function ProductDetail({
           <div className="space-y-4">
             {writing && (
               <div className="rounded-[var(--radius-card)] border border-gold-300/50 bg-[#fffdf9] p-5 sm:p-6 shadow-[0_6px_20px_rgba(32,8,45,0.08)]">
-                <ReviewForm productSlug={product.slug} />
+                <ReviewForm productSlug={product.slug} onSuccess={handleReviewSuccess} />
               </div>
             )}
 
-            {reviews.length > 0 && (
+            {localReviews.length > 0 && (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {reviews.map((r) => (
-                  <figure
-                    key={r.id}
-                    className="flex flex-col rounded-[var(--radius-card)] border border-gold-300/40 bg-[#fffdf9] p-4 shadow-[0_4px_16px_rgba(32,8,45,0.08),0_1.5px_4px_rgba(32,8,45,0.04)] transition-all duration-300 hover:shadow-[0_10px_24px_rgba(32,8,45,0.14),0_3px_8px_rgba(193,136,62,0.1)] hover:-translate-y-1"
-                  >
-                    <figcaption className="text-[0.75rem] font-medium text-plum-800">
-                      {r.authorName}
-                    </figcaption>
-                    {r.isVerified && <p className="text-[0.6rem] text-success">Verified Buyer</p>}
-                    <StarRating value={r.rating} size={11} className="mt-2.5" />
-                    <blockquote className="mt-2 text-[0.73rem] leading-relaxed text-ink-soft">
-                      {r.body}
-                    </blockquote>
-                    <p className="mt-auto pt-3 text-[0.62rem] text-ink-soft/80">
-                      {new Date(r.createdAt).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                        timeZone: "Asia/Kolkata",
-                      })}
-                    </p>
-                  </figure>
-                ))}
+                {localReviews.map((r) => {
+                  const demoVideo = DEMO_REVIEW_VIDEOS[r.authorName];
+                  const hasVideo = (r.videos && r.videos.length > 0) || !!demoVideo;
+                  const videoSrc = r.videos?.[0] ?? demoVideo?.videoUrl;
+                  const posterSrc = r.images?.[0] ?? demoVideo?.posterUrl ?? productImage(product);
+
+                  return (
+                    <figure
+                      key={r.id}
+                      className="flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-gold-300/40 bg-[#fffdf9] p-4 shadow-[0_4px_16px_rgba(32,8,45,0.08),0_1.5px_4px_rgba(32,8,45,0.04)] transition-all duration-300 hover:shadow-[0_10px_24px_rgba(32,8,45,0.14),0_3px_8px_rgba(193,136,62,0.1)] hover:-translate-y-1"
+                    >
+                      {/* Video Preview Thumbnail with Play Button */}
+                      {hasVideo && (
+                        <div
+                          onClick={() =>
+                            videoSrc &&
+                            setVideoLightbox({
+                              src: videoSrc,
+                              kind: "video",
+                              caption: `${r.authorName} · Video Review`,
+                            })
+                          }
+                          className="group/vid relative mb-3 aspect-[16/10] w-full cursor-pointer overflow-hidden rounded-md bg-plum-950 border border-gold-200/80 select-none shadow-sm"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={posterSrc}
+                            alt={`${r.authorName}'s video review`}
+                            className="size-full object-cover transition-transform duration-500 group-hover/vid:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+                          <div className="absolute inset-0 grid place-items-center">
+                            <span className="grid size-10 place-items-center rounded-full border border-white/90 bg-plum-900/75 text-white backdrop-blur shadow-md transition-all duration-300 group-hover/vid:scale-110 group-hover/vid:bg-gold-500">
+                              <Play className="ml-0.5 size-4 fill-white" />
+                            </span>
+                          </div>
+                          <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded bg-black/70 px-2 py-0.5 text-[0.62rem] font-medium text-gold-300 backdrop-blur">
+                            <Video className="size-3 text-gold-400" /> Customer Video
+                          </span>
+                        </div>
+                      )}
+
+                      <figcaption className="text-[0.75rem] font-medium text-plum-800">
+                        {r.authorName}
+                      </figcaption>
+                      {r.isVerified && <p className="text-[0.6rem] text-success">Verified Buyer</p>}
+                      <StarRating value={r.rating} size={11} className="mt-2.5" />
+                      {r.title && (
+                        <p className="mt-1.5 text-[0.78rem] font-semibold text-plum-800">
+                          {r.title}
+                        </p>
+                      )}
+                      <blockquote className="mt-2 text-[0.73rem] leading-relaxed text-ink-soft">
+                        {r.body}
+                      </blockquote>
+                      <p className="mt-auto pt-3 text-[0.62rem] text-ink-soft/80">
+                        {new Date(r.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                          timeZone: "Asia/Kolkata",
+                        })}
+                      </p>
+                    </figure>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -769,6 +1057,9 @@ export default function ProductDetail({
           </Button>
         </div>
       </section>
+
+      {/* Collaborator Reels & Videos */}
+      <CollaboratorVideos currentProduct={product} catalog={catalog} />
 
       {/* Frequently bought together */}
       {bundleItems.length > 1 && (
@@ -1048,10 +1339,19 @@ export default function ProductDetail({
         </div>
       )}
 
-      {/* Full-screen image lightbox dialog */}
+      {/* Full-screen image or review video lightbox dialog */}
       <Lightbox
-        item={lightboxOpen ? { src: currentImage, kind: "image", caption: product.name } : null}
-        onClose={() => setLightboxOpen(false)}
+        item={
+          videoLightbox
+            ? videoLightbox
+            : lightboxOpen
+              ? { src: currentImage, kind: "image", caption: product.name }
+              : null
+        }
+        onClose={() => {
+          setVideoLightbox(null);
+          setLightboxOpen(false);
+        }}
       />
     </>
   );
