@@ -704,7 +704,7 @@ function ShopAdCard({ ad }: { ad: ShopAd }) {
     <Link
       href={ad.href}
       className={cn(
-        "group relative flex flex-col justify-between h-full min-h-[380px] sm:min-h-[420px] xl:min-h-[460px] 2xl:min-h-[500px] overflow-hidden rounded-[var(--radius-card)] p-6 sm:p-7 xl:p-8 transition-all duration-300 ease-out hover:-translate-y-1.5 shadow-[0_4px_20px_rgba(32,8,45,0.15)] hover:shadow-[0_20px_40px_rgba(32,8,45,0.25)] border",
+        "group relative flex flex-col justify-between h-full min-h-[250px] sm:min-h-[400px] xl:min-h-[460px] 2xl:min-h-[500px] overflow-hidden rounded-[var(--radius-card)] p-3.5 sm:p-7 xl:p-8 transition-all duration-300 ease-out hover:-translate-y-1.5 shadow-[0_4px_20px_rgba(32,8,45,0.15)] hover:shadow-[0_20px_40px_rgba(32,8,45,0.25)] border",
         isLuxury
           ? "border-gold-300/70 bg-gradient-to-b from-[#fcf7f0] via-[#f7eee2] to-[#ebd8c4] text-plum-950 hover:border-gold-500"
           : isGlow
@@ -735,11 +735,11 @@ function ShopAdCard({ ad }: { ad: ShopAd }) {
       </div>
 
       {/* Top section: Badge + Eyebrow */}
-      <div className="relative z-10 flex flex-col items-start gap-2.5">
+      <div className="relative z-10 flex flex-col items-start gap-1 sm:gap-2.5">
         {ad.badge && (
           <span
             className={cn(
-              "label-caps px-2.5 py-0.5 rounded-full text-[0.62rem] xl:text-[0.68rem] font-bold tracking-[0.14em] uppercase shadow-sm border",
+              "label-caps px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-full text-[0.52rem] sm:text-[0.62rem] xl:text-[0.68rem] font-bold tracking-[0.14em] uppercase shadow-sm border",
               isLuxury
                 ? "border-plum-900/25 bg-plum-900/10 text-plum-900"
                 : "border-gold-400/40 bg-gold-500/15 text-gold-300 backdrop-blur-sm",
@@ -750,7 +750,7 @@ function ShopAdCard({ ad }: { ad: ShopAd }) {
         )}
         <p
           className={cn(
-            "label-caps text-[0.72rem] xl:text-[0.78rem] font-semibold tracking-[0.18em] uppercase",
+            "label-caps text-[0.58rem] sm:text-[0.72rem] xl:text-[0.78rem] font-semibold tracking-[0.16em] uppercase",
             isLuxury ? "text-[#8a5a26]" : "text-gold-400",
           )}
         >
@@ -759,11 +759,11 @@ function ShopAdCard({ ad }: { ad: ShopAd }) {
       </div>
 
       {/* Middle/Bottom section: Headline, Subtitle, CTA */}
-      <div className="relative z-10 flex flex-col items-start pt-8 pb-1">
+      <div className="relative z-10 flex flex-col items-start pt-2 sm:pt-8 pb-0 sm:pb-1">
         <h3
           className={cn(
             "font-heading font-black tracking-[-0.01em] uppercase leading-[1.08]",
-            "text-[1.85rem] sm:text-[2rem] xl:text-[2.25rem] 2xl:text-[2.45rem]",
+            "text-[1.05rem] sm:text-[2rem] xl:text-[2.25rem] 2xl:text-[2.45rem]",
             isLuxury ? "text-plum-950" : isGlow ? "text-cream-50 font-display italic capitalize" : "text-cream-50",
           )}
         >
@@ -771,7 +771,7 @@ function ShopAdCard({ ad }: { ad: ShopAd }) {
         </h3>
         <p
           className={cn(
-            "mt-3 text-[0.84rem] xl:text-[0.9rem] leading-relaxed line-clamp-2 max-w-[20rem]",
+            "mt-1 sm:mt-3 text-[0.68rem] sm:text-[0.84rem] xl:text-[0.9rem] leading-snug sm:leading-relaxed line-clamp-2 max-w-[20rem]",
             isLuxury ? "text-plum-950/80 font-medium" : "text-cream-100/85",
           )}
         >
@@ -781,14 +781,14 @@ function ShopAdCard({ ad }: { ad: ShopAd }) {
         {/* Action Button */}
         <div
           className={cn(
-            "mt-6 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[0.75rem] xl:text-[0.8rem] font-bold uppercase tracking-[0.12em] transition-all duration-300 shadow-[0_4px_14px_rgba(32,8,45,0.22)] group-hover:gap-3 group-hover:shadow-[0_8px_20px_rgba(32,8,45,0.35)] group-hover:-translate-y-0.5",
+            "mt-2.5 sm:mt-6 inline-flex items-center gap-1.5 sm:gap-2 rounded-full px-3 py-1.5 sm:px-5 sm:py-2.5 text-[0.6rem] sm:text-[0.75rem] xl:text-[0.8rem] font-bold uppercase tracking-[0.1em] sm:tracking-[0.12em] transition-all duration-300 shadow-[0_4px_14px_rgba(32,8,45,0.22)] group-hover:gap-3 group-hover:shadow-[0_8px_20px_rgba(32,8,45,0.35)] group-hover:-translate-y-0.5",
             isLuxury
               ? "bg-plum-900 text-cream-50 hover:bg-plum-950 border border-gold-300/40"
               : "border border-gold-400/80 bg-gold-500 text-plum-950 hover:bg-gold-400",
           )}
         >
           <span>{ad.cta}</span>
-          <span className="text-base leading-none transition-transform duration-300 group-hover:translate-x-1">→</span>
+          <span className="text-xs sm:text-base leading-none transition-transform duration-300 group-hover:translate-x-1">→</span>
         </div>
       </div>
     </Link>

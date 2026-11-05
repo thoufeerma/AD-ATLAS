@@ -11,7 +11,7 @@ const VISIBLE = 6;
 const STEP_MS = 3000;
 
 const ARROW =
-  "grid size-8.5 sm:size-10 xl:size-12 2xl:size-13 shrink-0 place-items-center rounded-full border border-gold-200/60 bg-white text-gold-600 shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all hover:border-gold-400 active:scale-95";
+  "grid size-8 sm:size-10 xl:size-12 2xl:size-13 shrink-0 place-items-center rounded-full border border-gold-200/60 bg-white text-gold-600 shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all hover:border-gold-400 active:scale-95";
 
 /**
  * Links out to the store's Instagram; the home page skips it until one is set.
@@ -68,18 +68,18 @@ export default function InstagramStrip({ href, handle }: { href: string; handle:
         </div>
 
         <div
-          className="flex items-center gap-2 sm:gap-3 lg:gap-4 xl:gap-5 [--visible:3] sm:[--visible:6] [--strip-gap:1rem] xl:[--strip-gap:1.25rem] 2xl:[--strip-gap:1.5rem]"
+          className="flex items-center gap-1.5 sm:gap-3 lg:gap-4 xl:gap-5 [--visible:2] sm:[--visible:4] lg:[--visible:6] [--strip-gap:0.75rem] sm:[--strip-gap:1rem] xl:[--strip-gap:1.25rem] 2xl:[--strip-gap:1.5rem]"
           {...hoverProps}
         >
           {loops && (
             <button type="button" aria-label="Previous posts" onClick={() => go(-1)} className={ARROW}>
-              <ChevronLeft className="size-5 xl:size-6" />
+              <ChevronLeft className="size-4 sm:size-5 xl:size-6" />
             </button>
           )}
 
           <div className="min-w-0 flex-1 overflow-hidden" {...swipeProps}>
             <ul
-              className={cn(trackClass, "gap-4 xl:gap-5 2xl:gap-6")}
+              className={cn(trackClass, "gap-3 sm:gap-4 xl:gap-5 2xl:gap-6")}
               style={
                 loops
                   ? { transform: `translateX(calc(${-i} * (100% + var(--strip-gap,1rem)) / var(--visible)))` }
@@ -92,7 +92,7 @@ export default function InstagramStrip({ href, handle }: { href: string; handle:
 
           {loops && (
             <button type="button" aria-label="Next posts" onClick={() => go(1)} className={ARROW}>
-              <ChevronRight className="size-5 xl:size-6" />
+              <ChevronRight className="size-4 sm:size-5 xl:size-6" />
             </button>
           )}
         </div>

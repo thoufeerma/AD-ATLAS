@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { Mail, Phone, MapPin, MessageCircle, Heart, Headset, Droplets, RefreshCcw, Users, MessagesSquare, Lock, RotateCcw, Truck, CreditCard, Gift, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { socialProfiles } from "@/components/ui/SocialIcons";
-import { telHref, whatsappHref } from "@/lib/utils";
+import { cn, telHref, whatsappHref } from "@/lib/utils";
 import OptionalPhoto from "@/components/ui/OptionalPhoto";
 import ContactForm from "@/components/forms/ContactForm";
 import { Ornament, ScriptHeart } from "@/components/ui/Ornament";
@@ -93,7 +93,13 @@ export default async function ContactPage() {
               { icon: <Users className="size-6 text-[#c8963c]" strokeWidth={2} />, title: "Collaborations", text: "Influencer, brand &\ncreator partnerships" },
               { icon: <MessagesSquare className="size-6 text-[#c8963c]" strokeWidth={2} />, title: "General Queries", text: "Any other questions?\nWe're all ears!" },
             ].map((item, i) => (
-              <div key={i} className="flex flex-col items-center text-center px-4 py-6 lg:py-8 rounded-[var(--radius-card)] border border-gold-300/40 bg-[#fbf8f4] shadow-[0_4px_16px_rgba(32,8,45,0.1),0_1.5px_4px_rgba(32,8,45,0.05)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(32,8,45,0.18),0_4px_12px_rgba(193,136,62,0.15)] hover:border-gold-400/80 h-full">
+              <div
+                key={i}
+                className={cn(
+                  "flex flex-col items-center text-center px-4 py-6 lg:py-8 rounded-[var(--radius-card)] border border-gold-300/40 bg-[#fbf8f4] shadow-[0_4px_16px_rgba(32,8,45,0.1),0_1.5px_4px_rgba(32,8,45,0.05)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(32,8,45,0.18),0_4px_12px_rgba(193,136,62,0.15)] hover:border-gold-400/80 h-full",
+                  i === 4 ? "col-span-2 md:col-span-1 max-w-[260px] md:max-w-none mx-auto w-full" : "",
+                )}
+              >
                 <span className="grid size-[60px] place-items-center rounded-full border border-[#c8963c] bg-white mb-5 shadow-sm">
                   {item.icon}
                 </span>

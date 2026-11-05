@@ -203,12 +203,9 @@ export default function CollaboratorVideos({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-1.5">
-              <Sparkles className="size-3.5 text-gold-600" />
-              <span className="label-caps text-[0.62rem] text-gold-700 tracking-wider">
-                Community & Creator Reels
-              </span>
-            </div>
+            <span className="label-caps block text-[0.62rem] text-gold-700 tracking-wider">
+              Community & Creator Reels
+            </span>
             <h2 className="mt-1 font-heading font-bold text-2xl sm:text-3xl tracking-[0.04em] text-plum-800">
               VIDEOS BY OUR COLLABORATORS
             </h2>
@@ -269,21 +266,16 @@ export default function CollaboratorVideos({
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />
 
                   {/* Creator Info Tag (Top) */}
-                  <div className="absolute left-3 top-3 right-3 z-10 flex items-center justify-between">
+                  <div className="absolute left-3 top-3 z-10 flex items-center">
                     <div className="flex items-center gap-2 rounded-full bg-plum-900/80 backdrop-blur px-2.5 py-1 text-cream-50 shadow-md">
                       <div className="relative size-6 shrink-0 overflow-hidden rounded-full border border-gold-400">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={reel.creatorAvatar} alt={reel.creatorName} className="size-full object-cover" />
                       </div>
-                      <span className="text-[0.7rem] font-semibold tracking-tight truncate max-w-[120px]">
+                      <span className="text-[0.7rem] font-semibold tracking-tight truncate max-w-[150px]">
                         {reel.creatorName}
                       </span>
                       <BadgeCheck className="size-3.5 fill-gold-400 text-plum-900 shrink-0" />
-                    </div>
-
-                    <div className="flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[0.65rem] text-gold-300 backdrop-blur">
-                      <Eye className="size-3" />
-                      <span>{reel.views}</span>
                     </div>
                   </div>
 
