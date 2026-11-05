@@ -97,29 +97,31 @@ export function CartClient({ products, reviews }: { products: Product[], reviews
       {/* 1. CART BANNER SECTION */}
       <section className="w-full pt-8 pb-0 lg:pt-10 lg:pb-0">
         <div className="container-vel">
-          <div className="relative rounded-2xl overflow-hidden shadow-sm flex items-center min-h-[220px] lg:min-h-[280px]">
+          <div className="relative rounded-2xl overflow-hidden shadow-sm flex items-center min-h-[180px] sm:min-h-[220px] lg:min-h-[280px]">
             {/* Background Image */}
             <div className="absolute inset-0 z-0">
                <img src="/images/your cart banner.png" alt="Cart Banner" className="w-full h-full object-cover object-right lg:object-center" />
+               {/* Soft gradient overlay on mobile so text is legible and doesn't clash with dark box */}
+               <div className="absolute inset-0 bg-gradient-to-r from-[#fcf9f5]/95 via-[#fcf9f5]/85 to-transparent sm:hidden" />
             </div>
             
             {/* Left Content overlaid on the banner */}
-            <div className="relative z-10 w-full lg:w-[50%] flex flex-col py-8 px-8 lg:px-12">
-              <div className="flex items-center gap-4 mb-1">
-                <h1 className="font-display font-bold text-[3.2rem] lg:text-[4rem] leading-[1.05] text-[#240b25] tracking-tight">
+            <div className="relative z-10 w-full sm:w-[75%] lg:w-[50%] flex flex-col py-6 px-5 sm:py-8 sm:px-8 lg:px-12">
+              <div className="flex items-center gap-3 sm:gap-4 mb-1">
+                <h1 className="font-display font-bold text-[2.2rem] sm:text-[3.2rem] lg:text-[4rem] leading-[1.05] text-[#240b25] tracking-tight">
                   Your Cart
                 </h1>
-                <ScriptHeart className="w-10 h-10 text-[#c8963c] mt-1 shrink-0" />
+                <ScriptHeart className="w-7 h-7 sm:w-10 sm:h-10 text-[#c8963c] mt-0.5 sm:mt-1 shrink-0" />
               </div>
               
               {/* Breadcrumbs */}
-              <div className="flex items-center gap-2 text-[0.86rem] sm:text-[0.9rem] text-[#240b25]/75 mb-6 font-medium">
+              <div className="flex items-center gap-2 text-[0.8rem] sm:text-[0.9rem] text-[#240b25]/75 mb-3 sm:mb-6 font-medium">
                  <Link href="/" className="hover:text-[#c8963c] transition-colors">Home</Link>
-                 <ChevronRight size={15} className="text-[#240b25]/50 shrink-0" />
+                 <ChevronRight size={14} className="text-[#240b25]/50 shrink-0" />
                  <span className="text-[#240b25] font-semibold">Cart</span>
               </div>
               
-              <p className="text-[1.05rem] lg:text-[1.15rem] text-[#240b25]/80 font-medium max-w-[400px] leading-relaxed">
+              <p className="text-[0.92rem] sm:text-[1.05rem] lg:text-[1.15rem] text-[#240b25]/85 font-medium max-w-[400px] leading-snug sm:leading-relaxed">
                 Great choices! You're just a step away from <span className="text-[#c8963c] font-bold">flawless beauty.</span>
               </p>
             </div>
@@ -132,14 +134,15 @@ export function CartClient({ products, reviews }: { products: Product[], reviews
         <div className="container-vel grid grid-cols-1 lg:grid-cols-[1fr_420px] xl:grid-cols-[1fr_460px] gap-8 xl:gap-10">
            
            {/* LEFT COLUMN: Cart Items & Badges */}
-           <div className="flex flex-col bg-[#fdfbf9] border border-[#eaddce] rounded-xl p-6 lg:p-10 shadow-sm h-fit">
+           <div className="flex flex-col bg-[#fdfbf9] border border-[#eaddce] rounded-xl p-4 sm:p-6 lg:p-10 shadow-sm h-fit">
               
-              {/* Table Header */}
-              <div className="flex items-center w-full pb-5 border-b border-[#eaddce] text-[0.95rem] font-bold uppercase tracking-widest text-[#240b25]/90">
+              {/* Table Header - Desktop only */}
+              <div className="hidden md:flex items-center w-full pb-5 border-b border-[#eaddce] text-[0.95rem] font-bold uppercase tracking-widest text-[#240b25]/90">
                  <div className="w-[45%]">PRODUCT</div>
                  <div className="w-[15%] text-center">PRICE</div>
                  <div className="w-[20%] text-center">QUANTITY</div>
-                 <div className="w-[20%] text-center">TOTAL</div>
+                 <div className="w-[15%] text-center">TOTAL</div>
+                 <div className="w-[5%]"></div>
               </div>
 
               {/* Items List */}
@@ -163,76 +166,154 @@ export function CartClient({ products, reviews }: { products: Product[], reviews
                      const total = quoteLine ? quoteLine.lineTotalPaise : price * row.qty;
 
                      return (
-                       <div key={`${row.slug}-${row.shade}-${i}`} className={`flex items-center w-full py-6 border-b border-[#eaddce] ${isProblem ? 'opacity-50' : ''}`}>
-                          <div className="w-[45%] flex items-center gap-4">
-                             <div className="size-28 lg:size-32 shrink-0 bg-[#f4ece4] rounded-lg overflow-hidden flex items-center justify-center shadow-sm">
-                                {row.product?.images[0] ? (
-                                  <img src={row.product.images[0].url} alt={row.product.name} className="w-full h-full object-cover" />
-                                ) : (
-                                  <img src={`https://placehold.co/150x150/f4ece4/c8963c?text=Product`} alt={row.slug} className="w-full h-full object-cover" />
-                                )}
-                             </div>
-                             <div className="flex flex-col pr-2">
-                                <Link href={`/shop/${row.slug}`}>
-                                  <h4 className="font-sans font-medium text-[#240b25] text-[1.1rem] mb-1 hover:text-[#c8963c] transition-colors">
-                                    {row.product ? row.product.name : row.slug}
-                                  </h4>
-                                </Link>
-                                <p className="text-[0.75rem] text-[#240b25]/70 font-medium">
-                                  {row.product?.descriptor || "Velastia Beauty"}
-                                </p>
-                                {(row.shade || row.product?.size) && (
-                                  <p className="text-[0.75rem] text-[#240b25]/70 font-medium mt-0.5">
-                                    {row.shade || row.product?.size}
+                       <div key={`${row.slug}-${row.shade}-${i}`} className="w-full">
+                         {/* Desktop Row (md:flex) */}
+                         <div className={`hidden md:flex items-center w-full py-6 border-b border-[#eaddce] ${isProblem ? 'opacity-50' : ''}`}>
+                            <div className="w-[45%] flex items-center gap-4">
+                               <div className="size-28 lg:size-32 shrink-0 bg-[#f4ece4] rounded-lg overflow-hidden flex items-center justify-center shadow-sm">
+                                  {row.product?.images[0] ? (
+                                    <img src={row.product.images[0].url} alt={row.product.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <img src={`https://placehold.co/150x150/f4ece4/c8963c?text=Product`} alt={row.slug} className="w-full h-full object-cover" />
+                                  )}
+                               </div>
+                               <div className="flex flex-col pr-2">
+                                  <Link href={`/shop/${row.slug}`}>
+                                    <h4 className="font-sans font-medium text-[#240b25] text-[1.1rem] mb-1 hover:text-[#c8963c] transition-colors">
+                                      {row.product ? row.product.name : row.slug}
+                                    </h4>
+                                  </Link>
+                                  <p className="text-[0.75rem] text-[#240b25]/70 font-medium">
+                                    {row.product?.descriptor || "Velastia Beauty"}
                                   </p>
-                                )}
-                                {isProblem && (
-                                  <p className="text-[0.7rem] text-red-600 font-bold mt-1">{row.problem}</p>
-                                )}
-                             </div>
-                          </div>
-                          
-                          <div className="w-[15%] text-center font-bold text-[#240b25] text-[1.15rem]">
-                             {formatMoney(price)}
-                          </div>
-                          
-                          <div className="w-[20%] flex flex-col items-center">
-                             <div className="flex items-center border border-[#eaddce] rounded-full px-5 py-2 gap-6">
-                                <button 
-                                  onClick={() => setQty(row.slug, row.shade, row.qty - 1)}
-                                  className="text-[#240b25]/50 hover:text-[#240b25] transition-colors disabled:opacity-30"
-                                >
-                                  <Minus size={14} strokeWidth={2.5} />
-                                </button>
-                                <span className="text-[1.1rem] font-bold text-[#240b25] min-w-[1.2rem] text-center">{row.qty}</span>
-                                <button 
-                                  onClick={() => setQty(row.slug, row.shade, row.qty + 1)}
-                                  disabled={row.qty >= MAX_QTY}
-                                  className="text-[#240b25]/50 hover:text-[#240b25] transition-colors disabled:opacity-30"
-                                >
-                                  <Plus size={14} strokeWidth={2.5} />
-                                </button>
-                             </div>
-                             <button 
-                                onClick={() => remove(row.slug, row.shade)}
-                                className="text-[0.75rem] font-medium text-[#240b25]/60 mt-1.5 hover:text-[#240b25] transition-colors"
-                             >
-                               Remove
-                             </button>
-                          </div>
-                          
-                          <div className="w-[15%] text-center font-bold text-[#240b25] text-[1.15rem]">
-                             {formatMoney(total)}
-                          </div>
+                                  {(row.shade || row.product?.size) && (
+                                    <p className="text-[0.75rem] text-[#240b25]/70 font-medium mt-0.5">
+                                      {row.shade || row.product?.size}
+                                    </p>
+                                  )}
+                                  {isProblem && (
+                                    <p className="text-[0.7rem] text-red-600 font-bold mt-1">{row.problem}</p>
+                                  )}
+                               </div>
+                            </div>
+                            
+                            <div className="w-[15%] text-center font-bold text-[#240b25] text-[1.15rem]">
+                               {formatMoney(price)}
+                            </div>
+                            
+                            <div className="w-[20%] flex flex-col items-center">
+                               <div className="flex items-center border border-[#eaddce] rounded-full px-5 py-2 gap-6">
+                                  <button 
+                                    onClick={() => setQty(row.slug, row.shade, row.qty - 1)}
+                                    className="text-[#240b25]/50 hover:text-[#240b25] transition-colors disabled:opacity-30"
+                                    aria-label="Decrease quantity"
+                                  >
+                                    <Minus size={14} strokeWidth={2.5} />
+                                  </button>
+                                  <span className="text-[1.1rem] font-bold text-[#240b25] min-w-[1.2rem] text-center">{row.qty}</span>
+                                  <button 
+                                    onClick={() => setQty(row.slug, row.shade, row.qty + 1)}
+                                    disabled={row.qty >= MAX_QTY}
+                                    className="text-[#240b25]/50 hover:text-[#240b25] transition-colors disabled:opacity-30"
+                                    aria-label="Increase quantity"
+                                  >
+                                    <Plus size={14} strokeWidth={2.5} />
+                                  </button>
+                               </div>
+                               <button 
+                                  onClick={() => remove(row.slug, row.shade)}
+                                  className="text-[0.75rem] font-medium text-[#240b25]/60 mt-1.5 hover:text-[#240b25] transition-colors"
+                               >
+                                 Remove
+                               </button>
+                            </div>
+                            
+                            <div className="w-[15%] text-center font-bold text-[#240b25] text-[1.15rem]">
+                               {formatMoney(total)}
+                            </div>
 
-                          <div className="w-[5%] flex justify-end">
-                             <button 
-                                onClick={() => remove(row.slug, row.shade)}
-                                className="rounded-full border border-[#eaddce] p-1.5 text-[#240b25]/40 hover:text-[#240b25] hover:border-[#240b25] transition-all"
-                             >
-                                <X size={14} strokeWidth={2.5} />
-                             </button>
-                          </div>
+                            <div className="w-[5%] flex justify-end">
+                               <button 
+                                  onClick={() => remove(row.slug, row.shade)}
+                                  className="rounded-full border border-[#eaddce] p-1.5 text-[#240b25]/40 hover:text-[#240b25] hover:border-[#240b25] transition-all"
+                                  aria-label="Remove product"
+                               >
+                                  <X size={14} strokeWidth={2.5} />
+                                </button>
+                            </div>
+                         </div>
+
+                         {/* Mobile Row (< md) */}
+                         <div className={`flex md:hidden flex-col w-full py-4 border-b border-[#eaddce] gap-3.5 ${isProblem ? 'opacity-50' : ''}`}>
+                            <div className="flex items-start gap-3 w-full">
+                               <div className="size-20 sm:size-24 shrink-0 bg-[#f4ece4] rounded-lg overflow-hidden flex items-center justify-center shadow-xs">
+                                  {row.product?.images[0] ? (
+                                    <img src={row.product.images[0].url} alt={row.product.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <img src={`https://placehold.co/150x150/f4ece4/c8963c?text=Product`} alt={row.slug} className="w-full h-full object-cover" />
+                                  )}
+                               </div>
+                               <div className="flex-1 min-w-0 pr-1">
+                                  <div className="flex items-start justify-between gap-2">
+                                     <Link href={`/shop/${row.slug}`} className="min-w-0">
+                                       <h4 className="font-sans font-medium text-[#240b25] text-[0.95rem] leading-snug line-clamp-2 hover:text-[#c8963c] transition-colors">
+                                         {row.product ? row.product.name : row.slug}
+                                       </h4>
+                                     </Link>
+                                     <button 
+                                        onClick={() => remove(row.slug, row.shade)}
+                                        className="rounded-full border border-[#eaddce] p-1.5 text-[#240b25]/50 hover:text-[#240b25] hover:border-[#240b25] transition-all shrink-0"
+                                        aria-label="Remove product"
+                                     >
+                                        <X size={14} strokeWidth={2.5} />
+                                     </button>
+                                  </div>
+                                  <p className="text-[0.72rem] text-[#240b25]/70 font-medium mt-0.5">
+                                    {row.product?.descriptor || "Velastia Beauty"}
+                                  </p>
+                                  {(row.shade || row.product?.size) && (
+                                    <p className="text-[0.72rem] text-[#240b25]/70 font-medium mt-0.5">
+                                      {row.shade || row.product?.size}
+                                    </p>
+                                  )}
+                                  <div className="text-[0.85rem] font-semibold text-[#240b25]/85 mt-1">
+                                    {formatMoney(price)} <span className="text-[0.7rem] text-[#240b25]/50 font-normal">/ item</span>
+                                  </div>
+                                  {isProblem && (
+                                    <p className="text-[0.7rem] text-red-600 font-bold mt-1">{row.problem}</p>
+                                  )}
+                               </div>
+                            </div>
+                            
+                            {/* Stepper and Total on Mobile */}
+                            <div className="flex items-center justify-between pt-1">
+                               <div className="flex items-center border border-[#eaddce] rounded-full px-3.5 py-1.5 gap-4 bg-white shadow-xs">
+                                  <button 
+                                    onClick={() => setQty(row.slug, row.shade, row.qty - 1)}
+                                    className="p-0.5 text-[#240b25]/60 hover:text-[#240b25] transition-colors disabled:opacity-30"
+                                    aria-label="Decrease quantity"
+                                  >
+                                    <Minus size={13} strokeWidth={2.5} />
+                                  </button>
+                                  <span className="text-[0.95rem] font-bold text-[#240b25] min-w-[1.2rem] text-center">{row.qty}</span>
+                                  <button 
+                                    onClick={() => setQty(row.slug, row.shade, row.qty + 1)}
+                                    disabled={row.qty >= MAX_QTY}
+                                    className="p-0.5 text-[#240b25]/60 hover:text-[#240b25] transition-colors disabled:opacity-30"
+                                    aria-label="Increase quantity"
+                                  >
+                                    <Plus size={13} strokeWidth={2.5} />
+                                  </button>
+                               </div>
+
+                               <div className="flex items-baseline gap-1.5">
+                                  <span className="text-[0.72rem] uppercase font-semibold text-[#240b25]/60">Subtotal:</span>
+                                  <span className="font-bold text-[#240b25] text-[1.1rem]">
+                                     {formatMoney(total)}
+                                  </span>
+                               </div>
+                            </div>
+                         </div>
                        </div>
                      );
                    })

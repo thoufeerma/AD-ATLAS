@@ -77,8 +77,8 @@ export default function AuthPanel() {
   return (
     <div className="flex flex-col min-h-screen font-sans">
       <div className="flex-1 grid lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] xl:grid-cols-[minmax(0,35%)_minmax(0,65%)]">
-        {/* Left Dark Panel */}
-        <aside className="relative flex flex-col items-center justify-start overflow-hidden bg-[#20082d] px-8 pt-12 pb-8 text-center lg:px-10 h-full min-h-[600px]">
+        {/* Left Dark Panel - Desktop only */}
+        <aside className="hidden lg:flex relative flex-col items-center justify-start overflow-hidden bg-[#20082d] px-8 pt-12 pb-8 text-center lg:px-10 h-full min-h-[600px]">
           <Image
             src="/images/login-left-banner.png"
             alt="Velastia Luxury Beauty"
@@ -168,7 +168,7 @@ export default function AuthPanel() {
         </aside>
 
         {/* Right Cream Panel */}
-        <div className="bg-[#fcf9f5] flex flex-col relative px-8 py-10 lg:px-12 xl:px-16">
+        <div className="bg-[#fcf9f5] flex flex-col relative px-4 py-8 sm:px-8 sm:py-10 lg:px-12 xl:px-16">
           {/* Header Navigation */}
           <div className="flex items-center justify-between pb-8 lg:pb-12 w-full max-w-[65rem] mx-auto">
             {/* Desktop Navigation Links */}
@@ -234,12 +234,12 @@ export default function AuthPanel() {
 
           <div className="flex-1 w-full max-w-[65rem] mx-auto flex flex-col">
             {/* Tabs */}
-            <div className="flex justify-center gap-16 lg:gap-24 border-b border-[#eaddce] pb-4 mb-12">
+            <div className="flex justify-center gap-12 sm:gap-16 lg:gap-24 border-b border-[#eaddce] pb-4 mb-8 lg:mb-12">
               <button
                 type="button"
                 onClick={() => setTab("login")}
                 className={cn(
-                  "text-[1.1rem] uppercase tracking-wide relative cursor-pointer pb-1 transition-all",
+                  "text-[1.05rem] sm:text-[1.1rem] uppercase tracking-wide relative cursor-pointer pb-1 transition-all py-1 px-2",
                   tab === "login"
                     ? "font-bold text-[#20082d]"
                     : "font-medium text-[#20082d]/40 hover:text-[#20082d]/70",
@@ -254,7 +254,7 @@ export default function AuthPanel() {
                 type="button"
                 onClick={() => setTab("register")}
                 className={cn(
-                  "text-[1.1rem] uppercase tracking-wide relative cursor-pointer pb-1 transition-all",
+                  "text-[1.05rem] sm:text-[1.1rem] uppercase tracking-wide relative cursor-pointer pb-1 transition-all py-1 px-2",
                   tab === "register"
                     ? "font-bold text-[#20082d]"
                     : "font-medium text-[#20082d]/40 hover:text-[#20082d]/70",
@@ -267,15 +267,15 @@ export default function AuthPanel() {
               </button>
             </div>
 
-            {/* Forms Split */}
+            {/* Forms Split: On mobile, show ONLY the active tab form. On desktop, show both side-by-side with OR */}
             <div className="grid lg:grid-cols-[1fr_auto_1fr] gap-10 lg:gap-12 xl:gap-16 mb-16 items-start">
               {/* Welcome Back (Login) Section */}
               <div
                 className={cn(
                   "relative transition-all duration-300",
                   tab === "login"
-                    ? "filter-none opacity-100"
-                    : "blur-[3.5px] opacity-35 grayscale-[20%] select-none cursor-pointer hover:opacity-50",
+                    ? "block filter-none opacity-100"
+                    : "hidden lg:block blur-[3.5px] opacity-35 grayscale-[20%] select-none cursor-pointer hover:opacity-50",
                 )}
                 onClick={() => {
                   if (tab !== "login") setTab("login");
@@ -303,8 +303,8 @@ export default function AuthPanel() {
                 className={cn(
                   "relative transition-all duration-300",
                   tab === "register"
-                    ? "filter-none opacity-100"
-                    : "blur-[3.5px] opacity-35 grayscale-[20%] select-none cursor-pointer hover:opacity-50",
+                    ? "block filter-none opacity-100"
+                    : "hidden lg:block blur-[3.5px] opacity-35 grayscale-[20%] select-none cursor-pointer hover:opacity-50",
                 )}
                 onClick={() => {
                   if (tab !== "register") setTab("register");
