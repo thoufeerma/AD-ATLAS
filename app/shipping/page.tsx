@@ -5,6 +5,7 @@ import {
   Map, Phone, Mail, MessageCircle, Info, FileText, CheckCircle2, ChevronRight, Check, Shield, RefreshCw, ShoppingBag, Home
 } from "lucide-react";
 import { Ornament, ScriptHeart } from "@/components/ui/Ornament";
+import { SUPPORT_PHONE, SUPPORT_PHONE_TEL, SUPPORT_WHATSAPP_NUMBER, CLAIMS } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Shipping Policy | Velastia",
@@ -358,19 +359,19 @@ export default function ShippingPage() {
                <div className="lg:w-1/3 flex items-center justify-center gap-6 lg:gap-10">
                   <div className="flex flex-col items-center text-center gap-2">
                      <MapPin className="text-[#c8963c]" size={36} strokeWidth={1.2} />
-                     <h4 className="text-[1.25rem] font-bold text-[#240b25]">29,000+</h4>
+                     <h4 className="text-[1.25rem] font-bold text-[#240b25]">{CLAIMS.pincodesCovered}</h4>
                      <p className="text-[0.9rem] text-[#240b25]/70 font-medium">Pincodes Covered</p>
                   </div>
                   <div className="w-1.5 h-1.5 rounded-full bg-[#c8963c]/50"></div>
                   <div className="flex flex-col items-center text-center gap-2">
                      <Heart className="text-[#c8963c]" size={36} strokeWidth={1.2} />
-                     <h4 className="text-[1.25rem] font-bold text-[#240b25]">100%</h4>
+                     <h4 className="text-[1.25rem] font-bold text-[#240b25]">{CLAIMS.panIndiaDelivery}</h4>
                      <p className="text-[0.9rem] text-[#240b25]/70 font-medium">Pan India Delivery</p>
                   </div>
                   <div className="w-1.5 h-1.5 rounded-full bg-[#c8963c]/50"></div>
                   <div className="flex flex-col items-center text-center gap-2">
                      <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c8963c" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/></svg>
-                     <h4 className="text-[1.25rem] font-bold text-[#240b25]">1000+</h4>
+                     <h4 className="text-[1.25rem] font-bold text-[#240b25]">{CLAIMS.deliveriesDaily}</h4>
                      <p className="text-[0.9rem] text-[#240b25]/70 font-medium">Happy Deliveries Daily</p>
                   </div>
                </div>
@@ -429,13 +430,18 @@ export default function ShippingPage() {
                <p className="text-[1rem] text-cream-50/80 mb-7">Our support team is just a message away!</p>
 
                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
-                  <div className="border-[1.5px] border-[#c8963c]/30 rounded-xl py-4 px-2 flex flex-col items-center gap-3 hover:bg-white/5 transition-colors cursor-pointer justify-center text-center">
+                  <a
+                    href={`https://wa.me/${SUPPORT_WHATSAPP_NUMBER}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border-[1.5px] border-[#c8963c]/30 rounded-xl py-4 px-2 flex flex-col items-center gap-3 hover:bg-white/5 transition-colors cursor-pointer justify-center text-center"
+                  >
                      <MessageCircle className="text-[#c8963c]" size={30} strokeWidth={1.2} />
                      <div className="flex flex-col items-center">
                        <p className="text-[0.65rem] uppercase tracking-wider font-bold mb-1">WHATSAPP</p>
-                       <p className="text-[0.75rem] text-cream-50/80 leading-tight">+91 98765 43210</p>
+                       <p className="text-[0.75rem] text-cream-50/80 leading-tight">{SUPPORT_PHONE}</p>
                      </div>
-                  </div>
+                  </a>
                   <div className="border-[1.5px] border-[#c8963c]/30 rounded-xl py-4 px-2 flex flex-col items-center gap-3 hover:bg-white/5 transition-colors cursor-pointer justify-center text-center">
                      <Mail className="text-[#c8963c]" size={30} strokeWidth={1.2} />
                      <div className="flex flex-col items-center">
@@ -443,14 +449,17 @@ export default function ShippingPage() {
                        <p className="text-[0.75rem] text-cream-50/80 leading-tight whitespace-nowrap">hello@velastia.com</p>
                      </div>
                   </div>
-                  <div className="border-[1.5px] border-[#c8963c]/30 rounded-xl py-4 px-2 flex flex-col items-center gap-3 hover:bg-white/5 transition-colors cursor-pointer justify-center text-center">
+                  <a
+                    href={`tel:${SUPPORT_PHONE_TEL}`}
+                    className="border-[1.5px] border-[#c8963c]/30 rounded-xl py-4 px-2 flex flex-col items-center gap-3 hover:bg-white/5 transition-colors cursor-pointer justify-center text-center"
+                  >
                      <Phone className="text-[#c8963c]" size={30} strokeWidth={1.2} />
                      <div className="flex flex-col items-center">
                        <p className="text-[0.65rem] uppercase tracking-wider font-bold mb-1">CALL US</p>
-                       <p className="text-[0.75rem] text-cream-50/80 leading-tight">+91 98765 43210</p>
+                       <p className="text-[0.75rem] text-cream-50/80 leading-tight">{SUPPORT_PHONE}</p>
                        <p className="text-[0.55rem] text-cream-50/50 mt-1 leading-tight">(Mon - Sat | 10AM - 7PM)</p>
                      </div>
-                  </div>
+                  </a>
                   <div className="border-[1.5px] border-[#c8963c]/30 rounded-xl py-4 px-2 flex flex-col items-center gap-3 hover:bg-white/5 transition-colors cursor-pointer justify-center text-center">
                      <MessageCircle className="text-[#c8963c]" size={30} strokeWidth={1.2} />
                      <div className="flex flex-col items-center">

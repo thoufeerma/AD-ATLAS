@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ImagePlus, Star, X, Video, Play, Film, Link as LinkIcon } from "lucide-react";
+import { Check, ImagePlus, Star, X, Video, Play, Link as LinkIcon } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { api, ApiError } from "@/lib/api/client";
 import { cn, looksLikeEmail } from "@/lib/utils";

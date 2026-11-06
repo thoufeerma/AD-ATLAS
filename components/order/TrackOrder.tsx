@@ -224,7 +224,7 @@ export default function TrackOrder({ products }: { products: Product[] }) {
           </ul>
           
           <div className="absolute right-0 top-0 bottom-0 w-80 opacity-70 pointer-events-none hidden lg:block">
-            <Image src="/images/login page left side banner.png" alt="" fill className="object-cover" />
+            <Image src="/images/login-left-banner.png" alt="" fill className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#fcf9f5] via-[#fcf9f5]/60 to-transparent" />
           </div>
         </section>

@@ -20,6 +20,7 @@ import ReviewsBrowser from "@/components/reviews/ReviewsBrowser";
 import MediaStrip from "@/components/reviews/MediaStrip";
 import WriteReviewDialog from "@/components/reviews/WriteReviewDialog";
 import type { MediaItem } from "@/components/reviews/Lightbox";
+import { CLAIMS } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
   return pageMetadata("reviews");
@@ -44,9 +45,9 @@ const PHOTOS = {
  */
 const MEDIA_DIR = "/images/customer-media";
 
-/** Marketing figures for the stats band; the rest of the band is computed. */
-const HAPPY_CUSTOMERS = "10K+";
-const PRODUCTS_LOVED = "50K+";
+/** Marketing figures for the stats band (defined in lib/site.ts CLAIMS); the rest is computed. */
+const HAPPY_CUSTOMERS = CLAIMS.happyCustomers;
+const PRODUCTS_LOVED = CLAIMS.productsLoved;
 
 const PROMISES = [
   { Icon: Shield, title: "100% Genuine Reviews", text: "No fake reviews. Ever." },

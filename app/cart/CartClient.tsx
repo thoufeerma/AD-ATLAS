@@ -9,14 +9,13 @@ import {
 import { ScriptHeart } from "@/components/ui/Ornament";
 import { useStore, useHydrated, MAX_QTY } from "@/lib/store";
 import { resolveCart, quoteItems, useQuote } from "@/lib/cart";
-import { inr } from "@/lib/utils";
 import type { Product, Review } from "@/lib/api/types";
 import Link from 'next/link';
 import { Visa, Mastercard, Upi, Paytm, Razorpay } from "@/components/ui/PaymentLogos";
 
 export function CartClient({ products, reviews }: { products: Product[], reviews: Review[] }) {
   const hydrated = useHydrated();
-  const { lines, add, setQty, remove, coupon, setCoupon, removeCoupon } = useStore();
+  const { lines, setQty, remove, coupon, setCoupon, removeCoupon } = useStore();
   const [couponInput, setCouponInput] = useState(coupon || "");
   const [bannerIndex, setBannerIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(true);
@@ -122,7 +121,7 @@ export function CartClient({ products, reviews }: { products: Product[], reviews
               </div>
               
               <p className="text-[0.92rem] sm:text-[1.05rem] lg:text-[1.15rem] text-[#240b25]/85 font-medium max-w-[400px] leading-snug sm:leading-relaxed">
-                Great choices! You're just a step away from <span className="text-[#c8963c] font-bold">flawless beauty.</span>
+                Great choices! You&apos;re just a step away from <span className="text-[#c8963c] font-bold">flawless beauty.</span>
               </p>
             </div>
           </div>
@@ -560,7 +559,7 @@ export function CartClient({ products, reviews }: { products: Product[], reviews
                       </div>
                    </div>
                    <p className="text-[0.9rem] text-[#240b25]/80 font-medium leading-relaxed">
-                     "{review.body}"
+                     &ldquo;{review.body}&rdquo;
                    </p>
                 </div>
               ))}

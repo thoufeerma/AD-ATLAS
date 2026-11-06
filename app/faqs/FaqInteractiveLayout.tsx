@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Ornament } from "@/components/ui/Ornament";
+import { SUPPORT_PHONE, SUPPORT_PHONE_TEL, SUPPORT_WHATSAPP_NUMBER, SUPPORT_EMAIL } from "@/lib/site";
 
 const FAQ_DATA = [
   {
@@ -130,38 +131,54 @@ export default function FaqInteractiveLayout() {
           </p>
 
           <div className="flex flex-col gap-3 mb-6">
-            <a href="#" className="flex items-center gap-4 p-3 rounded-xl border border-[#d4af37]/40 hover:bg-white/5 transition-colors">
+            <a
+              href={`https://wa.me/${SUPPORT_WHATSAPP_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-4 p-3 rounded-xl border border-[#d4af37]/40 hover:bg-white/5 transition-colors"
+            >
               <span className="grid size-9 place-items-center rounded-full border border-[#d4af37]/60 text-[#d4af37]">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 3.2L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
               </span>
               <div>
                 <p className="text-[0.7rem] text-cream-50/80">WhatsApp Us</p>
-                <p className="text-[0.75rem] font-bold tracking-wide">+91 98765 43210</p>
+                <p className="text-[0.75rem] font-bold tracking-wide">{SUPPORT_PHONE}</p>
               </div>
             </a>
             
-            <a href="#" className="flex items-center gap-4 p-3 rounded-xl border border-[#d4af37]/40 hover:bg-white/5 transition-colors">
+            <a
+              href={`mailto:${SUPPORT_EMAIL}`}
+              className="flex items-center gap-4 p-3 rounded-xl border border-[#d4af37]/40 hover:bg-white/5 transition-colors"
+            >
               <span className="grid size-9 place-items-center rounded-full border border-[#d4af37]/60 text-[#d4af37]">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
               </span>
               <div>
                 <p className="text-[0.7rem] text-cream-50/80">Email Us</p>
-                <p className="text-[0.75rem] font-bold tracking-wide">hello@velastia.com</p>
+                <p className="text-[0.75rem] font-bold tracking-wide">{SUPPORT_EMAIL}</p>
               </div>
             </a>
             
-            <a href="#" className="flex items-center gap-4 p-3 rounded-xl border border-[#d4af37]/40 hover:bg-white/5 transition-colors">
+            <a
+              href={`tel:${SUPPORT_PHONE_TEL}`}
+              className="flex items-center gap-4 p-3 rounded-xl border border-[#d4af37]/40 hover:bg-white/5 transition-colors"
+            >
               <span className="grid size-9 place-items-center rounded-full border border-[#d4af37]/60 text-[#d4af37]">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/><path d="M14.05 2a9 9 0 0 1 8 7.94"/><path d="M14.05 6A5 5 0 0 1 18 10"/></svg>
               </span>
               <div>
                 <p className="text-[0.7rem] text-cream-50/80">Call Us</p>
-                <p className="text-[0.75rem] font-bold tracking-wide">+91 98765 43210</p>
+                <p className="text-[0.75rem] font-bold tracking-wide">{SUPPORT_PHONE}</p>
                 <p className="text-[0.6rem] text-cream-50/50 mt-0.5">(Mon - Sat | 10AM - 7PM)</p>
               </div>
             </a>
             
-            <a href="#" className="flex items-center gap-4 p-3 rounded-xl border border-[#d4af37]/40 hover:bg-white/5 transition-colors">
+            <a
+              href={`https://wa.me/${SUPPORT_WHATSAPP_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-4 p-3 rounded-xl border border-[#d4af37]/40 hover:bg-white/5 transition-colors"
+            >
               <span className="grid size-9 place-items-center rounded-full border border-[#d4af37]/60 text-[#d4af37]">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               </span>

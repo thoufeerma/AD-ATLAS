@@ -73,14 +73,14 @@ export default function WishlistView({ products }: { products: Product[] }) {
           )}
           <div className="rounded-2xl border border-gold-200/70 p-3 lg:p-4">
             {/* Controls Header */}
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-[#eaddce] pb-4">
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-[#eaddce] pb-4">
               <p className="font-bold text-[1.15rem] text-[#240b25]">
                 {items.length} {items.length === 1 ? "Item" : "Items"}
               </p>
-              <div className="flex items-center gap-6 lg:gap-8">
+              <div className="flex flex-wrap items-center gap-3.5 sm:gap-6 lg:gap-8">
                 <button
                   onClick={clearWishlist}
-                  className="inline-flex items-center gap-2 font-bold text-[0.9rem] text-[#240b25] transition-colors hover:text-[#c8963c]"
+                  className="inline-flex items-center gap-1.5 sm:gap-2 font-bold text-[0.85rem] sm:text-[0.9rem] text-[#240b25] transition-colors hover:text-[#c8963c]"
                 >
                   <Trash2 className="size-4" strokeWidth={2.5} /> Clear Wishlist
                 </button>
@@ -88,7 +88,7 @@ export default function WishlistView({ products }: { products: Product[] }) {
                   onClick={() =>
                     items.filter(buyable).forEach((p) => add(p.slug, 1, p.shades[0]?.name))
                   }
-                  className="bg-[#240b25] text-white flex items-center justify-center gap-2 py-3 px-8 rounded-lg font-bold uppercase tracking-widest text-[0.8rem] hover:bg-[#3a133d] transition-colors shadow-md"
+                  className="bg-[#240b25] text-white flex items-center justify-center gap-2 py-2.5 px-4 sm:py-3 sm:px-8 rounded-lg font-bold uppercase tracking-widest text-[0.75rem] sm:text-[0.8rem] hover:bg-[#3a133d] transition-colors shadow-md"
                 >
                   <ShoppingBag className="size-4" strokeWidth={2} /> ADD ALL TO BAG
                 </button>

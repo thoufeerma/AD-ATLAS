@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
-import { Mail, Phone, MapPin, MessageCircle, Heart, Headset, Droplets, RefreshCcw, Users, MessagesSquare, Lock, RotateCcw, Truck, CreditCard, Gift, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { Mail, Phone, MapPin, MessageCircle, Heart, Headset, Droplets, RefreshCcw, Users, MessagesSquare, Lock, RotateCcw, Truck, CreditCard, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { socialProfiles } from "@/components/ui/SocialIcons";
 import { cn, telHref, whatsappHref } from "@/lib/utils";
 import OptionalPhoto from "@/components/ui/OptionalPhoto";
 import ContactForm from "@/components/forms/ContactForm";
 import { Ornament, ScriptHeart } from "@/components/ui/Ornament";
 import { getHomeContent, getSettings } from "@/lib/api/server";
+import { SUPPORT_PHONE, STORE_ADDRESS } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
   return pageMetadata("contact");
@@ -20,7 +21,7 @@ export default async function ContactPage() {
   const testimonials = content.testimonials;
   const socials = socialProfiles(settings.store.social, ["instagram", "youtube", "facebook", "x", "pinterest"]);
   const supportEmail = settings.store.supportEmail || "hello@velastia.com";
-  const supportPhone = settings.store.supportPhone || "+91 98765 43210";
+  const supportPhone = settings.store.supportPhone || SUPPORT_PHONE;
   const supportHours = settings.store.supportHours || "Mon – Sat | 10AM – 7PM";
   const instagramUrl = settings.store.social.instagram || "https://www.instagram.com/velastiaofficial";
   return (
@@ -167,7 +168,11 @@ export default async function ContactPage() {
                 </span>
                 <div className="pt-1">
                   <h3 className={`text-[0.85rem] font-extrabold uppercase tracking-wider ${INK}`}>Office Address</h3>
-                  <p className="text-[0.85rem] font-medium text-[#1d052b]/90 leading-relaxed mt-1">Velastia Beauty Pvt. Ltd.<br/>123, Beauty Street, Andheri West,<br/>Mumbai &ndash; 400058, India</p>
+                  <p className="text-[0.85rem] font-medium text-[#1d052b]/90 leading-relaxed mt-1">
+                    {STORE_ADDRESS.company}<br/>
+                    {STORE_ADDRESS.line1},<br/>
+                    {STORE_ADDRESS.city} &ndash; {STORE_ADDRESS.postalCode}, {STORE_ADDRESS.country}
+                  </p>
                 </div>
               </div>
             </div>
